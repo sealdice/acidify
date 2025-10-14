@@ -25,7 +25,7 @@ class YogurtConfig(
 ) {
     @Serializable
     class LoggingConfig(
-        val coreLogLevel: LogLevel = LogLevel.INFO,
+        val coreLogLevel: LogLevel = LogLevel.DEBUG,
         val messageLogLevel: LogLevel = LogLevel.INFO
     )
 
