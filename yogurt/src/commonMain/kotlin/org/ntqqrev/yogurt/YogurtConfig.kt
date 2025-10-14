@@ -2,6 +2,7 @@
 
 package org.ntqqrev.yogurt
 
+import io.ktor.util.decodeBase64String
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -14,7 +15,7 @@ import org.ntqqrev.acidify.util.log.LogLevel
 
 @Serializable
 class YogurtConfig(
-    val signApiUrl: String = "https://sign.lagrangecore.org/api/sign/39038",
+    val signApiUrl: String = "aHR0cHM6Ly9hcGkubnRxcXJldi5vcmcvc2lnbi8zOTAzOA==".decodeBase64String(),
     val reportSelfMessage: Boolean = true,
     val transformIncomingMFaceToImage: Boolean = false,
     val httpConfig: MilkyHttpConfig = MilkyHttpConfig(),
