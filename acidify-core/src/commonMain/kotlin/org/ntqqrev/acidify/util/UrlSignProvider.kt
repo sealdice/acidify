@@ -44,14 +44,12 @@ class UrlSignProvider(val url: String, val httpProxy: String? = null) : SignProv
     /**
      * 通过 Lagrange 的签名服务提供的额外的 `/appinfo` 接口获取 [AppInfo]，若未提供则返回 `null`
      */
-    fun getAppInfo(): AppInfo? {
-        return runBlocking {
-            val response = client.get("$url/appinfo")
-            if (response.status == HttpStatusCode.OK) {
-                return@runBlocking response.body<AppInfo>()
-            } else {
-                return@runBlocking null
-            }
+    suspend fun getAppInfo(): AppInfo? {
+        val response = client.get("$url/appinfo")
+        return if (response.status == HttpStatusCode.OK) {
+            response.body<AppInfo>()
+        } else {
+            null
         }
     }
 }

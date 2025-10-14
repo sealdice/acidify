@@ -30,7 +30,7 @@ class BotTest {
         SessionStore.empty()
     }
     private val bot = Bot(
-        appInfo = defaultSignProvider.getAppInfo()!!,
+        appInfo = runBlocking { defaultSignProvider.getAppInfo() }!!,
         sessionStore = session,
         signProvider = defaultSignProvider,
         scope = defaultScope,
