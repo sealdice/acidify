@@ -85,9 +85,7 @@ internal interface IncomingSegmentFactory<T : BotIncomingSegment> {
                     val faceId = extra.get { faceId }
                     val detail = ctx.bot.faceDetailMap[faceId.toString()]
                     if (ctx.hasNext()) {
-                        val text = ctx.tryPeekType { text }
-                        if (text?.get { textMsg } == detail?.qDes)
-                            ctx.skip()
+                        ctx.tryPeekType { text }?.let { ctx.skip() }
                     }
                     return BotIncomingSegment.Face(
                         faceId = faceId,
