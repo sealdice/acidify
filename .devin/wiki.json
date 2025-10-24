@@ -1,0 +1,302 @@
+{
+  "repo_notes": [
+    {
+      "content": "使用简体中文生成内容。"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "High-level introduction to the acidify/yogurt project, explaining its purpose as a PC NTQQ protocol implementation with Milky API exposure",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started",
+      "purpose": "Guide users through installation, configuration, and initial setup of the Yogurt application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Installation",
+      "purpose": "Instructions for downloading and setting up Yogurt, including native executables and JVM builds",
+      "parent": "Getting Started",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Configuration",
+      "purpose": "Detailed explanation of config.json and all available configuration options",
+      "parent": "Getting Started",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "First Run and Authentication",
+      "purpose": "Guide through first-time login process, QR code authentication, and session management",
+      "parent": "Getting Started",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Architecture",
+      "purpose": "Comprehensive overview of system architecture, layers, and data flow patterns",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "System Layers",
+      "purpose": "Explanation of the three-tier architecture: Protocol Layer, Acidify Core, and Yogurt Application",
+      "parent": "Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Module Organization",
+      "purpose": "Overview of all modules (acidify-core, acidify-crypto, acidify-pb, yogurt, yogurt-*) and their relationships",
+      "parent": "Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Data Flow Pipelines",
+      "purpose": "Detailed explanation of incoming message, outgoing message, and event distribution pipelines",
+      "parent": "Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Acidify Core",
+      "purpose": "Deep dive into the acidify-core module, which implements the PC NTQQ protocol",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Bot Class",
+      "purpose": "Complete reference for the Bot class, the main programmatic API entrypoint",
+      "parent": "Acidify Core",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Protocol Layer",
+      "purpose": "Explanation of PacketLogic, LoginLogic, and low-level protocol communication",
+      "parent": "Acidify Core",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Incoming Message Parsing",
+      "purpose": "How raw protocol buffers are parsed into BotIncomingMessage and segments",
+      "parent": "Acidify Core",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Outgoing Message Building",
+      "purpose": "MessageBuildingContext and the DSL for constructing outgoing messages",
+      "parent": "Acidify Core",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Event System",
+      "purpose": "Event flow, MsgPushSignal, and how events are parsed and emitted",
+      "parent": "Acidify Core",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Entity Management and Caching",
+      "purpose": "How friends, groups, and members are cached and resolved",
+      "parent": "Acidify Core",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Media Handling",
+      "purpose": "Comprehensive guide to uploading and processing images, audio, video, and files",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Media Upload Protocols",
+      "purpose": "Detailed explanation of Highway and FlashTransfer upload mechanisms",
+      "parent": "Media Handling",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Image Handling",
+      "purpose": "Image upload, format detection, and resolution",
+      "parent": "Media Handling",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Audio Handling",
+      "purpose": "Audio encoding to SILK format and record message handling",
+      "parent": "Media Handling",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Video Handling",
+      "purpose": "Video upload, thumbnail generation, and metadata extraction",
+      "parent": "Media Handling",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Yogurt Application",
+      "purpose": "Complete guide to the Yogurt wrapper application that exposes Milky protocol",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Application Lifecycle",
+      "purpose": "Startup sequence, plugin installation, and shutdown procedures",
+      "parent": "Yogurt Application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "HTTP API Layer",
+      "purpose": "How Ktor serves the Milky API, routing, and handler architecture",
+      "parent": "Yogurt Application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Event Distribution",
+      "purpose": "WebSocket, SSE, and Webhook event distribution mechanisms",
+      "parent": "Yogurt Application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Transform Layer",
+      "purpose": "How data is transformed between Acidify and Milky formats",
+      "parent": "Yogurt Application",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Milky Protocol Reference",
+      "purpose": "Complete API reference for the Milky protocol exposed by Yogurt",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "API Endpoints",
+      "purpose": "Reference for all HTTP API endpoints (system info, message operations, etc.)",
+      "parent": "Milky Protocol Reference",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Event Types",
+      "purpose": "Reference for all event types (message receive, friend request, group notifications, etc.)",
+      "parent": "Milky Protocol Reference",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Message Format",
+      "purpose": "Reference for incoming and outgoing message structures and segment types",
+      "parent": "Milky Protocol Reference",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}
