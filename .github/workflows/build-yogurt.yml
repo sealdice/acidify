@@ -5,6 +5,7 @@ on:
       - main
     paths-ignore:
       - '**.md'
+      - '.devin/wiki.json'
   workflow_dispatch:
 
 
