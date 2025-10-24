@@ -282,7 +282,9 @@ suspend fun Application.transformEssenceMessage(msg: BotEssenceMessage): GroupEs
     )
 }
 
-suspend fun transformEssenceSegment(segment: BotEssenceSegment): IncomingSegment {
+suspend fun Application.transformEssenceSegment(segment: BotEssenceSegment): IncomingSegment {
+    val bot = dependencies.resolve<Bot>()
+    val logger = bot.createLogger("MessageTransform")
     return when (segment) {
         is BotEssenceSegment.Text -> IncomingSegment.Text(
             data = IncomingSegment.Text.Data(
@@ -298,7 +300,16 @@ suspend fun transformEssenceSegment(segment: BotEssenceSegment): IncomingSegment
 
         is BotEssenceSegment.Image -> {
             val imageData = resolveUri(segment.imageUrl)
-            val imageInfo = getImageInfo(imageData)
+            val imageInfo = try {
+                getImageInfo(imageData)
+            } catch (e: Exception) {
+                logger.w(e) { "解析精华消息图像信息失败，使用缺省值" }
+                ImageInfo(
+                    format = org.ntqqrev.yogurt.codec.ImageFormat.PNG,
+                    width = 300,
+                    height = 300
+                )
+            }
             IncomingSegment.Image(
                 data = IncomingSegment.Image.Data(
                     resourceId = segment.imageUrl,
