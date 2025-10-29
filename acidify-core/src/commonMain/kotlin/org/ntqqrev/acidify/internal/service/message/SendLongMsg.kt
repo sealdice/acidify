@@ -16,19 +16,28 @@ internal object SendLongMsg :
         val scene: MessageScene,
         val peerUin: Long,
         val peerUid: String,
-        val messages: List<PbObject<CommonMessage>>
+        val messages: List<PbObject<CommonMessage>>,
+        val nestedForwardTrace: Map<String, List<PbObject<CommonMessage>>>
     )
 
     override fun build(client: LagrangeClient, payload: Req): ByteArray {
         val content = PbMultiMsgTransmit {
-            it[items] = listOf(
-                PbObject(PbMultiMsgItem) {
+            it[items] = buildList {
+                this.add(PbMultiMsgItem {
                     it[fileName] = "MultiMsg"
-                    it[buffer] = PbObject(PbMultiMsgNew) {
+                    it[buffer] = PbMultiMsgNew {
                         it[msg] = payload.messages
                     }
-                }
-            )
+                })
+                this.addAll(payload.nestedForwardTrace.map { (key, value) ->
+                    PbMultiMsgItem {
+                        it[fileName] = key
+                        it[buffer] = PbMultiMsgNew {
+                            it[msg] = value
+                        }
+                    }
+                })
+            }
         }
 
         val compressedContent = GZIP.compress(content.toByteArray())

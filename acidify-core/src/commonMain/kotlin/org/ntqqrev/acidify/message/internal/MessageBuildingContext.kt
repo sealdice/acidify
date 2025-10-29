@@ -39,6 +39,7 @@ internal class MessageBuildingContext(
     val scene: MessageScene,
     val peerUin: Long,
     val peerUid: String,
+    private val nestedForwardTrace: MutableMap<String, List<PbObject<CommonMessage>>>? = null
 ) : BotOutgoingMessageBuilder {
     private val logger = bot.createLogger(this)
     private val elemsList = mutableListOf<Deferred<List<PbObject<Elem>>>>()
@@ -422,21 +423,26 @@ internal class MessageBuildingContext(
         val forwardCtx = Forward(this)
         forwardCtx.block()
         val fakeMessages = forwardCtx.build()
+        val uuid = Random.nextBytes(16).let {
+            "${it.sliceArray(0..3).toHexString()}-${it.sliceArray(4..5).toHexString()}-" +
+                    "${it.sliceArray(6..7).toHexString()}-${it.sliceArray(8..9).toHexString()}-" +
+                    it.sliceArray(10..15).toHexString()
+        }
+        val commonMessages = fakeMessages.map { it.commonMsg }
+        this.nestedForwardTrace?.set(uuid, commonMessages)
+
         val resId = bot.client.callService(
             SendLongMsg,
             SendLongMsg.Req(
                 scene = scene,
                 peerUin = peerUin,
                 peerUid = peerUid,
-                messages = fakeMessages.map { it.commonMsg }
+                messages = commonMessages,
+                nestedForwardTrace = if (this.nestedForwardTrace == null)
+                    forwardCtx.nestedForwardTrace
+                else mutableMapOf()
             )
         )
-
-        val uuid = Random.nextBytes(16).let {
-            "${it.sliceArray(0..3).toHexString()}-${it.sliceArray(4..5).toHexString()}-" +
-                    "${it.sliceArray(6..7).toHexString()}-${it.sliceArray(8..9).toHexString()}-" +
-                    it.sliceArray(10..15).toHexString()
-        }
 
         val lightApp = ForwardLightAppPayload(
             config = buildJsonObject {
@@ -488,6 +494,7 @@ internal class MessageBuildingContext(
         val ctx: MessageBuildingContext
     ) : BotOutgoingMessageBuilder.Forward {
         private val commonMsgList = mutableListOf<Deferred<FakeMessage>>()
+        val nestedForwardTrace = mutableMapOf<String, List<PbObject<CommonMessage>>>()
 
         private fun addAsync(elem: suspend () -> FakeMessage) {
             commonMsgList.add(ctx.bot.async { elem() })
@@ -503,12 +510,13 @@ internal class MessageBuildingContext(
                 bot = ctx.bot,
                 scene = ctx.scene,
                 peerUin = ctx.peerUin,
-                peerUid = ctx.peerUid
+                peerUid = ctx.peerUid,
+                nestedForwardTrace = ctx.nestedForwardTrace ?: nestedForwardTrace,
             )
-            val subCtxWithPreview = ContextWithPreview(subCtx)
-            subCtxWithPreview.block()
+            val subBuilder = SubBuilder(subCtx)
+            subBuilder.block()
             val subElems = subCtx.build()
-            val preview = subCtxWithPreview.preview
+            val preview = subBuilder.preview
             FakeMessage(
                 senderUin = senderUin,
                 senderName = senderName,
@@ -565,7 +573,7 @@ internal class MessageBuildingContext(
             val commonMsg: PbObject<CommonMessage>
         )
 
-        internal class ContextWithPreview(val parent: MessageBuildingContext) : BotOutgoingMessageBuilder {
+        internal class SubBuilder(val parent: MessageBuildingContext) : BotOutgoingMessageBuilder {
             private val previewBuilder = StringBuilder()
             val preview: String
                 get() = previewBuilder.toString()
