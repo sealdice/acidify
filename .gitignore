@@ -115,3 +115,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Acidify ###
+config.json
+session-store.json
+qrcode.png
+logs/
