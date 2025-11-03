@@ -27,7 +27,7 @@ yogurt.exe      (for Windows)
 |---------|------------|
 | Windows | x64        |
 | Linux   | x64, arm64 |
-| macOS   | arm64      |
+| macOS   | x64, arm64 |
 
 ### 通过 Java 运行时启动 (Kotlin/JVM)
 
