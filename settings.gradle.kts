@@ -17,8 +17,6 @@ plugins {
 }
 
 include(":acidify-core")
-include(":acidify-crypto")
-include(":acidify-pb")
 include(":yogurt")
 include(":yogurt-jvm")
 include(":yogurt-media-codec")
