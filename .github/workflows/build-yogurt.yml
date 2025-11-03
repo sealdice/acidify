@@ -25,6 +25,14 @@ jobs:
             dynamic-lib-ext: .dll
 
           - runs-on: macos-latest
+            target: macosX64
+            gradle-target: MacosX64
+            platform: macos-x64
+            ext: .kexe
+            dynamic-lib-prefix: lib
+            dynamic-lib-ext: .dylib
+
+          - runs-on: macos-latest
             target: macosArm64
             gradle-target: MacosArm64
             platform: macos-arm64
@@ -132,6 +140,11 @@ jobs:
           # Package Windows x64
           cd artifacts/yogurt-windows-x64
           zip -r ../../release-assets/yogurt-windows-x64.zip .
+          cd ../..
+          
+          # Package macOS x64
+          cd artifacts/yogurt-macos-x64
+          tar -czf ../../release-assets/yogurt-macos-x64.tar.gz .
           cd ../..
           
           # Package macOS ARM64
