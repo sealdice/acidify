@@ -31,7 +31,7 @@ class CodecTest {
                 .buffered()
                 .readByteArray()
             val info = getImageInfo(file)
-            assertEquals(info.format.ext, it)
+            assertEquals(info.format.toString().lowercase(), it)
             println("Image info of test.$it: $info")
         }
     }
