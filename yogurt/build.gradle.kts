@@ -22,6 +22,7 @@ kotlin {
             implementation(libs.bundles.ktor.client)
             implementation(libs.bundles.ktor.server)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.milky.types)
             implementation(libs.stately.concurrent.collections)
             implementation(libs.mordant)
         }
