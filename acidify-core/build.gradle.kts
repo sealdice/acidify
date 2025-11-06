@@ -22,16 +22,8 @@ kotlin {
             implementation(libs.stately.concurrent.collections)
         }
         commonTest.dependencies {
+            implementation(libs.ktor.client.cio)
             implementation(kotlin("test"))
-        }
-        mingwMain.dependencies {
-            implementation(libs.ktor.client.winhttp)
-        }
-        appleMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
-        linuxMain.dependencies {
-            implementation(libs.ktor.client.curl)
         }
     }
 }
