@@ -14,7 +14,6 @@
   "license": "GPL-3.0-only",
   "packageManager": "pnpm@10.20.0",
   "dependencies": {
-    "@fontsource/inter": "^5.2.6",
     "next": "^16.0.1",
     "nextra": "^4.6.0",
     "nextra-theme-docs": "^4.6.0",
