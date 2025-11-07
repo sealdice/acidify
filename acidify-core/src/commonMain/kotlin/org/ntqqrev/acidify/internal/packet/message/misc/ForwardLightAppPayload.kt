@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 @Serializable
-class ForwardLightAppPayload(
+internal class ForwardLightAppPayload(
     val config: JsonObject,
     val desc: String,
     val extra: String,

@@ -160,7 +160,7 @@ internal object SHA256 {
 /**
  * HMAC-SHA256 implementation
  */
-object HMACSHA256 {
+internal object HMACSHA256 {
     private const val BLOCK_SIZE = SHA256.BLOCK_SIZE
     private const val IPAD: Byte = 0x36
     private const val OPAD: Byte = 0x5c

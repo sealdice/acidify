@@ -7,7 +7,7 @@ import nl.adaptivity.xmlutil.serialization.UnknownChildHandler
 import nl.adaptivity.xmlutil.serialization.XML
 
 @Serializable
-data class IncomingForwardBody(
+internal class IncomingForwardBody(
     @SerialName("m_resid") val resId: String,
 ) {
     companion object {

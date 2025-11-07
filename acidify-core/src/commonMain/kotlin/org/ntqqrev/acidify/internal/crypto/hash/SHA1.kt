@@ -4,7 +4,7 @@ package org.ntqqrev.acidify.internal.crypto.hash
  * SHA-1 hash algorithm implementation
  * Produces 160-bit (20 byte) hash values
  */
-object SHA1 {
+internal object SHA1 {
     const val BLOCK_SIZE = 64  // 512 bits
     const val DIGEST_SIZE = 20 // 160 bits
 
@@ -123,7 +123,7 @@ object SHA1 {
 /**
  * HMAC-SHA1 implementation
  */
-object HMACSHA1 {
+internal object HMACSHA1 {
     private const val BLOCK_SIZE = SHA1.BLOCK_SIZE
     private const val IPAD: Byte = 0x36
     private const val OPAD: Byte = 0x5c

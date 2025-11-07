@@ -1,6 +1,6 @@
 package org.ntqqrev.acidify.internal.packet.message
 
-enum class PushMsgType(val value: Int) {
+internal enum class PushMsgType(val value: Int) {
     FriendMessage(166),
     GroupMessage(82),
     TempMessage(141),

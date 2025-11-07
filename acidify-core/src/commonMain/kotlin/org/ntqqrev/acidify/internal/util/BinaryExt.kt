@@ -142,12 +142,12 @@ private fun Source.readLength(prefix: Prefix): UInt {
 
 // ======== Int Operations ========
 
-fun Source.readShortLittleEndian(): Short {
+internal fun Source.readShortLittleEndian(): Short {
     val value = this.readShort()
     return if (value.toInt() < 0) (value.toInt() + Short.MAX_VALUE * 2).toShort() else value
 }
 
-fun Source.readIntLittleEndian(): Int {
+internal fun Source.readIntLittleEndian(): Int {
     val value = this.readInt()
     return if (value < 0) (value + Int.MAX_VALUE * 2) else value
 }
