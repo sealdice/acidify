@@ -955,30 +955,50 @@ class Bot(
      * @param groupUin 群号
      * @param content 公告内容
      * @param imageUrl 公告图片 URL（可选，暂不支持）
+     * @param showEditCard 是否显示编辑名片提示
+     * @param showTipWindow 是否显示提示窗口
+     * @param confirmRequired 是否需要确认
      * @return 公告 ID
      */
     suspend fun sendGroupAnnouncement(
         groupUin: Long,
         content: String,
-        imageUrl: String? = null
+        imageUrl: String? = null,
+        showEditCard: Boolean = false,
+        showTipWindow: Boolean = true,
+        confirmRequired: Boolean = true
     ): String {
         if (imageUrl != null) {
             TODO("暂不支持带图片的群公告")
         }
 
         val bkn = getCsrfToken()
-        val url = "https://web.qun.qq.com/cgi-bin/announce/add_qun_notice?bkn=$bkn"
-        val body = "qid=$groupUin&bkn=$bkn&text=${content.encodeURLParameter()}" +
-                "&pinned=0&type=1&settings={\"is_show_edit_card\":0,\"tip_window_type\":1,\"confirm_required\":1}"
-
-        val cookie = getCookies("qun.qq.com").entries.joinToString("; ") { (k, v) -> "$k=$v" }
-        val response = httpClient.post(url) {
-            headers {
-                append(HttpHeaders.Cookie, cookie)
-                append(HttpHeaders.UserAgent, "Dalvik/2.1.0 (Linux; U; Android 7.1.2; PCRT00 Build/N2G48H)")
-                append(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
-            }
-            setBody(body)
+        val response = httpClient.post("https://web.qun.qq.com/cgi-bin/announce/add_qun_notice") {
+            withBkn()
+            withCookies("qun.qq.com")
+            userAgent("Dalvik/2.1.0 (Linux; U; Android 7.1.2; PCRT00 Build/N2G48H)")
+            contentType(ContentType.Application.FormUrlEncoded)
+            setBody(
+                FormDataContent(
+                    Parameters.build {
+                        append("qid", groupUin.toString())
+                        append("bkn", bkn.toString())
+                        append("text", content)
+                        append("pinned", "0")
+                        append("type", "1")
+                        append(
+                            "settings",
+                            Json.encodeToString(
+                                buildJsonObject {
+                                    put("is_show_edit_card", if (showEditCard) 1 else 0)
+                                    put("tip_window_type", if (showTipWindow) 1 else 0)
+                                    put("confirm_required", if (confirmRequired) 1 else 0)
+                                }
+                            )
+                        )
+                    }
+                )
+            )
         }
 
         if (!response.status.isSuccess()) {
