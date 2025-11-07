@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {
           name: 'kdoc',
           route: '/kdoc/index.html',
-          title: 'API 文档',
+          title: 'acidify-core KDoc',
         }
       ]}
       docsRepositoryBase="https://github.com/LagrangeDev/acidify/tree/main/docs"
