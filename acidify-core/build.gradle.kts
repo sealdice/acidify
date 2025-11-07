@@ -75,6 +75,11 @@ dokka {
             remoteLineSuffix.set("#L")
         }
     }
+    dokkaSourceSets.configureEach {
+        externalDocumentationLinks.register("kotlinx-coroutines") {
+            url("https://kotlinlang.org/api/kotlinx.coroutines/")
+        }
+    }
     pluginsConfiguration.html {
         homepageLink = "https://acidify.ntqqrev.org"
         footerMessage = "(c) LagrangeDev"
