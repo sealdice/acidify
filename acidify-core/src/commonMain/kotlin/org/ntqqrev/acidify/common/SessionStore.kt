@@ -2,12 +2,16 @@ package org.ntqqrev.acidify.common
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.json.Json
+import kotlin.js.JsExport
+import kotlin.js.JsStatic
 import kotlin.jvm.JvmField
 import kotlin.random.Random
 
 /**
  * 存储 Bot 登录会话相关信息，如密钥等
  */
+@JsExport
 @Serializable
 class SessionStore(
     @JvmField var uin: Long,
@@ -35,6 +39,7 @@ class SessionStore(
     internal var unusualCookies: String? = null
 
     companion object {
+        @JsStatic
         fun empty(): SessionStore {
             return SessionStore(
                 uin = 0,
@@ -50,6 +55,9 @@ class SessionStore(
                 deviceName = "Lagrange-${Random.nextBytes(3).toHexString()}"
             )
         }
+
+        @JsStatic
+        fun fromJson(json: String): SessionStore = Json.decodeFromString(json)
     }
 
     fun clear() {
@@ -68,4 +76,6 @@ class SessionStore(
     fun refreshDeviceGuid() {
         guid = Random.nextBytes(16)
     }
+
+    fun toJson() = Json.encodeToString(this)
 }

@@ -3,6 +3,7 @@ package org.ntqqrev.acidify.logging
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import org.ntqqrev.acidify.Bot
+import kotlin.js.JsName
 
 typealias MessageSupplier = suspend () -> String
 
@@ -30,6 +31,7 @@ class Logger(private val bot: Bot, val tag: String) {
         LogMessage(LogLevel.INFO, tag, messageSupplier)
     )
 
+    @JsName("wNoThrowable")
     fun w(messageSupplier: MessageSupplier) = bot.sharedLogFlow.emitAsync(
         LogMessage(LogLevel.WARN, tag, messageSupplier)
     )
@@ -38,6 +40,7 @@ class Logger(private val bot: Bot, val tag: String) {
         LogMessage(LogLevel.WARN, tag, messageSupplier, t)
     )
 
+    @JsName("eNoThrowable")
     fun e(messageSupplier: MessageSupplier) = bot.sharedLogFlow.emitAsync(
         LogMessage(LogLevel.ERROR, tag, messageSupplier)
     )

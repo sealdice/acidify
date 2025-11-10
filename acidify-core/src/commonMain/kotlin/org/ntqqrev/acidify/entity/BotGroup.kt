@@ -4,10 +4,12 @@ import org.ntqqrev.acidify.Bot
 import org.ntqqrev.acidify.common.CacheUtility
 import org.ntqqrev.acidify.struct.BotGroupData
 import org.ntqqrev.acidify.struct.BotGroupMemberData
+import kotlin.js.JsExport
 
 /**
  * 群实体
  */
+@JsExport
 class BotGroup internal constructor(
     bot: Bot,
     data: BotGroupData,
@@ -52,6 +54,7 @@ class BotGroup internal constructor(
      * @param forceUpdate 是否强制更新缓存
      * @return 所有群成员的列表
      */
+    @JsExport.Ignore
     suspend fun getMembers(forceUpdate: Boolean = false): List<BotGroupMember> {
         return memberCache.getAll(forceUpdate)
     }
@@ -63,6 +66,7 @@ class BotGroup internal constructor(
      * @param forceUpdate 是否强制更新缓存
      * @return 群成员实体，如果不存在则返回 null
      */
+    @JsExport.Ignore
     suspend fun getMember(uin: Long, forceUpdate: Boolean = false): BotGroupMember? {
         return memberCache.get(uin, forceUpdate)
     }
@@ -70,6 +74,7 @@ class BotGroup internal constructor(
     /**
      * 更新群成员缓存
      */
+    @JsExport.Ignore
     suspend fun updateMemberCache() {
         memberCache.update()
     }

@@ -2,10 +2,14 @@ package org.ntqqrev.acidify.common
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlin.js.JsExport
+import kotlin.js.JsStatic
 
 /**
  * Bot 登录所模拟的 QQ 客户端信息
  */
+@JsExport
 @Serializable
 class AppInfo(
     @SerialName("Os") val os: String,
@@ -43,4 +47,13 @@ class AppInfo(
             ntLoginType = 1
         )
     }
+
+    companion object {
+        private val jsonModule = Json { ignoreUnknownKeys = true }
+
+        @JsStatic
+        fun fromJson(json: String): AppInfo = jsonModule.decodeFromString(json)
+    }
+
+    fun toJson() = jsonModule.encodeToString(this)
 }

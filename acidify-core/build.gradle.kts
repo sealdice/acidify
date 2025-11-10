@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -14,8 +15,23 @@ group = "org.ntqqrev"
 version = "0.2.2"
 
 kotlin {
+    js(IR) {
+        nodejs()
+        useEsModules()
+        binaries.library()
+        generateTypeScriptDefinitions()
+        compilerOptions {
+            freeCompilerArgs.add("-Xes-long-as-bigint")
+        }
+        compilations["main"].packageJson {
+            name = "@acidify/core"
+            customField("description", "Kotlin NTQQ protocol implementation, ported to JS")
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
+            implementation(kotlin("reflect"))
             implementation(libs.kotlinx.serialization)
             implementation(libs.kotlinx.coroutines)
             implementation(libs.kotlinx.io)
@@ -29,6 +45,27 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.ktor.client.cio)
             implementation(kotlin("test"))
+        }
+        val nativeMain by creating {
+            listOf(
+                "linuxX64",
+                "linuxArm64",
+                "macosX64",
+                "macosArm64",
+                "mingwX64"
+            ).forEach { platformName ->
+                getByName(platformName + "Main").dependsOn(this)
+            }
+        }
+        val nonJsMain by creating {
+            dependsOn(getByName("commonMain"))
+            getByName("jvmMain").dependsOn(this)
+            nativeMain.dependsOn(this)
+        }
+        all {
+            languageSettings.optIn("kotlin.js.ExperimentalJsExport")
+            languageSettings.optIn("kotlin.js.ExperimentalJsStatic")
+            languageSettings.optIn("kotlin.js.ExperimentalWasmJsInterop")
         }
     }
 }
