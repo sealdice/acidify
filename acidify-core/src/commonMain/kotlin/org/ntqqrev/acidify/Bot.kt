@@ -951,6 +951,7 @@ class Bot private constructor(
      * @param showEditCard 是否显示编辑名片提示
      * @param showTipWindow 是否显示提示窗口
      * @param confirmRequired 是否需要确认
+     * @param isPinned 是否置顶
      * @return 公告 ID
      */
     suspend fun sendGroupAnnouncement(
@@ -959,7 +960,8 @@ class Bot private constructor(
         imageUrl: String? = null,
         showEditCard: Boolean = false,
         showTipWindow: Boolean = true,
-        confirmRequired: Boolean = true
+        confirmRequired: Boolean = true,
+        isPinned: Boolean = false,
     ): String {
         if (imageUrl != null) {
             TODO("暂不支持带图片的群公告")
@@ -977,7 +979,7 @@ class Bot private constructor(
                         append("qid", groupUin.toString())
                         append("bkn", bkn.toString())
                         append("text", content)
-                        append("pinned", "0")
+                        append("pinned", if (isPinned) "1" else "0")
                         append("type", "1")
                         append(
                             "settings",
