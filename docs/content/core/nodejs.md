@@ -19,3 +19,48 @@ npm install @acidify/core
 这是 Ktor 目前[尚未解决的一个问题](https://youtrack.jetbrains.com/issue/KTOR-9082)。Ktor 的代码中使用了 `eval("require")("node:net")` 的方式来动态加载 Node.js 内置模块，而这种写法在 CommonJS 模块中才能工作。我们在构建中使用了 `useEsModule()` 来生成 ES 模块版本的包，但由于这个问题，最终发布的包仍然是通过 ESBuild 转换成的 CommonJS 模块。
 
 </details>
+
+## 使用示例
+
+`@acidify/core` 包导出的类型和 API 与 Kotlin 版本的 `acidify-core` 基本保持一致，但在其他方面有一些重要的区别：
+
+- 在使用 Kotlin 单例对象时（如 `SimpleLogHandler`），需要通过 `getInstance()` 方法来获取实例。
+- 由于 `kotlinx-coroutines` 并没有针对 JavaScript 平台提供类型定义，因此 `@acidify/core` 提供了一个简化的 `CoroutineScope` 包装类型，接收一个 `boolean` 表示该协程作用域是否为 `SupervisorJob`，同时只暴露了一个方法 `cancel()` 用于取消协程作用域。
+- `Bot` 没有暴露 `eventFlow` 属性，而是转而通过 `onXxx` 方法来注册事件处理器，同时提供了对应的 `offXxx` 方法来注销事件处理器。
+
+以下是一个完整的 TypeScript 使用示例：
+
+```typescript
+let sessionStore: SessionStore;
+if (existsSync('session-store.json')) {
+  const data = await readFile('session-store.json', 'utf-8');
+  sessionStore = SessionStore.fromJson(data);
+} else {
+  sessionStore = SessionStore.empty();
+}
+
+const scope = new CoroutineScope(true);
+const signProvider = new UrlSignProvider(scope, '...');
+const bot = await Bot.create(
+  AppInfo.Bundled.Linux,
+  sessionStore,
+  signProvider,
+  scope,
+  LogLevel.DEBUG,
+  SimpleLogHandler.getInstance()
+);
+
+bot.onSessionStoreUpdated(async (event) => {
+  await writeFile('session-store.json', event.sessionStore.toJson());
+});
+await bot.login();
+
+await bot.sendGroupMessage(111111111n, async (b) => {
+  b.text('Hello, @acidify/core from Node.js!');
+});
+
+await bot.offline();
+scope.cancel(); // stop all coroutines
+```
+
+更多的使用说明请参考[在 Kotlin 中使用](./kotlin.md)。
