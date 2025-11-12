@@ -4,10 +4,10 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'acidify-core-js/**'
-      - 'docs/**'
+      - '.devin/**'
+      - 'kotlin-js-store/**'
+      - 'packages/**'
       - '**.md'
-      - '.devin/wiki.json'
   workflow_dispatch:
 
 
