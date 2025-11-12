@@ -28,7 +28,7 @@
     - Windows via `mingwX64`
     - macOS via `macosX64` and `macosArm64`
     - Linux via `linuxX64` and `linuxArm64`
-- Kotlin/JS (`acidify-core` only)
+- Kotlin/JS (for `acidify-core`, Node.js only)
 
 ## Special Thanks
 
