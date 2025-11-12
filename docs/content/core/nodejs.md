@@ -45,7 +45,7 @@ const signProvider = new UrlSignProvider(scope, '...');
 
 // 创建 Bot 实例
 const bot = await Bot.create(
-  await signProvider.getAppInfo(),
+  await signProvider.getAppInfo()!,
   sessionStore,
   signProvider,
   scope,

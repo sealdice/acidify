@@ -59,7 +59,7 @@ val scope = CoroutineScope(SupervisorJob())
 
 // 创建 Bot 实例
 val bot = Bot.create(
-    appInfo = signProvider.getAppInfo(),
+    appInfo = signProvider.getAppInfo()!!,
     sessionStore = SessionStore.empty(),
     signProvider = signProvider,
     scope = scope,
