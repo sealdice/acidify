@@ -1,6 +1,5 @@
 package org.ntqqrev.acidify.internal.context
 
-import co.touchlab.stately.collections.ConcurrentMutableMap
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
@@ -11,8 +10,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.io.Buffer
+import kotlinx.io.IOException
 import kotlinx.io.readByteArray
-import org.ntqqrev.acidify.common.SignProvider
 import org.ntqqrev.acidify.common.SignResult
 import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.crypto.tea.TeaProvider
@@ -34,9 +33,10 @@ internal class PacketContext(client: LagrangeClient) : AbstractContext(client) {
     private var currentSocket: Socket? = null
     private lateinit var input: ByteReadChannel
     private lateinit var output: ByteWriteChannel
-    private val pending = ConcurrentMutableMap<Int, CompletableDeferred<SsoResponse>>()
+    private val pending = mutableMapOf<Int, CompletableDeferred<SsoResponse>>()
     private val headerLength = 4
     private val sendPacketMutex = Mutex()
+    private val mapQueryMutex = Mutex()
     private val signRequiredCommand = setOf(
         "MessageSvc.PbSendMsg",
         "wtlogin.trans_emp",
@@ -127,7 +127,7 @@ internal class PacketContext(client: LagrangeClient) : AbstractContext(client) {
         val service = buildService(sso)
 
         val deferred = CompletableDeferred<SsoResponse>()
-        pending[sequence] = deferred
+        mapQueryMutex.withLock { pending[sequence] = deferred }
 
         sendPacketMutex.withLock {
             output.writePacket(service)
@@ -135,11 +135,9 @@ internal class PacketContext(client: LagrangeClient) : AbstractContext(client) {
         logger.v { "[seq=$sequence] -> $cmd" }
 
         return try {
-            withTimeout(timeoutMillis) {
-                deferred.await()
-            }
+            withTimeout(timeoutMillis) { deferred.await() }
         } catch (e: Exception) {
-            pending.remove(sequence)
+            mapQueryMutex.withLock { pending.remove(sequence) }
             throw e
         }
     }
@@ -152,7 +150,7 @@ internal class PacketContext(client: LagrangeClient) : AbstractContext(client) {
             val service = parseService(packet)
             val sso = parseSso(service)
             logger.v { "[seq=${sso.sequence}] <- ${sso.command} (code=${sso.retCode})" }
-            pending.remove(sso.sequence).also {
+            mapQueryMutex.withLock { pending.remove(sso.sequence) }.also {
                 if (it != null) {
                     it.complete(sso)
                 } else {
@@ -268,16 +266,18 @@ internal class PacketContext(client: LagrangeClient) : AbstractContext(client) {
         }
     }
 
-    private fun cleanupPendingRequests(error: Throwable) {
-        val pendingCount = pending.size
+    private suspend fun cleanupPendingRequests(error: Throwable) {
+        val pendingCount = mapQueryMutex.withLock { pending.size }
         if (pendingCount > 0) {
             logger.w { "清理 $pendingCount 个待处理的请求" }
-            pending.forEach { (seq, deferred) ->
-                deferred.completeExceptionally(
-                    Exception("连接已断开: ${error.message}", error)
-                )
+            mapQueryMutex.withLock {
+                pending.forEach { (_, deferred) ->
+                    deferred.completeExceptionally(
+                        IOException("连接已断开: ${error.message}", error)
+                    )
+                }
+                pending.clear()
             }
-            pending.clear()
         }
     }
 }

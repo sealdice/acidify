@@ -1,6 +1,6 @@
 package org.ntqqrev.acidify.internal
 
-import co.touchlab.stately.concurrency.AtomicBoolean
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.ntqqrev.acidify.Bot
@@ -13,7 +13,7 @@ internal class CacheUtility<K, V : BotEntity<D>, D>(
 ) {
     private val mutex = Mutex()
     private var map = mutableMapOf<K, V>()
-    private val updating = AtomicBoolean(false)
+    private var updating by atomic(false)
     private val logger = bot.createLogger(this)
 
     suspend fun get(key: K, forceUpdate: Boolean = false): V? {
@@ -32,11 +32,11 @@ internal class CacheUtility<K, V : BotEntity<D>, D>(
     }
 
     suspend fun update() {
-        if (updating.value) {
+        if (updating) {
             logger.v { "重复的刷新请求，已忽略" }
             mutex.withLock { } // 等待正在进行的更新完成
         } else {
-            updating.value = true
+            updating = true
             mutex.withLock {
                 try {
                     val data = updateCache(bot)
@@ -44,7 +44,7 @@ internal class CacheUtility<K, V : BotEntity<D>, D>(
                 } catch (e: Exception) {
                     logger.w(e) { "缓存刷新失败" }
                 } finally {
-                    updating.value = false
+                    updating = false
                 }
             }
         }

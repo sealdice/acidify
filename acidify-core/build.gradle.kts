@@ -39,7 +39,6 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.korlibs.compression)
             implementation(libs.bundles.xmlutil)
-            implementation(libs.stately.concurrent.collections)
         }
         commonTest.dependencies {
             implementation(libs.ktor.client.cio)

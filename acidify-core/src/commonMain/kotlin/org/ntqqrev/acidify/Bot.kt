@@ -1,6 +1,5 @@
 package org.ntqqrev.acidify
 
-import co.touchlab.stately.collections.ConcurrentMutableMap
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -13,6 +12,8 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -84,8 +85,6 @@ class Bot private constructor(
         KickSignal
     ).associateBy { it.cmd }
     internal val faceDetailMapMut = mutableMapOf<String, BotFaceDetail>()
-    internal val uin2uidMap = ConcurrentMutableMap<Long, String>()
-    internal val uid2uinMap = ConcurrentMutableMap<String, Long>()
     internal var eventCollectJob: Job? = null
 
     private val friendCache = CacheUtility(
@@ -99,6 +98,10 @@ class Bot private constructor(
         updateCache = { bot -> bot.fetchGroups().associateBy { it.uin } },
         entityFactory = ::BotGroup
     )
+
+    private val uin2uidMap = mutableMapOf<Long, String>()
+    private val uid2uinMap = mutableMapOf<String, Long>()
+    private val idMapQueryMutex = Mutex()
 
     /**
      * [AcidifyEvent] 流，可用于监听各种事件
@@ -300,7 +303,14 @@ class Bot private constructor(
     /**
      * 通过 uid 获取用户信息。
      */
-    suspend fun fetchUserInfoByUid(uid: String) = client.callService(FetchUserInfo.ByUid, uid)
+    suspend fun fetchUserInfoByUid(uid: String): BotUserInfo {
+        val userInfo = client.callService(FetchUserInfo.ByUid, uid)
+        idMapQueryMutex.withLock {
+            uin2uidMap[userInfo.uin] = uid
+            uid2uinMap[uid] = userInfo.uin
+        }
+        return userInfo
+    }
 
     /**
      * 拉取好友与好友分组信息。此操作不会被缓存。
@@ -313,14 +323,13 @@ class Bot private constructor(
             nextUin = resp.nextUin
             friendDataResult.addAll(resp.friendDataList)
         } while (nextUin != null)
-        return friendDataResult.also {
-            launch {
-                it.forEach { data ->
-                    uin2uidMap[data.uin] = data.uid
-                    uid2uinMap[data.uid] = data.uin
-                }
+        idMapQueryMutex.withLock {
+            friendDataResult.forEach { data ->
+                uin2uidMap[data.uin] = data.uid
+                uid2uinMap[data.uid] = data.uin
             }
         }
+        return friendDataResult
     }
 
     /**
@@ -341,14 +350,13 @@ class Bot private constructor(
             cookie = resp.cookie
             memberDataResult.addAll(resp.memberDataList)
         } while (cookie != null)
-        return memberDataResult.also {
-            launch {
-                it.forEach { data ->
-                    uin2uidMap[data.uin] = data.uid
-                    uid2uinMap[data.uid] = data.uin
-                }
+        idMapQueryMutex.withLock {
+            memberDataResult.forEach { data ->
+                uin2uidMap[data.uin] = data.uid
+                uid2uinMap[data.uid] = data.uin
             }
         }
+        return memberDataResult
     }
 
     /**
@@ -397,27 +405,26 @@ class Bot private constructor(
      * 解析 uid 到 QQ 号。
      * 如果之前未解析过该 uid，会发起网络请求获取用户信息。
      */
-    suspend fun getUinByUid(uid: String): Long {
-        return uid2uinMap.getOrPut(uid) {
-            fetchUserInfoByUid(uid).uin.also { uin2uidMap[it] = uid }
+    suspend fun getUinByUid(uid: String): Long =
+        idMapQueryMutex.withLock { uid2uinMap[uid] } ?: run {
+            fetchUserInfoByUid(uid)
+            idMapQueryMutex.withLock { uid2uinMap[uid]!! }
         }
-    }
 
     /**
      * 解析 QQ 号到 uid，该过程可能失败，此时抛出 [NoSuchElementException]。
      * 若 [mayComeFromGroupUin] 非空且在缓存中未找到对应 uid，会尝试从该群的成员列表中查找；
      * 否则，会尝试从好友列表中查找。
      */
-    suspend fun getUidByUin(uin: Long, mayComeFromGroupUin: Long? = null): String {
-        return uin2uidMap[uin] ?: run {
+    suspend fun getUidByUin(uin: Long, mayComeFromGroupUin: Long? = null) =
+        idMapQueryMutex.withLock { uin2uidMap[uin] } ?: run {
             if (mayComeFromGroupUin != null) {
                 fetchGroupMembers(mayComeFromGroupUin)
             } else {
                 fetchFriends()
             }
-            uin2uidMap[uin]
+            idMapQueryMutex.withLock { uin2uidMap[uin] }
         } ?: throw NoSuchElementException("无法解析 uin $uin 对应的 uid")
-    }
 
     /**
      * 获取 s_key，用于组成 Cookie。

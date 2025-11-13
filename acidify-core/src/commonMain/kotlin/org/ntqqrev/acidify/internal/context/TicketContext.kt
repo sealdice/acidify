@@ -2,10 +2,11 @@
 
 package org.ntqqrev.acidify.internal.context
 
-import co.touchlab.stately.collections.ConcurrentMutableMap
-import io.ktor.client.HttpClient
+import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.service.system.FetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchPSKey
@@ -33,7 +34,8 @@ internal class TicketContext(client: LagrangeClient) : AbstractContext(client) {
     }
 
     private val currentSKey = KeyWithLifetime.dummy()
-    private val psKeyCache = ConcurrentMutableMap<String, KeyWithLifetime>()
+    private val psKeyCache = mutableMapOf<String, KeyWithLifetime>()
+    private val psKeyQueryMutex = Mutex()
     private val httpClient = HttpClient {
         install(HttpCookies)
         followRedirects = false
@@ -75,15 +77,19 @@ internal class TicketContext(client: LagrangeClient) : AbstractContext(client) {
     }
 
     suspend fun getPSKey(domain: String): String {
-        psKeyCache[domain]?.let {
-            if (it.isValid()) {
-                return it.value
+        psKeyQueryMutex.withLock {
+            psKeyCache[domain]?.let {
+                if (it.isValid()) {
+                    return it.value
+                }
             }
         }
         val newKeys = client.callService(FetchPSKey, listOf(domain))
         val newKey = newKeys[domain]
             ?: throw RuntimeException("获取 PSKey 失败")
-        psKeyCache[domain] = KeyWithLifetime.create(newKey, 86400L)
+        psKeyQueryMutex.withLock {
+            psKeyCache[domain] = KeyWithLifetime.create(newKey, 86400L)
+        }
         return newKey
     }
 }
