@@ -255,6 +255,13 @@ class Bot private constructor(
         faceDetailMapMut.putAll(
             client.callService(FetchFaceDetails).associateBy { it.qSid }
         ).also { logger.d { "加载了 ${faceDetailMapMut.size} 条表情信息" } }
+
+        // Preload friends, groups and group members to initialize in-memory cache
+        val friendCount = getFriends().size
+        val groups = getGroups()
+        val groupCount = groups.size
+        val groupMemberCount = groups.sumOf { it.getMembers().size }
+        logger.d { "加载了 $friendCount 个好友, $groupCount 个群和 $groupMemberCount 个群成员" }
     }
 
     /**
