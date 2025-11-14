@@ -1,0 +1,19 @@
+{
+  "name": "@acidify/yogurt-darwin-arm64",
+  "version": "__VERSION__",
+  "description": "Milky implementation based on Acidify",
+  "keywords": [
+    "qq",
+    "oicq"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LagrangeDev/acidify.git"
+  },
+  "homepage": "https://acidify.ntqqrev.org/",
+  "author": "LagrangeDev",
+  "license": "GPL-3.0-only",
+  "packageManager": "pnpm@10.21.0",
+  "os": ["darwin"],
+  "cpu": ["arm64"]
+}

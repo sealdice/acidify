@@ -193,3 +193,146 @@ jobs:
           prerelease: false
           draft: false
           make_latest: true
+
+  publish-npm:
+    if: contains(github.event.head_commit.message, '[skip build]') == false
+    needs:
+      - build-native
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: yogurt-*
+          path: native-artifacts
+
+      - name: Prepare npm packages
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          import shutil
+          from pathlib import Path
+
+          root = Path(".").resolve()
+          gradle_file = root / "yogurt" / "build.gradle.kts"
+          gradle_content = gradle_file.read_text(encoding="utf-8")
+          match = re.search(r'version\s*=\s*"([^"]+)"', gradle_content)
+          if not match:
+              raise RuntimeError("Cannot find version in build.gradle.kts")
+          base_version = match.group(1)
+          build_number = os.environ.get("GITHUB_RUN_NUMBER")
+          if not build_number:
+              raise RuntimeError("GITHUB_RUN_NUMBER is not set")
+          npm_version = f"{base_version}-dev.{build_number}"
+
+          packages_dir = root / "packages"
+          artifacts_root = root / "native-artifacts"
+
+          platform_configs = [
+              {
+                  "package": "yogurt-win32-x64",
+                  "artifact": "yogurt-windows-x64",
+                  "binary": "yogurt.exe",
+              },
+              {
+                  "package": "yogurt-linux-x64",
+                  "artifact": "yogurt-linux-x64",
+                  "binary": "yogurt.kexe",
+              },
+              {
+                  "package": "yogurt-linux-arm64",
+                  "artifact": "yogurt-linux-arm64",
+                  "binary": "yogurt.kexe",
+              },
+              {
+                  "package": "yogurt-darwin-x64",
+                  "artifact": "yogurt-macos-x64",
+                  "binary": "yogurt.kexe",
+              },
+              {
+                  "package": "yogurt-darwin-arm64",
+                  "artifact": "yogurt-macos-arm64",
+                  "binary": "yogurt.kexe",
+              },
+          ]
+
+          def update_package_json(pkg_path: Path) -> None:
+              data = json.loads(pkg_path.read_text(encoding="utf-8"))
+              data["version"] = npm_version
+              optional = data.get("optionalDependencies")
+              if isinstance(optional, dict):
+                  for key in optional.keys():
+                      optional[key] = npm_version
+              pkg_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+          for cfg in platform_configs:
+              artifact_dir = artifacts_root / cfg["artifact"]
+              payload_root = artifact_dir / "artifacts"
+              if not payload_root.exists():
+                  raise FileNotFoundError(f"Missing artifact contents for {cfg['artifact']}")
+
+              package_dir = packages_dir / cfg["package"]
+              package_dir.mkdir(parents=True, exist_ok=True)
+
+              binary_src = payload_root / cfg["binary"]
+              if not binary_src.exists():
+                  raise FileNotFoundError(f"Missing binary {binary_src}")
+              binary_dest = package_dir / cfg["binary"]
+              shutil.copy2(binary_src, binary_dest)
+              if binary_dest.suffix == ".kexe":
+                  binary_dest.chmod(0o755)
+
+              lib_src = payload_root / "lib"
+              if not lib_src.exists():
+                  raise FileNotFoundError(f"Missing codec library for {cfg['artifact']}")
+              lib_dest = package_dir / "lib"
+              if lib_dest.exists():
+                  shutil.rmtree(lib_dest)
+              shutil.copytree(lib_src, lib_dest)
+
+          package_files = [
+              packages_dir / "yogurt-win32-x64" / "package.json",
+              packages_dir / "yogurt-linux-x64" / "package.json",
+              packages_dir / "yogurt-linux-arm64" / "package.json",
+              packages_dir / "yogurt-darwin-x64" / "package.json",
+              packages_dir / "yogurt-darwin-arm64" / "package.json",
+              packages_dir / "yogurt" / "package.json",
+          ]
+
+          for pkg_file in package_files:
+              if not pkg_file.exists():
+                  raise FileNotFoundError(f"Missing {pkg_file}")
+              update_package_json(pkg_file)
+
+          print(f"Prepared npm packages with version {npm_version}")
+          PY
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish npm packages
+        run: |
+          set -euo pipefail
+          packages=(
+            "packages/yogurt-win32-x64"
+            "packages/yogurt-linux-x64"
+            "packages/yogurt-linux-arm64"
+            "packages/yogurt-darwin-x64"
+            "packages/yogurt-darwin-arm64"
+            "packages/yogurt"
+          )
+          for pkg in "${packages[@]}"; do
+            echo "Publishing $pkg"
+            npm publish "$pkg" --tag latest --access public
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

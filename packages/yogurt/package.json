@@ -1,0 +1,27 @@
+{
+  "name": "@acidify/yogurt",
+  "version": "__VERSION__",
+  "description": "Milky implementation based on Acidify",
+  "bin": {
+    "yogurt": "./index.js"
+  },
+  "keywords": [
+    "qq",
+    "oicq"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LagrangeDev/acidify.git"
+  },
+  "homepage": "https://acidify.ntqqrev.org/",
+  "author": "LagrangeDev",
+  "license": "GPL-3.0-only",
+  "packageManager": "pnpm@10.21.0",
+  "optionalDependencies": {
+    "@acidify/yogurt-win32-x64": "__VERSION__",
+    "@acidify/yogurt-linux-x64": "__VERSION__",
+    "@acidify/yogurt-linux-arm64": "__VERSION__",
+    "@acidify/yogurt-darwin-x64": "__VERSION__",
+    "@acidify/yogurt-darwin-arm64": "__VERSION__"
+  }
+}
