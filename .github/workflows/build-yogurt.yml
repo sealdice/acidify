@@ -11,6 +11,9 @@ on:
       - '**.md'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
 
 jobs:
   build-native:
@@ -336,5 +339,3 @@ jobs:
             npm publish --tag latest --access public
             cd -
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
