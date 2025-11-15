@@ -2,6 +2,9 @@ name: Publish acidify-core to Maven Central
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+
 jobs:
   publish:
     name: Release build and publish
@@ -15,7 +18,7 @@ jobs:
           distribution: 'zulu'
           java-version: 21
       - name: Publish to MavenCentral
-        run: ./gradlew :acidify-core:publishToMavenCentral --no-configuration-cache
+        run: ./gradlew :acidify-core:publishToMavenCentral
         env:
           GITHUB_ACTIONS_BUILD_CORE_LIBRARY: 'true'
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -23,3 +26,47 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ''
+      - name: Generate JS Production Build
+        run: ./gradlew :acidify-core:jsNodeProductionLibraryDistribution
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: packages/core/package.json
+          run_install: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+          cache-dependency-path: packages/core/pnpm-lock.yaml
+          registry-url: https://registry.npmjs.org
+      - name: Ensure npm is up to date
+        run: pnpm install -g npm@latest
+      - name: Install npm dependencies
+        run: |
+          cd packages/core
+          pnpm install
+      - name: Sync npm package version
+        run: |
+          python3 <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          gradle_file = Path("acidify-core") / "build.gradle.kts"
+          gradle_content = gradle_file.read_text(encoding="utf-8")
+          match = re.search(r'version\s*=\s*"([^"]+)"', gradle_content)
+          if not match:
+              raise RuntimeError("Cannot find version in acidify-core/build.gradle.kts")
+          version = match.group(1)
+
+          package_json = Path("packages/core/package.json")
+          data = json.loads(package_json.read_text(encoding="utf-8"))
+          data["version"] = version
+          package_json.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+          print(f"Set npm package version to {version}")
+          PY
+      - name: Publish @acidify/core to npm
+        run: |
+          cd packages/core
+          npm publish --access public
