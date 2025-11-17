@@ -20,12 +20,14 @@ import kotlinx.serialization.json.put
 import org.ntqqrev.acidify.common.AppInfo
 import org.ntqqrev.acidify.common.SessionStore
 import org.ntqqrev.acidify.common.SignProvider
+import org.ntqqrev.acidify.common.SsoResponse
+import org.ntqqrev.acidify.common.UnsafeAcidifyApi
 import org.ntqqrev.acidify.entity.BotFriend
 import org.ntqqrev.acidify.entity.BotGroup
 import org.ntqqrev.acidify.event.AcidifyEvent
-import org.ntqqrev.acidify.event.QRCodeGeneratedEvent
 import org.ntqqrev.acidify.event.QRCodeStateQueryEvent
 import org.ntqqrev.acidify.event.SessionStoreUpdatedEvent
+import org.ntqqrev.acidify.event.QRCodeGeneratedEvent
 import org.ntqqrev.acidify.event.internal.KickSignal
 import org.ntqqrev.acidify.event.internal.MsgPushSignal
 import org.ntqqrev.acidify.exception.BotOnlineException
@@ -186,6 +188,17 @@ class Bot private constructor(
     }
 
     /**
+     * 发送自定义 SSO 数据包。
+     * **Ensure that you know what you are doing!**
+     * @param cmd 命令字符串
+     * @param payload 原始数据
+     * @param timeoutMillis 超时时间，默认 10000 毫秒
+     */
+    @UnsafeAcidifyApi
+    suspend fun sendPacket(cmd: String, payload: ByteArray, timeoutMillis: Long = 10000L): SsoResponse =
+        client.packetContext.sendPacket(cmd, payload, timeoutMillis)
+
+    /**
      * 发起二维码登录请求。过程中会触发事件：
      * - [QRCodeGeneratedEvent]：当二维码生成时触发，包含二维码链接和 PNG 图片数据
      * - [QRCodeStateQueryEvent]：每次查询二维码状态时触发，包含当前二维码状态（例如未扫码、已扫码未确认、已确认等）
@@ -337,6 +350,11 @@ class Bot private constructor(
     }
 
     /**
+     * 获取收藏表情的直链 URL 列表
+     */
+    suspend fun getCustomFaceUrl(): List<String> = client.callService(FetchCustomFace)
+
+    /**
      * 拉取群信息。此操作不会被缓存。
      */
     suspend fun fetchGroups(): List<BotGroupData> {
@@ -429,6 +447,37 @@ class Bot private constructor(
             }
             idMapQueryMutex.withLock { uin2uidMap[uin] }
         } ?: throw NoSuchElementException("无法解析 uin $uin 对应的 uid")
+
+
+    /**
+     * 获取当前置顶的好友与群聊
+     */
+    suspend fun getPins(): BotPinnedChats {
+        val resp = client.callService(FetchPins)
+        val friendUins = resp.friendUids.mapNotNull {
+            runCatching { getUinByUid(it) }.getOrNull()
+        }
+        return BotPinnedChats(
+            friendUins = friendUins,
+            groupUins = resp.groupUins
+        )
+    }
+
+    /**
+     * 设置好友置顶状态
+     * @param friendUin 好友 QQ 号
+     * @param isPinned 是否置顶
+     */
+    suspend fun setFriendPin(friendUin: Long, isPinned: Boolean) =
+        client.callService(SetFriendPin, SetFriendPin.Req(getUidByUin(friendUin), isPinned))
+
+    /**
+     * 设置群聊置顶状态
+     * @param groupUin 群号
+     * @param isPinned 是否置顶
+     */
+    suspend fun setGroupPin(groupUin: Long, isPinned: Boolean) =
+        client.callService(SetGroupPin, SetGroupPin.Req(groupUin, isPinned))
 
     /**
      * 获取 s_key，用于组成 Cookie。

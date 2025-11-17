@@ -129,10 +129,16 @@ sealed class BotIncomingSegment {
      * 市场表情消息段
      * @property url 表情的图像 URL
      * @property summary 表情的文本描述
+     * @property emojiId 市场表情的唯一 ID
+     * @property emojiPackageId 市场表情所属的套图 ID
+     * @property key 市场表情的 key
      */
     class MarketFace(
         val url: String,
         val summary: String,
+        val emojiId: String,
+        val emojiPackageId: Int,
+        val key: String,
     ) : BotIncomingSegment() {
         override fun toString(): String = summary
     }

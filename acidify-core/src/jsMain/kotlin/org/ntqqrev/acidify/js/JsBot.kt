@@ -9,6 +9,7 @@ import kotlinx.coroutines.promise
 import org.ntqqrev.acidify.Bot
 import org.ntqqrev.acidify.common.AppInfo
 import org.ntqqrev.acidify.common.SessionStore
+import org.ntqqrev.acidify.common.UnsafeAcidifyApi
 import org.ntqqrev.acidify.event.*
 import org.ntqqrev.acidify.logging.LogHandler
 import org.ntqqrev.acidify.logging.LogLevel
@@ -41,6 +42,11 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
         return true
     }
 
+    @OptIn(UnsafeAcidifyApi::class)
+    fun unsafeSendPacket(cmd: String, payload: ByteArray, timeoutMillis: Long = 10000L) = promise {
+        bot.sendPacket(cmd, payload, timeoutMillis)
+    }
+
     fun qrCodeLogin(queryInterval: Long = 3000L) = promise {
         bot.qrCodeLogin(queryInterval)
     }
@@ -56,6 +62,8 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
     fun fetchUserInfoByUid(uid: String): Promise<BotUserInfo> = promise { bot.fetchUserInfoByUid(uid) }
 
     fun fetchFriends(): Promise<Array<BotFriendData>> = promise { bot.fetchFriends().toTypedArray() }
+
+    fun getCustomFaceUrl(): Promise<Array<String>> = promise { bot.getCustomFaceUrl().toTypedArray() }
 
     fun fetchGroups(): Promise<Array<BotGroupData>> = promise { bot.fetchGroups().toTypedArray() }
 
@@ -98,6 +106,16 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
 
     fun getUidByUin(uin: Long, mayComeFromGroupUin: Long? = null): Promise<String> = promise {
         bot.getUidByUin(uin, mayComeFromGroupUin)
+    }
+
+    fun getPins(): Promise<BotPinnedChats> = promise { bot.getPins() }
+
+    fun setFriendPin(friendUin: Long, isPinned: Boolean) = promise {
+        bot.setFriendPin(friendUin, isPinned)
+    }
+
+    fun setGroupPin(groupUin: Long, isPinned: Boolean) = promise {
+        bot.setGroupPin(groupUin, isPinned)
     }
 
     fun getSKey(): Promise<String> = promise { bot.getSKey() }
@@ -432,6 +450,10 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
     fun offGroupNudge(callback: (GroupNudgeEvent) -> dynamic) = tryUnsubscribe(callback)
 
     fun onGroupWholeMute(callback: (GroupWholeMuteEvent) -> dynamic) = subscribeTracking(callback)
+
+    fun onPinChanged(callback: (PinChangedEvent) -> dynamic) = subscribeTracking(callback)
+
+    fun offPinChanged(callback: (PinChangedEvent) -> dynamic) = tryUnsubscribe(callback)
 
     fun offGroupWholeMute(callback: (GroupWholeMuteEvent) -> dynamic) = tryUnsubscribe(callback)
 

@@ -235,7 +235,10 @@ internal interface IncomingSegmentFactory<T : BotIncomingSegment> {
             val faceIdHex = market.get { faceId }.toHexString()
             return BotIncomingSegment.MarketFace(
                 url = "https://gxh.vip.qq.com/club/item/parcel/item/${faceIdHex.take(2)}/$faceIdHex/raw300.gif",
-                summary = market.get { summary }
+                summary = market.get { summary },
+                emojiId = faceIdHex,
+                emojiPackageId = market.get { tabId },
+                key = market.get { key },
             )
         }
     }

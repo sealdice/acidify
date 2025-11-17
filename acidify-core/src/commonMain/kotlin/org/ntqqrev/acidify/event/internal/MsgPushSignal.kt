@@ -341,6 +341,30 @@ internal object MsgPushSignal : AbstractSignal("trpc.msg.olpush.OlPushService.Ms
                         )
                     }
 
+                    39 -> { // FriendDeleteOrPinChanged
+                        val content = FriendDeleteOrPinChanged(msgContent)
+                        val body = content.get { body }
+                        val pinChanged = body.get { pinChanged } ?: return listOf()
+                        val pinBody = pinChanged.get { this.body }
+                        val uid = pinBody.get { uid }
+                        val groupUin = pinBody.get { groupUin }
+                        val isPin = pinBody.get { info }.get { timestamp }.isNotEmpty()
+                        val (scene, targetUin) = if (groupUin != null) {
+                            MessageScene.GROUP to groupUin
+                        } else {
+                            val uin = runCatching { bot.getUinByUid(uid) }.getOrNull() ?: return listOf()
+                            MessageScene.FRIEND to uin
+                        }
+
+                        listOf(
+                            PinChangedEvent(
+                                scene = scene,
+                                peerUin = targetUin,
+                                isPinned = isPin
+                            )
+                        )
+                    }
+
                     else -> listOf()
                 }
             }

@@ -6,12 +6,12 @@ import kotlinx.coroutines.channels.Channel
 import org.ntqqrev.acidify.common.AppInfo
 import org.ntqqrev.acidify.common.SessionStore
 import org.ntqqrev.acidify.common.SignProvider
+import org.ntqqrev.acidify.common.SsoResponse
 import org.ntqqrev.acidify.exception.ServiceException
 import org.ntqqrev.acidify.internal.context.HighwayContext
 import org.ntqqrev.acidify.internal.context.LoginContext
 import org.ntqqrev.acidify.internal.context.PacketContext
 import org.ntqqrev.acidify.internal.context.TicketContext
-import org.ntqqrev.acidify.internal.packet.SsoResponse
 import org.ntqqrev.acidify.internal.service.Service
 import org.ntqqrev.acidify.logging.Logger
 

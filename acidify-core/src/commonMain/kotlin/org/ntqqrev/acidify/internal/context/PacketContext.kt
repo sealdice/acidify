@@ -13,9 +13,9 @@ import kotlinx.io.Buffer
 import kotlinx.io.IOException
 import kotlinx.io.readByteArray
 import org.ntqqrev.acidify.common.SignResult
+import org.ntqqrev.acidify.common.SsoResponse
 import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.crypto.tea.TeaProvider
-import org.ntqqrev.acidify.internal.packet.SsoResponse
 import org.ntqqrev.acidify.internal.packet.system.SsoReservedFields
 import org.ntqqrev.acidify.internal.packet.system.SsoSecureInfo
 import org.ntqqrev.acidify.internal.protobuf.PbObject
