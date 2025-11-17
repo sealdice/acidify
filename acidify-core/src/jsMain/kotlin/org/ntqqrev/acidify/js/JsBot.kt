@@ -63,8 +63,6 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
 
     fun fetchFriends(): Promise<Array<BotFriendData>> = promise { bot.fetchFriends().toTypedArray() }
 
-    fun getCustomFaceUrl(): Promise<Array<String>> = promise { bot.getCustomFaceUrl().toTypedArray() }
-
     fun fetchGroups(): Promise<Array<BotGroupData>> = promise { bot.fetchGroups().toTypedArray() }
 
     fun fetchGroupMembers(groupUin: Long): Promise<Array<BotGroupMemberData>> = promise {
@@ -108,6 +106,8 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
         bot.getUidByUin(uin, mayComeFromGroupUin)
     }
 
+    fun getCustomFaceUrl(): Promise<Array<String>> = promise { bot.getCustomFaceUrl().toTypedArray() }
+
     fun getPins(): Promise<BotPinnedChats> = promise { bot.getPins() }
 
     fun setFriendPin(friendUin: Long, isPinned: Boolean) = promise {
@@ -119,6 +119,10 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
     }
 
     fun setAvatar(imageData: ByteArray) = promise { bot.setAvatar(imageData) }
+
+    fun setNickname(nickname: String) = promise { bot.setNickname(nickname) }
+
+    fun setBio(bio: String) = promise { bot.setBio(bio) }
 
     fun getSKey(): Promise<String> = promise { bot.getSKey() }
 

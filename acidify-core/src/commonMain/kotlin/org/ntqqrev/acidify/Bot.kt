@@ -347,11 +347,6 @@ class Bot private constructor(
     }
 
     /**
-     * 获取收藏表情的直链 URL 列表
-     */
-    suspend fun getCustomFaceUrl(): List<String> = client.callService(FetchCustomFace)
-
-    /**
      * 拉取群信息。此操作不会被缓存。
      */
     suspend fun fetchGroups(): List<BotGroupData> {
@@ -445,6 +440,10 @@ class Bot private constructor(
             idMapQueryMutex.withLock { uin2uidMap[uin] }
         } ?: throw NoSuchElementException("无法解析 uin $uin 对应的 uid")
 
+    /**
+     * 获取收藏表情的直链 URL 列表
+     */
+    suspend fun getCustomFaceUrl(): List<String> = client.callService(FetchCustomFace)
 
     /**
      * 获取当前置顶的好友与群聊
