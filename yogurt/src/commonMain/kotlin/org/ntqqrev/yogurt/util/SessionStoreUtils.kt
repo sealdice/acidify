@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package org.ntqqrev.yogurt.util
 
 import io.ktor.server.application.*
@@ -9,9 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.io.encodeToSink
+import kotlinx.io.writeString
 import org.ntqqrev.acidify.Bot
 import org.ntqqrev.acidify.event.SessionStoreUpdatedEvent
 
@@ -23,7 +19,7 @@ fun Application.configureSessionStoreAutoSave() = launch {
     bot.eventFlow.filterIsInstance<SessionStoreUpdatedEvent>().collect {
         logger.i { "SessionStore 已更新，正在保存至文件..." }
         SystemFileSystem.sink(sessionStorePath).buffered().use { source ->
-            Json.encodeToSink(it.sessionStore, source)
+            source.writeString(it.sessionStore.toJson())
         }
     }
 }

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package org.ntqqrev.yogurt
 
 import com.github.ajalt.mordant.platform.MultiplatformSystem.exitProcess
@@ -23,9 +21,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.io.decodeFromSource
+import kotlinx.io.readString
 import org.ntqqrev.acidify.Bot
 import org.ntqqrev.acidify.common.AppInfo
 import org.ntqqrev.acidify.common.SessionStore
@@ -99,7 +95,7 @@ object YogurtApp {
         val signProvider = UrlSignProvider(config.signApiUrl)
         val sessionStore: SessionStore = if (SystemFileSystem.exists(sessionStorePath)) {
             SystemFileSystem.source(sessionStorePath).buffered().use {
-                Json.decodeFromSource<SessionStore>(it)
+                SessionStore.fromJson(it.readString())
             }
         } else SessionStore.empty()
         val appInfo: AppInfo = signProvider.getAppInfo() ?: run {
