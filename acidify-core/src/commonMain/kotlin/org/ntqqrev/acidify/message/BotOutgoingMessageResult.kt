@@ -8,7 +8,7 @@ import kotlin.js.JsExport
  * @param sendTime 消息的 Unix 时间戳（秒）
  */
 @JsExport
-class BotOutgoingMessageResult(
+class BotOutgoingMessageResult internal constructor(
     val sequence: Long,
     val sendTime: Long,
 )

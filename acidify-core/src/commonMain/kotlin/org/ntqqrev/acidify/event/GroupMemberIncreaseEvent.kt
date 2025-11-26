@@ -13,7 +13,7 @@ import kotlin.js.JsExport
  * @property invitorUid 邀请者 uid，如果是邀请入群
  */
 @JsExport
-class GroupMemberIncreaseEvent(
+class GroupMemberIncreaseEvent internal constructor(
     val groupUin: Long,
     val userUin: Long,
     val userUid: String,

@@ -22,7 +22,7 @@ sealed class BotGroupNotification {
      * @property operatorUid 处理请求的管理员 uid
      * @property comment 入群请求附加信息
      */
-    data class JoinRequest(
+    class JoinRequest internal constructor(
         val groupUin: Long,
         val notificationSeq: Long,
         val isFiltered: Boolean,
@@ -44,7 +44,7 @@ sealed class BotGroupNotification {
      * @property operatorUin 操作者（群主）QQ 号
      * @property operatorUid 操作者（群主）uid
      */
-    data class AdminChange(
+    class AdminChange internal constructor(
         val groupUin: Long,
         val notificationSeq: Long,
         val targetUserUin: Long,
@@ -63,7 +63,7 @@ sealed class BotGroupNotification {
      * @property operatorUin 移除用户的管理员 QQ 号
      * @property operatorUid 移除用户的管理员 uid
      */
-    data class Kick(
+    class Kick internal constructor(
         val groupUin: Long,
         val notificationSeq: Long,
         val targetUserUin: Long,
@@ -79,7 +79,7 @@ sealed class BotGroupNotification {
      * @property targetUserUin 退群用户 QQ 号
      * @property targetUserUid 退群用户 uid
      */
-    data class Quit(
+    class Quit internal constructor(
         val groupUin: Long,
         val notificationSeq: Long,
         val targetUserUin: Long,
@@ -98,7 +98,7 @@ sealed class BotGroupNotification {
      * @property operatorUin 处理请求的管理员 QQ 号
      * @property operatorUid 处理请求的管理员 uid
      */
-    data class InvitedJoinRequest(
+    class InvitedJoinRequest internal constructor(
         val groupUin: Long,
         val notificationSeq: Long,
         val initiatorUin: Long,

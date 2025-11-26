@@ -16,6 +16,9 @@ import kotlin.js.JsExport
  * @property role 群成员的角色（权限等级）
  */
 @JsExport
+// `data class` preserved here for compatibility.
+// Once Kotlin allows internal constructor for data class,
+// we can change everything back to data class + internal constructor
 data class BotGroupMemberData(
     val uin: Long,
     val uid: String,

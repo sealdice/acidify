@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property oidbErrorMsg Oidb 错误信息
  */
 @JsExport
-class OidbException(
+class OidbException internal constructor(
     val oidbCommand: Int,
     val oidbService: Int,
     val oidbResult: Int,

@@ -8,7 +8,7 @@ import kotlin.js.JsExport
  * @property isEnd 是否已到达列表末尾
  */
 @JsExport
-class BotEssenceMessageResult(
+class BotEssenceMessageResult internal constructor(
     val messages: List<BotEssenceMessage>,
     val isEnd: Boolean
 )

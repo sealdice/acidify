@@ -8,4 +8,7 @@ import kotlin.js.JsExport
  * @property png 二维码 PNG 图片数据
  */
 @JsExport
-class QRCodeGeneratedEvent(val url: String, val png: ByteArray) : AcidifyEvent
+class QRCodeGeneratedEvent internal constructor(
+    val url: String,
+    val png: ByteArray
+) : AcidifyEvent

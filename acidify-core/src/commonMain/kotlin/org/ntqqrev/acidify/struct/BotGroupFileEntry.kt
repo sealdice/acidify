@@ -16,7 +16,7 @@ import kotlin.js.JsExport
  * @property downloadedTimes 下载次数
  */
 @JsExport
-data class BotGroupFileEntry(
+class BotGroupFileEntry internal constructor(
     val fileId: String,
     val fileName: String,
     val parentFolderId: String,

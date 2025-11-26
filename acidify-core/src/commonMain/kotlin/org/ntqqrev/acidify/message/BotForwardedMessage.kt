@@ -14,7 +14,7 @@ import kotlin.js.JsExport
  * @property segments 消息内容
  */
 @JsExport
-class BotForwardedMessage(
+class BotForwardedMessage internal constructor(
     val senderName: String,
     val avatarUrl: String,
     val timestamp: Long,

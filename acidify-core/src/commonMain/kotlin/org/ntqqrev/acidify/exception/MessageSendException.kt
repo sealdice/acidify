@@ -8,7 +8,7 @@ import kotlin.js.JsExport
  * @property errorMessage 错误信息
  */
 @JsExport
-class MessageSendException(
+class MessageSendException internal constructor(
     val resultCode: Int,
     val errorMessage: String
 ) : Exception("Message sending failed with code $resultCode: $errorMessage")

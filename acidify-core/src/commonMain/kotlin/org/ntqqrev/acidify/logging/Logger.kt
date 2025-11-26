@@ -12,7 +12,7 @@ typealias MessageSupplier = suspend () -> String
  * @property bot 关联的 Bot 实例
  * @property tag 日志标签，通常为完整类名
  */
-class Logger(private val bot: Bot, val tag: String) {
+class Logger internal constructor(private val bot: Bot, val tag: String) {
     private fun MutableSharedFlow<LogMessage>.emitAsync(message: LogMessage) {
         bot.launch {
             emit(message)

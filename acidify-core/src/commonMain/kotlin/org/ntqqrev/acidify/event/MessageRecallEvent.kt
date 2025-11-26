@@ -15,7 +15,7 @@ import kotlin.js.JsExport
  * @property displaySuffix 撤回提示的后缀文本
  */
 @JsExport
-class MessageRecallEvent(
+class MessageRecallEvent internal constructor(
     val scene: MessageScene,
     val peerUin: Long,
     val messageSeq: Long,

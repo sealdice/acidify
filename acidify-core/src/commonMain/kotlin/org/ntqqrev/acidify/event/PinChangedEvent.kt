@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property isPinned 是否为置顶状态
  */
 @JsExport
-class PinChangedEvent(
+class PinChangedEvent internal constructor(
     val scene: MessageScene,
     val peerUin: Long,
     val isPinned: Boolean

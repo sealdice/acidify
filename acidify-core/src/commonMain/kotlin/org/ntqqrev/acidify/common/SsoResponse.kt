@@ -11,7 +11,7 @@ import kotlin.js.JsExport
  * @property extra 额外信息（如果返回码非 0，则包含错误信息）
  */
 @JsExport
-class SsoResponse(
+class SsoResponse internal constructor(
     val retCode: Int,
     val command: String,
     val response: ByteArray,

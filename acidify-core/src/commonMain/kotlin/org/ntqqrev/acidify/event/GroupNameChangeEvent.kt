@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property operatorUid 操作者 uid
  */
 @JsExport
-class GroupNameChangeEvent(
+class GroupNameChangeEvent internal constructor(
     val groupUin: Long,
     val newGroupName: String,
     val operatorUin: Long,

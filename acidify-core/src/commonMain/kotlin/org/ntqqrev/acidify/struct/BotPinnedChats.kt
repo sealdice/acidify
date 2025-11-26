@@ -8,7 +8,7 @@ import kotlin.js.JsExport
  * @property groupUins 置顶群聊 QQ 号列表
  */
 @JsExport
-data class BotPinnedChats(
+class BotPinnedChats internal constructor(
     val friendUins: List<Long>,
     val groupUins: List<Long>
 )

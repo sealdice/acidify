@@ -11,7 +11,7 @@ sealed class BotEssenceSegment {
      * 文本消息段
      * @property text 文本内容
      */
-    data class Text(
+    class Text internal constructor(
         val text: String
     ) : BotEssenceSegment() {
         override fun toString(): String = text
@@ -21,7 +21,7 @@ sealed class BotEssenceSegment {
      * 表情消息段
      * @property faceId 表情 ID
      */
-    data class Face(
+    class Face internal constructor(
         val faceId: Int
     ) : BotEssenceSegment() {
         override fun toString(): String = "[表情 $faceId]"
@@ -31,7 +31,7 @@ sealed class BotEssenceSegment {
      * 图片消息段
      * @property imageUrl 图片 URL
      */
-    data class Image(
+    class Image internal constructor(
         val imageUrl: String
     ) : BotEssenceSegment() {
         override fun toString(): String = "[图片]"
@@ -41,7 +41,7 @@ sealed class BotEssenceSegment {
      * 视频消息段
      * @property thumbnailUrl 视频封面 URL
      */
-    data class Video(
+    class Video internal constructor(
         val thumbnailUrl: String
     ) : BotEssenceSegment() {
         override fun toString(): String = "[视频]"

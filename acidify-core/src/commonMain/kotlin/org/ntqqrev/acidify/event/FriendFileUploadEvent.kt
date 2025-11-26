@@ -13,7 +13,7 @@ import kotlin.js.JsExport
  * @property isSelf 是否是自己发送的文件
  */
 @JsExport
-class FriendFileUploadEvent(
+class FriendFileUploadEvent internal constructor(
     val userUin: Long,
     val userUid: String,
     val fileId: String,

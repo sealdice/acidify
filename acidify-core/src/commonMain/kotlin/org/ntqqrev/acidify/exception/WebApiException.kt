@@ -7,7 +7,7 @@ import kotlin.js.JsExport
  * @property statusCode HTTP 状态码
  */
 @JsExport
-class WebApiException(
+class WebApiException internal constructor(
     msg: String,
     val statusCode: Int
 ) : Exception("$msg ($statusCode)")

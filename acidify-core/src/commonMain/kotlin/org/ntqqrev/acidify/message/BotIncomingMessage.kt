@@ -31,7 +31,7 @@ import kotlin.js.JsExport
  * @property extraInfo 群消息的附加信息，可用于刷新群昵称、群头衔等
  */
 @JsExport
-class BotIncomingMessage(
+class BotIncomingMessage internal constructor(
     val scene: MessageScene,
     val peerUin: Long,
     val peerUid: String,
@@ -54,7 +54,7 @@ class BotIncomingMessage(
      * @property groupCard 发送者的群名片
      * @property specialTitle 发送者的群头衔
      */
-    class ExtraInfo(
+    class ExtraInfo internal constructor(
         val nick: String,
         val groupCard: String,
         val specialTitle: String

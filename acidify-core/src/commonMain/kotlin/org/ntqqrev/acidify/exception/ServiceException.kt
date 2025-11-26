@@ -9,7 +9,7 @@ import kotlin.js.JsExport
  * @property extra 额外信息
  */
 @JsExport
-class ServiceException(
+class ServiceException internal constructor(
     val cmd: String,
     val retCode: Int,
     val extra: String

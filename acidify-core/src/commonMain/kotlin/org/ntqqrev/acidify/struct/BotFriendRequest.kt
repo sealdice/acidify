@@ -20,7 +20,7 @@ import kotlin.js.JsExport
  * @property isFiltered 请求是否被过滤（发起自风险账户）
  */
 @JsExport
-data class BotFriendRequest(
+class BotFriendRequest internal constructor(
     val time: Long,
     val initiatorUin: Long,
     val initiatorUid: String,

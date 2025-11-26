@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property comment 申请附加信息
  */
 @JsExport
-class GroupJoinRequestEvent(
+class GroupJoinRequestEvent internal constructor(
     val groupUin: Long,
     val notificationSeq: Long,
     val isFiltered: Boolean,

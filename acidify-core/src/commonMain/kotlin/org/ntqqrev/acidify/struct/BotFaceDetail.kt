@@ -8,7 +8,7 @@ import kotlin.js.JsExport
  * @property qDes 表情描述
  */
 @JsExport
-data class BotFaceDetail(
+class BotFaceDetail internal constructor(
     val qSid: String,
     val qDes: String,
     val emCode: String,

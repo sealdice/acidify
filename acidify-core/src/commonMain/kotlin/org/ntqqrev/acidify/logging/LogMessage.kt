@@ -7,7 +7,7 @@ package org.ntqqrev.acidify.logging
  * @property messageSupplier 延迟提供的日志消息
  * @property throwable 可选的异常对象，仅在 WARN 或 ERROR 级别时提供
  */
-class LogMessage(
+class LogMessage internal constructor(
     val level: LogLevel,
     val tag: String,
     val messageSupplier: suspend () -> String,
