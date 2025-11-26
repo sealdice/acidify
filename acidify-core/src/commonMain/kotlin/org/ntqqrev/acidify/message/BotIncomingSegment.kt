@@ -46,11 +46,15 @@ sealed class BotIncomingSegment {
     /**
      * 回复消息段
      * @property sequence 被回复的消息的序列号
+     * @property senderUin 被回复的消息的发送者的 QQ 号
+     * @property segments 被回复的消息的内容
      */
     class Reply(
         val sequence: Long,
+        val senderUin: Long,
+        val segments: List<BotIncomingSegment>,
     ) : BotIncomingSegment() {
-        override fun toString(): String = "[引用消息 #$sequence] "
+        override fun toString(): String = "[引用消息]"
     }
 
     /**

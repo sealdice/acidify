@@ -15,6 +15,7 @@ import org.ntqqrev.acidify.internal.protobuf.invoke
 import org.ntqqrev.acidify.internal.util.BinaryReader
 import org.ntqqrev.acidify.internal.util.Prefix
 import org.ntqqrev.acidify.internal.util.readUInt32BE
+import org.ntqqrev.acidify.message.BotIncomingMessage.Companion.buildSegments
 import org.ntqqrev.acidify.message.BotIncomingSegment
 import org.ntqqrev.acidify.message.ImageSubType
 import org.ntqqrev.acidify.message.MessageScene
@@ -128,7 +129,12 @@ internal interface IncomingSegmentFactory<T : BotIncomingSegment> {
                 sequence = when (ctx.scene) {
                     MessageScene.GROUP -> reply.get { origSeqs }.firstOrNull() ?: 0L
                     else -> SourceMsg.PbReserve(reply.get { pbReserve }).get { friendSequence }
-                }
+                },
+                senderUin = reply.get { senderUin },
+                segments = ctx.bot.buildSegments(
+                    elems = reply.get { elems },
+                    scene = ctx.scene,
+                ),
             )
         }
     }

@@ -1,5 +1,6 @@
 package org.ntqqrev.acidify.internal.packet.message.elem
 
+import org.ntqqrev.acidify.internal.packet.message.Elem
 import org.ntqqrev.acidify.internal.protobuf.*
 
 internal object SourceMsg : PbSchema() {
@@ -7,7 +8,7 @@ internal object SourceMsg : PbSchema() {
     val senderUin = PbInt64[2]
     val time = PbInt64[3]
     val flag = PbInt32[4]
-    val elems = PbRepeatedBytes[5]
+    val elems = PbRepeated[Elem[5]]
     val type = PbInt32[6]
     val richMsg = PbBytes[7]
     val pbReserve = PbBytes[8]
@@ -16,6 +17,8 @@ internal object SourceMsg : PbSchema() {
     val troopName = PbBytes[11]
 
     internal object PbReserve : PbSchema() {
+        val senderUid = PbString[6]
+        val receiverUid = PbString[7]
         val friendSequence = PbInt64[8]
     }
 }
