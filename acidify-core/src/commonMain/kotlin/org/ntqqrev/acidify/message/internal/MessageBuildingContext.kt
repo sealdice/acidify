@@ -137,10 +137,10 @@ internal class MessageBuildingContext(
                     if (scene == MessageScene.FRIEND) replied.clientSequence
                     else replied.sequence
                 )
-                it[senderUin] = 0L
+                it[senderUin] = replied.senderUin
                 it[time] = replied.timestamp
                 it[flag] = 0
-                it[elems] = emptyList() // 客户端会自行获取原始消息内容
+                it[elems] = replied.raw.get { messageBody }.get { richText }.get { elems }
                 it[pbReserve] = SourceMsgResvAttr {
                     it[oriMsgType] = 2
                     it[sourceMsgId] = replied.messageUid

@@ -41,7 +41,8 @@ class BotIncomingMessage internal constructor(
     val senderUid: String,
     val clientSequence: Long,
     val random: Int,
-    val messageUid: Long
+    val messageUid: Long,
+    internal val raw: PbObject<CommonMessage>,
 ) {
     lateinit var segments: List<BotIncomingSegment>
         internal set
@@ -124,6 +125,7 @@ class BotIncomingMessage internal constructor(
                         clientSequence = contentHead.get { sequence }, // weird
                         random = contentHead.get { random },
                         messageUid = contentHead.get { msgUid },
+                        raw = raw,
                     )
                 }
 
@@ -139,6 +141,7 @@ class BotIncomingMessage internal constructor(
                         clientSequence = contentHead.get { clientSequence },
                         random = contentHead.get { random },
                         messageUid = contentHead.get { msgUid },
+                        raw = raw,
                     )
                 }
 
