@@ -10,7 +10,7 @@ kx-coroutines = "1.10.2"
 kx-io = "0.8.0"
 kx-datetime = "0.7.1"
 kx-atomicfu = "0.29.0"
-ktor = "3.3.2"
+ktor = "3.3.3"
 
 milky = "1.0.0"
 
