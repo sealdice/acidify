@@ -224,9 +224,12 @@ internal interface IncomingSegmentFactory<T : BotIncomingSegment> {
                 bytesTemplate1.sliceArray(1 until bytesTemplate1.size)
             ).decodeToString()
             val body = IncomingForwardBody.xmlModule.decodeFromString<IncomingForwardBody>(xml)
+            val titles = body.items[0].titles
             return BotIncomingSegment.Forward(
                 resId = body.resId,
-                preview = body.items[0].titles.drop(1).map { it.text },
+                title = titles[0].text,
+                preview = titles.drop(1).map { it.text },
+                summary = body.items[0].summaries[0].text,
             )
         }
     }

@@ -122,10 +122,15 @@ sealed class BotIncomingSegment {
     /**
      * 转发消息段
      * @property resId 转发消息的资源 ID
+     * @property title 转发消息的标题，形如 `XXX的聊天记录`
+     * @property preview 转发消息的预览文本列表，形如 `XXX: 你好！`
+     * @property summary 转发消息的文本描述，形如 `查看1条转发消息`
      */
     class Forward internal constructor(
         val resId: String,
+        val title: String,
         val preview: List<String>,
+        val summary: String,
     ) : BotIncomingSegment() {
         override fun toString(): String = "[转发消息]"
     }
