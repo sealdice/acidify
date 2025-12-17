@@ -4,6 +4,7 @@ import org.ntqqrev.acidify.Bot
 import org.ntqqrev.acidify.internal.CacheUtility
 import org.ntqqrev.acidify.struct.BotGroupData
 import org.ntqqrev.acidify.struct.BotGroupMemberData
+import org.ntqqrev.acidify.struct.GroupMemberRole
 import kotlin.js.JsExport
 
 /**
@@ -17,7 +18,11 @@ class BotGroup internal constructor(
     private val memberCache = CacheUtility<Long, BotGroupMember, BotGroupMemberData>(
         bot = bot,
         updateCache = { bot -> bot.fetchGroupMembers(uin).associateBy { it.uin } },
-        entityFactory = { bot, data -> BotGroupMember(bot, data, this) }
+        entityFactory = { bot, data ->
+            BotGroupMember(bot, data, this).also {
+                if (it.role == GroupMemberRole.OWNER) { owner = it }
+            }
+        }
     )
 
     /**
@@ -43,6 +48,12 @@ class BotGroup internal constructor(
      */
     val capacity: Int
         get() = data.capacity
+
+    /**
+     * 群主
+     */
+    lateinit var owner: BotGroupMember
+        internal set
 
     /**
      * 获取所有群成员
