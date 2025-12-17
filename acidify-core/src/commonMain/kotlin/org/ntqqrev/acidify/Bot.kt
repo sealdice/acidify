@@ -39,6 +39,7 @@ import org.ntqqrev.acidify.internal.packet.misc.GroupEssenceResponse
 import org.ntqqrev.acidify.internal.packet.misc.UserInfoKey
 import org.ntqqrev.acidify.internal.protobuf.invoke
 import org.ntqqrev.acidify.internal.service.file.*
+import org.ntqqrev.acidify.internal.service.friend.*
 import org.ntqqrev.acidify.internal.service.group.*
 import org.ntqqrev.acidify.internal.service.message.*
 import org.ntqqrev.acidify.internal.service.system.*

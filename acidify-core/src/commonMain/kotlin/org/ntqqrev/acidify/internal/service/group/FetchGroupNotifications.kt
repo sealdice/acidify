@@ -1,4 +1,4 @@
-package org.ntqqrev.acidify.internal.service.system
+package org.ntqqrev.acidify.internal.service.group
 
 import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.packet.oidb.FetchGroupNotificationsReq
