@@ -106,6 +106,10 @@ fun Route.configureMilkyApiHttpRoutes() {
     serve(GetGroupInfo)
     serve(GetGroupMemberList)
     serve(GetGroupMemberInfo)
+    serve(SetAvatar)
+    serve(SetNickname)
+    serve(SetBio)
+    serve(GetCustomFaceUrlList)
     serve(GetCookies)
     serve(GetCsrfToken)
 
@@ -121,6 +125,7 @@ fun Route.configureMilkyApiHttpRoutes() {
 
     serve(SendFriendNudge)
     serve(SendProfileLike)
+    serve(DeleteFriend)
     serve(GetFriendRequests)
     serve(AcceptFriendRequest)
     serve(RejectFriendRequest)
