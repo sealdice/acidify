@@ -49,10 +49,10 @@ import org.ntqqrev.acidify.internal.util.triSha1
 import org.ntqqrev.acidify.internal.util.unescapeHttp
 import org.ntqqrev.acidify.logging.*
 import org.ntqqrev.acidify.message.*
-import org.ntqqrev.acidify.message.BotEssenceMessage.Companion.toBotEssenceMessage
-import org.ntqqrev.acidify.message.BotForwardedMessage.Companion.parseForwardedMessage
-import org.ntqqrev.acidify.message.BotIncomingMessage.Companion.parseMessage
 import org.ntqqrev.acidify.message.internal.MessageBuildingContext
+import org.ntqqrev.acidify.message.internal.MessageParsingContext.Companion.parseForwardedMessage
+import org.ntqqrev.acidify.message.internal.MessageParsingContext.Companion.parseMessage
+import org.ntqqrev.acidify.message.internal.MessageParsingContext.Companion.toBotEssenceMessage
 import org.ntqqrev.acidify.struct.*
 import org.ntqqrev.acidify.struct.BotFriendRequest.Companion.parseFilteredFriendRequest
 import org.ntqqrev.acidify.struct.BotFriendRequest.Companion.parseFriendRequest

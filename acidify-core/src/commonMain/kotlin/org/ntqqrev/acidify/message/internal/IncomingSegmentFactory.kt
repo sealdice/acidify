@@ -15,10 +15,10 @@ import org.ntqqrev.acidify.internal.protobuf.invoke
 import org.ntqqrev.acidify.internal.util.BinaryReader
 import org.ntqqrev.acidify.internal.util.Prefix
 import org.ntqqrev.acidify.internal.util.readUInt32BE
-import org.ntqqrev.acidify.message.BotIncomingMessage.Companion.buildSegments
 import org.ntqqrev.acidify.message.BotIncomingSegment
 import org.ntqqrev.acidify.message.ImageSubType
 import org.ntqqrev.acidify.message.MessageScene
+import org.ntqqrev.acidify.message.internal.MessageParsingContext.Companion.buildSegments
 import kotlin.math.min
 
 internal interface IncomingSegmentFactory<T : BotIncomingSegment> {

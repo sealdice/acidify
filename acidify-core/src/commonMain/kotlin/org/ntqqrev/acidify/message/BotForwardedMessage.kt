@@ -1,9 +1,5 @@
 package org.ntqqrev.acidify.message
 
-import org.ntqqrev.acidify.Bot
-import org.ntqqrev.acidify.internal.packet.message.CommonMessage
-import org.ntqqrev.acidify.internal.protobuf.PbObject
-import org.ntqqrev.acidify.message.BotIncomingMessage.Companion.buildSegments
 import kotlin.js.JsExport
 
 /**
@@ -21,30 +17,5 @@ class BotForwardedMessage internal constructor(
 ) {
     lateinit var segments: List<BotIncomingSegment>
         internal set
-
-    companion object {
-        internal fun Bot.parseForwardedMessage(raw: PbObject<CommonMessage>): BotForwardedMessage? {
-            val routingHead = raw.get { routingHead }
-            val contentHead = raw.get { contentHead }
-            val senderName = routingHead.get { commonC2C }.get { name }.takeIf { it.isNotEmpty() }
-                ?: routingHead.get { group }.get { groupCard }.takeIf { it.isNotEmpty() }
-                ?: "QQ用户"
-            val avatarUrl = contentHead.get { forwardExt }.get { avatar }
-            val message = BotForwardedMessage(
-                senderName = senderName,
-                avatarUrl = avatarUrl,
-                timestamp = contentHead.get { time }
-            )
-            val segments = buildSegments(
-                elems = raw.get { messageBody }.get { richText }.get { this.elems },
-                scene = MessageScene.FRIEND
-            )
-            if (segments.isEmpty()) {
-                return null
-            }
-            message.segments = segments
-            return message
-        }
-    }
 }
 

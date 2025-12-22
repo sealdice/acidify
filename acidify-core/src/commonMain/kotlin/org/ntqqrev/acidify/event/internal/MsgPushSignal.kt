@@ -11,9 +11,9 @@ import org.ntqqrev.acidify.internal.packet.message.PushMsg
 import org.ntqqrev.acidify.internal.packet.message.PushMsgType
 import org.ntqqrev.acidify.internal.packet.message.extra.*
 import org.ntqqrev.acidify.internal.protobuf.invoke
-import org.ntqqrev.acidify.message.BotIncomingMessage.Companion.parseMessage
 import org.ntqqrev.acidify.message.BotIncomingSegment
 import org.ntqqrev.acidify.message.MessageScene
+import org.ntqqrev.acidify.message.internal.MessageParsingContext.Companion.parseMessage
 import org.ntqqrev.acidify.struct.BotGroupNotification
 import org.ntqqrev.acidify.struct.RequestState
 import kotlin.time.Clock
