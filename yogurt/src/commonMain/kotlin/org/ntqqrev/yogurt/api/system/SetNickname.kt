@@ -10,7 +10,7 @@ import org.ntqqrev.yogurt.util.define
 val SetNickname = ApiEndpoint.SetNickname.define {
     val bot = application.dependencies.resolve<Bot>()
 
-    bot.setNickname(it.newCard)
+    bot.setNickname(it.newNickname)
 
     SetNicknameOutput()
 }
