@@ -104,7 +104,7 @@ jobs:
         with:
           name: yogurt-${{ matrix.platform }}
           path: artifacts/**
-  
+
   build-jvm:
     if: contains(github.event.head_commit.message, '[skip build]') == false
     runs-on: ubuntu-latest
@@ -130,73 +130,6 @@ jobs:
         with:
           name: yogurt-jvm
           path: yogurt-jvm/build/libs/yogurt-jvm-all.jar
-  
-  release-nightly:
-    if: contains(github.event.head_commit.message, '[skip build]') == false
-    needs:
-      - build-native
-      - build-jvm
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-      
-      - name: Prepare release assets
-        run: |
-          mkdir -p release-assets
-          
-          # Package Windows x64
-          cd artifacts/yogurt-windows-x64
-          zip -r ../../release-assets/yogurt-windows-x64.zip .
-          cd ../..
-          
-          # Package macOS x64
-          cd artifacts/yogurt-macos-x64
-          tar -czf ../../release-assets/yogurt-macos-x64.tar.gz .
-          cd ../..
-          
-          # Package macOS ARM64
-          cd artifacts/yogurt-macos-arm64
-          tar -czf ../../release-assets/yogurt-macos-arm64.tar.gz .
-          cd ../..
-          
-          # Package Linux x64
-          cd artifacts/yogurt-linux-x64
-          tar -czf ../../release-assets/yogurt-linux-x64.tar.gz .
-          cd ../..
-          
-          # Package Linux ARM64
-          cd artifacts/yogurt-linux-arm64
-          tar -czf ../../release-assets/yogurt-linux-arm64.tar.gz .
-          cd ../..
-          
-          # Copy JVM jar
-          cp artifacts/yogurt-jvm/yogurt-jvm-all.jar release-assets/
-      
-      - name: Delete existing nightly release
-        uses: dev-drprasad/delete-tag-and-release@v1.1
-        with:
-          tag_name: nightly
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-      
-      - name: Create nightly release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly
-          name: Nightly Build
-          body: |
-            🚀自动构建的 Yogurt 可执行文件
-            
-            构建时间: ${{ github.event.head_commit.timestamp }}
-            提交: ${{ github.sha }}
-          files: release-assets/*
-          prerelease: false
-          draft: false
-          make_latest: true
 
   publish-npm:
     if: contains(github.event.head_commit.message, '[skip build]') == false
