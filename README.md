@@ -18,9 +18,8 @@
 
 - `acidify-core` - PC NTQQ 协议的核心实现 [![Maven Central](https://img.shields.io/maven-central/v/org.ntqqrev/acidify-core?label=Maven%20Central&logo=maven&color=blue)](https://central.sonatype.com/artifact/org.ntqqrev/acidify-core)
 - `yogurt` - 基于 Acidify 的 Milky 实现
-  - `yogurt-jvm` - Yogurt 的 JVM 平台实现 (Workaround for Ktor plugin's incompatibility issue)
-  - `yogurt-media-codec` - Yogurt 的多媒体编解码支持模块
-  - `yogurt-qrcode` - Yogurt 的二维码矩阵生成模块
+- `yogurt-jvm` - Yogurt 的 JVM 平台适配 (Workaround for Ktor plugin's incompatibility issue)
+- `yogurt-media-codec` - Yogurt 的多媒体编解码支持模块
 
 ### TypeScript
 

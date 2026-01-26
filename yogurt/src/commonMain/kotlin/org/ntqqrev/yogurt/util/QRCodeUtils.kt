@@ -8,9 +8,9 @@ import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
 import org.ntqqrev.acidify.Bot
 import org.ntqqrev.acidify.event.QRCodeGeneratedEvent
+import org.ntqqrev.qrmatrix.ErrorCorrectionLevel
+import org.ntqqrev.qrmatrix.generateMatrix
 import org.ntqqrev.yogurt.YogurtApp.qrCodePath
-import org.ntqqrev.yogurt.qrcode.ErrorCorrectionLevel
-import org.ntqqrev.yogurt.qrcode.QRCodeProcessor
 
 object Palette {
     const val WHITE_WHITE = '\u2588'
@@ -19,29 +19,24 @@ object Palette {
     const val BLACK_BLACK = ' '
 }
 
-fun generateTerminalQRCode(data: String): String {
-    val matrix = QRCodeProcessor(data, ErrorCorrectionLevel.LOW).encode()
-    val height = matrix.size
-    val width = matrix[0].size
+fun generateTerminalQRCode(data: String) = buildString {
+    val matrix = generateMatrix(data, ErrorCorrectionLevel.LOW)
+    val size = matrix.size
 
-    val b = StringBuilder()
-
-    for (row in 0 until height step 2) {
-        for (col in 0 until width) {
-            val upper = matrix[col][row].dark
-            val lower = if (row + 1 < height) matrix[col][row + 1].dark else false
+    for (row in 0 until size step 2) {
+        for (col in 0 until size) {
+            val paintUpper = matrix[col][row]
+            val paintLower = if (row + 1 < size) matrix[col][row + 1] else false
             val char = when {
-                upper && lower -> Palette.WHITE_WHITE
-                upper && !lower -> Palette.WHITE_BLACK
-                !upper && lower -> Palette.BLACK_WHITE
+                paintUpper && paintLower -> Palette.WHITE_WHITE
+                paintUpper && !paintLower -> Palette.WHITE_BLACK
+                !paintUpper && paintLower -> Palette.BLACK_WHITE
                 else -> Palette.BLACK_BLACK
             }
-            b.append(char)
+            append(char)
         }
-        b.appendLine()
+        appendLine()
     }
-
-    return b.toString()
 }
 
 fun Application.configureQRCodeDisplay() = launch {

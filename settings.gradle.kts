@@ -16,10 +16,11 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":acidify-core")
-include(":yogurt")
-include(":yogurt-jvm")
-include(":yogurt-media-codec")
-include(":yogurt-qrcode")
+include(
+    ":acidify-core",
+    ":yogurt",
+    ":yogurt-jvm",
+    ":yogurt-media-codec",
+)
 
 rootProject.name = "acidify"

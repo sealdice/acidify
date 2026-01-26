@@ -17,12 +17,12 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":acidify-core"))
             implementation(project(":yogurt-media-codec"))
-            implementation(project(":yogurt-qrcode"))
             implementation(libs.kotlinx.datetime)
             implementation(libs.bundles.ktor.client)
             implementation(libs.bundles.ktor.server)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.milky.types)
+            implementation(libs.qr.matrix)
             implementation(libs.mordant)
         }
         jvmMain.dependencies {
