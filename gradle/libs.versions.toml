@@ -4,7 +4,6 @@
 
 [versions]
 kotlin = "2.3.0"
-
 kx-serialization = "1.10.0"
 kx-coroutines = "1.10.2"
 kx-io = "0.8.2"
@@ -13,15 +12,15 @@ kx-atomicfu = "0.31.0"
 ktor = "3.4.0"
 
 milky = "1.1.0"
-
 korlibs = "6.0.0"
 qr-matrix = "0.1.0"
 xmlutil = "1.0.0-rc2"
 mordant = "3.0.2"
 logback = "1.5.26"
+jna = "5.18.1"
+
 build-konfig = "0.17.1"
 maven-publish = "0.36.0"
-
 dokka = "2.1.0"
 
 [libraries]
@@ -59,6 +58,7 @@ xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlu
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
 mordant = { module = "com.github.ajalt.mordant:mordant", version.ref = "mordant" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 
 [bundles]
 ktor-client = [

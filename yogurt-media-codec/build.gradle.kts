@@ -8,7 +8,7 @@ kotlin {
             implementation(libs.kotlinx.io)
         }
         jvmMain.dependencies {
-            implementation("net.java.dev.jna:jna:5.18.1")
+            implementation(libs.jna)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
