@@ -4,6 +4,7 @@ import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.proto.oidb.Oidb0x6D7Req
 import org.ntqqrev.acidify.internal.proto.oidb.Oidb0x6D7Resp
 import org.ntqqrev.acidify.internal.service.OidbService
+import org.ntqqrev.acidify.internal.util.checkRetCode
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 
@@ -28,11 +29,7 @@ internal object CreateGroupFolder : OidbService<CreateGroupFolder.Req, CreateGro
 
     override fun parseOidb(client: LagrangeClient, payload: ByteArray): Resp {
         val resp = payload.pbDecode<Oidb0x6D7Resp>().createFolder
-        val retCode = resp.retCode
-        if (retCode != 0) {
-            val retMsg = resp.retMsg
-            throw Exception("$retCode $retMsg")
-        }
+        checkRetCode(resp.retCode, resp.retMsg)
         return Resp(folderId = resp.folderId)
     }
 }

@@ -5,6 +5,7 @@ import org.ntqqrev.acidify.internal.proto.oidb.GroupFileListReq
 import org.ntqqrev.acidify.internal.proto.oidb.GroupFileListReqBody
 import org.ntqqrev.acidify.internal.proto.oidb.GroupFileListResp
 import org.ntqqrev.acidify.internal.service.OidbService
+import org.ntqqrev.acidify.internal.util.checkRetCode
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 import org.ntqqrev.acidify.struct.BotGroupFileEntry
@@ -40,11 +41,7 @@ internal object GetGroupFileList : OidbService<GetGroupFileList.Req, GetGroupFil
 
     override fun parseOidb(client: LagrangeClient, payload: ByteArray): Resp {
         val resp = payload.pbDecode<GroupFileListResp>().listResp
-        val retCode = resp.retCode
-
-        if (retCode != 0) {
-            throw Exception(retCode.toString())
-        }
+        checkRetCode(resp.retCode)
 
         val items = resp.items
         val files = mutableListOf<BotGroupFileEntry>()

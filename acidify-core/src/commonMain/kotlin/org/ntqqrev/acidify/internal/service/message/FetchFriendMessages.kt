@@ -5,6 +5,7 @@ import org.ntqqrev.acidify.internal.proto.message.CommonMessage
 import org.ntqqrev.acidify.internal.proto.message.action.SsoGetC2cMsgReq
 import org.ntqqrev.acidify.internal.proto.message.action.SsoGetC2cMsgResp
 import org.ntqqrev.acidify.internal.service.Service
+import org.ntqqrev.acidify.internal.util.checkRetCode
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 
@@ -26,13 +27,7 @@ internal object FetchFriendMessages :
 
     override fun parse(client: LagrangeClient, payload: ByteArray): List<CommonMessage> {
         val resp = payload.pbDecode<SsoGetC2cMsgResp>()
-        val retcode = resp.retcode
-        val errorMsg = resp.errorMsg
-
-        if (retcode != 0) {
-            throw Exception("Failed to get friend messages: $errorMsg (retcode=$retcode)")
-        }
-
+        checkRetCode(resp.retcode, resp.errorMsg)
         return resp.messages
     }
 }

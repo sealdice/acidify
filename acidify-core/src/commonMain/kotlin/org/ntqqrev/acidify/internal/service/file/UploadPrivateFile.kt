@@ -4,6 +4,7 @@ import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.proto.oidb.Oidb0xE37Req
 import org.ntqqrev.acidify.internal.proto.oidb.Oidb0xE37Resp
 import org.ntqqrev.acidify.internal.service.OidbService
+import org.ntqqrev.acidify.internal.util.checkRetCode
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 import org.ntqqrev.acidify.internal.util.toIpString
@@ -50,11 +51,7 @@ internal object UploadPrivateFile : OidbService<UploadPrivateFile.Req, UploadPri
 
     override fun parseOidb(client: LagrangeClient, payload: ByteArray): Resp {
         val resp = payload.pbDecode<Oidb0xE37Resp>().uploadBody
-        val retCode = resp.retCode
-        if (retCode != 0) {
-            val retMsg = resp.retMsg
-            throw Exception("$retCode $retMsg")
-        }
+        checkRetCode(resp.retCode, resp.retMsg)
         return Resp(
             fileExist = resp.boolFileExist,
             fileId = resp.uuid,

@@ -4,6 +4,7 @@ import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.proto.oidb.Oidb0x6D6Req
 import org.ntqqrev.acidify.internal.proto.oidb.Oidb0x6D6Resp
 import org.ntqqrev.acidify.internal.service.OidbService
+import org.ntqqrev.acidify.internal.util.checkRetCode
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 
@@ -26,10 +27,6 @@ internal object DeleteGroupFile : OidbService<DeleteGroupFile.Req, Unit>(0x6d6, 
 
     override fun parseOidb(client: LagrangeClient, payload: ByteArray) {
         val resp = payload.pbDecode<Oidb0x6D6Resp>().deleteFile
-        val retCode = resp.retCode
-        if (retCode != 0) {
-            val retMsg = resp.retMsg
-            throw Exception("$retCode $retMsg")
-        }
+        checkRetCode(resp.retCode, resp.retMsg)
     }
 }
