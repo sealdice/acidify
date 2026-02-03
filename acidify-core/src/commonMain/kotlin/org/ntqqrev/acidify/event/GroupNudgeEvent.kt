@@ -14,7 +14,7 @@ import kotlin.js.JsExport
  * @property displayActionImgUrl 戳一戳提示的动作图片 URL，用于取代动作提示文本
  */
 @JsExport
-class GroupNudgeEvent internal constructor(
+data class GroupNudgeEvent internal constructor(
     val groupUin: Long,
     val senderUin: Long,
     val senderUid: String,

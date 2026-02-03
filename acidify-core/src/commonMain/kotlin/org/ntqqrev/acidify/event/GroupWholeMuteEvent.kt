@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property isMute 是否全员禁言，`false` 表示取消全员禁言
  */
 @JsExport
-class GroupWholeMuteEvent internal constructor(
+data class GroupWholeMuteEvent internal constructor(
     val groupUin: Long,
     val operatorUin: Long,
     val operatorUid: String,

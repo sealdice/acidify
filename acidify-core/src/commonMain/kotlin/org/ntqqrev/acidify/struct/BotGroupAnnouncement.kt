@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property imageUrl 公告图片 URL，可能为 `null`
  */
 @JsExport
-class BotGroupAnnouncement internal constructor(
+data class BotGroupAnnouncement internal constructor(
     val groupUin: Long,
     val announcementId: String,
     val senderId: Long,

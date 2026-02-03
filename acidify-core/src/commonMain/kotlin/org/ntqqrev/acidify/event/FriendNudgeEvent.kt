@@ -13,7 +13,7 @@ import kotlin.js.JsExport
  * @property displayActionImgUrl 戳一戳提示的动作图片 URL，用于取代动作提示文本
  */
 @JsExport
-class FriendNudgeEvent internal constructor(
+data class FriendNudgeEvent internal constructor(
     val userUin: Long,
     val userUid: String,
     val isSelfSend: Boolean,

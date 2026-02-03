@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property initiatorUid 邀请者 uid
  */
 @JsExport
-class GroupInvitationEvent internal constructor(
+data class GroupInvitationEvent internal constructor(
     val groupUin: Long,
     val invitationSeq: Long,
     val initiatorUin: Long,

@@ -10,12 +10,10 @@ import kotlin.js.JsExport
  * @property segments 消息内容
  */
 @JsExport
-class BotForwardedMessage internal constructor(
+data class BotForwardedMessage internal constructor(
     val senderName: String,
     val avatarUrl: String,
     val timestamp: Long,
-) {
-    lateinit var segments: List<BotIncomingSegment>
-        internal set
-}
+    val segments: List<BotIncomingSegment>
+)
 

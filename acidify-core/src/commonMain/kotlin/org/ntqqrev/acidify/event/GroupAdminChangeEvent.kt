@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property isSet 是否被设置为管理员，`false` 表示被取消管理员
  */
 @JsExport
-class GroupAdminChangeEvent internal constructor(
+data class GroupAdminChangeEvent internal constructor(
     val groupUin: Long,
     val userUin: Long,
     val userUid: String,

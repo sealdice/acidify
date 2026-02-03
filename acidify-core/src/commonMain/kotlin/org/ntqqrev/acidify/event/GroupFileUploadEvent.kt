@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property fileSize 文件大小（字节）
  */
 @JsExport
-class GroupFileUploadEvent internal constructor(
+data class GroupFileUploadEvent internal constructor(
     val groupUin: Long,
     val userUin: Long,
     val userUid: String,

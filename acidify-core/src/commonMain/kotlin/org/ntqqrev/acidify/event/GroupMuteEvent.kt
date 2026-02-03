@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property duration 禁言时长（秒），为 0 表示取消禁言
  */
 @JsExport
-class GroupMuteEvent internal constructor(
+data class GroupMuteEvent internal constructor(
     val groupUin: Long,
     val userUin: Long,
     val userUid: String,

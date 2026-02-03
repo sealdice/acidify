@@ -15,7 +15,7 @@ import kotlin.js.JsExport
  * @property segments 消息段列表
  */
 @JsExport
-class BotEssenceMessage internal constructor(
+data class BotEssenceMessage internal constructor(
     val groupUin: Long,
     val messageSeq: Long,
     val messageTime: Long,

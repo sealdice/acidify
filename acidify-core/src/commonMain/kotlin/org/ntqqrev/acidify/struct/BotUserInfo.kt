@@ -18,7 +18,7 @@ import kotlin.js.JsExport
  * @property qid 用户的 qid
  */
 @JsExport
-class BotUserInfo internal constructor(
+data class BotUserInfo internal constructor(
     val uin: Long,
     val nickname: String,
     val bio: String,

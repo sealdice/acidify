@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property via 申请来源
  */
 @JsExport
-class FriendRequestEvent internal constructor(
+data class FriendRequestEvent internal constructor(
     val initiatorUin: Long,
     val initiatorUid: String,
     val comment: String,

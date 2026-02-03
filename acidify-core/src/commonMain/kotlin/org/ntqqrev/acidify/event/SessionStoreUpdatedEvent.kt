@@ -8,6 +8,6 @@ import kotlin.js.JsExport
  * @property sessionStore 更新后的会话存储
  */
 @JsExport
-class SessionStoreUpdatedEvent internal constructor(
+data class SessionStoreUpdatedEvent internal constructor(
     val sessionStore: SessionStore
 ) : AcidifyEvent

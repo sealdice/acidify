@@ -23,7 +23,7 @@ import kotlin.js.JsExport
  * @property extraInfo 群消息的附加信息，可用于刷新群昵称、群头衔等
  */
 @JsExport
-class BotIncomingMessage internal constructor(
+data class BotIncomingMessage internal constructor(
     val scene: MessageScene,
     val peerUin: Long,
     val peerUid: String,
@@ -34,13 +34,10 @@ class BotIncomingMessage internal constructor(
     val clientSequence: Long,
     val random: Int,
     val messageUid: Long,
-    internal val raw: CommonMessage,
+    val segments: List<BotIncomingSegment>,
+    val extraInfo: ExtraInfo? = null,
 ) {
-    lateinit var segments: List<BotIncomingSegment>
-        internal set
-
-    var extraInfo: ExtraInfo? = null
-        internal set
+    internal lateinit var raw: CommonMessage
 
     /**
      * @property nick 发送者的昵称

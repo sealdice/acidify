@@ -14,7 +14,7 @@ import kotlin.js.JsExport
  * @property totalFileCount 文件总数
  */
 @JsExport
-class BotGroupFolderEntry internal constructor(
+data class BotGroupFolderEntry internal constructor(
     val folderId: String,
     val parentFolderId: String,
     val folderName: String,

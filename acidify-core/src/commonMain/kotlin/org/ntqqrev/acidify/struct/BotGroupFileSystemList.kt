@@ -9,7 +9,7 @@ import kotlin.js.JsExport
  * @property folders 文件夹列表
  */
 @JsExport
-class BotGroupFileSystemList internal constructor(
+data class BotGroupFileSystemList internal constructor(
     val files: List<BotGroupFileEntry>,
     val folders: List<BotGroupFolderEntry>
 )

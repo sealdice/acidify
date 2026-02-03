@@ -8,6 +8,6 @@ import kotlin.js.JsExport
  * @property message 接收到的消息
  */
 @JsExport
-class MessageReceiveEvent internal constructor(
+data class MessageReceiveEvent internal constructor(
     val message: BotIncomingMessage
 ) : AcidifyEvent

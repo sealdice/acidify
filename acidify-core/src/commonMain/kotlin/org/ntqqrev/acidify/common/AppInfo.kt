@@ -11,7 +11,7 @@ import kotlin.js.JsStatic
  */
 @JsExport
 @Serializable
-class AppInfo(
+data class AppInfo(
     @SerialName("Os") val os: String,
     @SerialName("Kernel") val kernel: String,
     @SerialName("VendorOs") val vendorOs: String,

@@ -16,7 +16,7 @@ import kotlin.js.JsExport
  * @property categoryName 好友所在的分组名称
  */
 @JsExport
-class BotFriendData internal constructor(
+data class BotFriendData internal constructor(
     val uin: Long,
     val uid: String,
     val nickname: String,

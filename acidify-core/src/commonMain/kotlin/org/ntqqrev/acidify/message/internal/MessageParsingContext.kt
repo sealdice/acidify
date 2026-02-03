@@ -56,9 +56,10 @@ internal class MessageParsingContext(
             val contentHead = raw.contentHead
             val pushMsgType = PushMsgType.from(contentHead.type) ?: return null
             val draftMsg = buildDraftMessage(raw, pushMsgType) ?: return null
+            var extraInfo: ExtraInfo? = null
             val segments = if (pushMsgType != PushMsgType.FriendFileMessage) {
                 buildSegments(raw.messageBody.richText.elems, draftMsg.scene) {
-                    draftMsg.extraInfo = it
+                    extraInfo = it
                 }
             } else {
                 val notOnlineFile = raw.messageBody.msgContent.pbDecode<PrivateFileExtra>().notOnlineFile
@@ -71,13 +72,13 @@ internal class MessageParsingContext(
                     )
                 )
             }
-
             if (segments.isEmpty()) {
                 return null
             }
-
-            draftMsg.segments = segments
-            return draftMsg
+            return draftMsg.copy(
+                segments = segments,
+                extraInfo = extraInfo
+            ).apply { this.raw = raw }
         }
 
         private fun Bot.buildDraftMessage(raw: CommonMessage, pushMsgType: PushMsgType): BotIncomingMessage? {
@@ -100,7 +101,7 @@ internal class MessageParsingContext(
                         clientSequence = contentHead.sequence, // weird
                         random = contentHead.random,
                         messageUid = contentHead.msgUid,
-                        raw = raw,
+                        segments = emptyList(),
                     )
                 }
 
@@ -115,23 +116,23 @@ internal class MessageParsingContext(
                     clientSequence = contentHead.clientSequence,
                     random = contentHead.random,
                     messageUid = contentHead.msgUid,
-                    raw = raw,
+                    segments = emptyList(),
                 )
 
                 else -> null
             }
         }
 
-        internal fun Bot.buildSegments(
+        internal inline fun Bot.buildSegments(
             elems: List<Elem>,
             scene: MessageScene,
-            onExtraInfo: ((ExtraInfo) -> Unit)? = null
+            onExtraInfo: ((ExtraInfo) -> Unit) = {}
         ): List<BotIncomingSegment> {
             val segments = mutableListOf<BotIncomingSegment>()
             val ctx = MessageParsingContext(scene, elems, this)
             while (ctx.hasNext()) {
                 ctx.tryPeekType { this.extraInfo }?.let {
-                    onExtraInfo?.invoke(
+                    onExtraInfo(
                         ExtraInfo(
                             nick = it.nick,
                             groupCard = it.groupCard,
@@ -167,7 +168,8 @@ internal class MessageParsingContext(
             val message = BotForwardedMessage(
                 senderName = senderName,
                 avatarUrl = avatarUrl,
-                timestamp = contentHead.time
+                timestamp = contentHead.time,
+                segments = emptyList()
             )
             val segments = buildSegments(
                 elems = raw.messageBody.richText.elems,
@@ -176,8 +178,7 @@ internal class MessageParsingContext(
             if (segments.isEmpty()) {
                 return null
             }
-            message.segments = segments
-            return message
+            return message.copy(segments = segments)
         }
 
         internal fun GroupEssenceMsgItem.toBotEssenceMessage(groupUin: Long) = BotEssenceMessage(

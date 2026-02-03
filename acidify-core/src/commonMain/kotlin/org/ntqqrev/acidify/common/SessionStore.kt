@@ -5,7 +5,6 @@ import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlin.js.JsExport
 import kotlin.js.JsStatic
-import kotlin.jvm.JvmField
 import kotlin.random.Random
 
 /**
@@ -14,18 +13,15 @@ import kotlin.random.Random
 @JsExport
 @Serializable
 data class SessionStore(
-    @JvmField var uin: Long,
-    @JvmField var uid: String,
-
+    var uin: Long,
+    var uid: String,
     var a2: ByteArray,
     var d2: ByteArray,
     var d2Key: ByteArray,
     var tgtgt: ByteArray,
     var encryptedA1: ByteArray,
     var noPicSig: ByteArray,
-
     var qrSig: ByteArray,
-
     var guid: ByteArray,
     val deviceName: String,
 ) {

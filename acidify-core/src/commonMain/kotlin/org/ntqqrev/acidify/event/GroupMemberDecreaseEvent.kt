@@ -11,7 +11,7 @@ import kotlin.js.JsExport
  * @property operatorUid 管理员 uid，如果是管理员踢出
  */
 @JsExport
-class GroupMemberDecreaseEvent internal constructor(
+data class GroupMemberDecreaseEvent internal constructor(
     val groupUin: Long,
     val userUin: Long,
     val userUid: String,

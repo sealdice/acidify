@@ -8,6 +8,6 @@ import kotlin.js.JsExport
  * @property state 二维码状态
  */
 @JsExport
-class QRCodeStateQueryEvent internal constructor(
+data class QRCodeStateQueryEvent internal constructor(
     val state: QRCodeState
 ) : AcidifyEvent

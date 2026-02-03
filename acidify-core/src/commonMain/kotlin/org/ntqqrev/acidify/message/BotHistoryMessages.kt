@@ -8,7 +8,7 @@ import kotlin.js.JsExport
  * @param nextStartSequence 下一次获取历史消息时的起始序列号
  */
 @JsExport
-class BotHistoryMessages internal constructor(
+data class BotHistoryMessages internal constructor(
     val messages: List<BotIncomingMessage>,
     val nextStartSequence: Long? = null
 )

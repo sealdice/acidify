@@ -7,7 +7,7 @@ import kotlin.js.JsExport
  * @property reason 下线原因
  */
 @JsExport
-class BotOfflineEvent internal constructor(
+data class BotOfflineEvent internal constructor(
     val reason: String
 ) : AcidifyEvent
 

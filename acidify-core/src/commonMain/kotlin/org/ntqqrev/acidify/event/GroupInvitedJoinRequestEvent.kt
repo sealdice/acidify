@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property targetUserUid 被邀请者 uid
  */
 @JsExport
-class GroupInvitedJoinRequestEvent internal constructor(
+data class GroupInvitedJoinRequestEvent internal constructor(
     val groupUin: Long,
     val notificationSeq: Long,
     val initiatorUin: Long,

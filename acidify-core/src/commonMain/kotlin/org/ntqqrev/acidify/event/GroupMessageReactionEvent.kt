@@ -12,7 +12,7 @@ import kotlin.js.JsExport
  * @property isAdd 是否为添加，`false` 表示取消回应
  */
 @JsExport
-class GroupMessageReactionEvent internal constructor(
+data class GroupMessageReactionEvent internal constructor(
     val groupUin: Long,
     val userUin: Long,
     val userUid: String,

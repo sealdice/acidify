@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property isSet 是否被设置为精华，`false` 表示被取消精华
  */
 @JsExport
-class GroupEssenceMessageChangeEvent internal constructor(
+data class GroupEssenceMessageChangeEvent internal constructor(
     val groupUin: Long,
     val messageSeq: Long,
     val operatorUin: Long,

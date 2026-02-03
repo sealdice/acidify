@@ -10,7 +10,7 @@ import kotlin.js.JsExport
  * @property capacity 群容量
  */
 @JsExport
-class BotGroupData internal constructor(
+data class BotGroupData internal constructor(
     val uin: Long,
     val name: String,
     val memberCount: Int,

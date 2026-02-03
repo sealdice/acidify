@@ -11,7 +11,7 @@ sealed class BotIncomingSegment {
      * 文本消息段
      * @property text 文本内容
      */
-    class Text internal constructor(
+    data class Text internal constructor(
         val text: String,
     ) : BotIncomingSegment() {
         override fun toString(): String = text
@@ -22,7 +22,7 @@ sealed class BotIncomingSegment {
      * @property uin 被提及的用户的 QQ 号，为 `null` 表示提及了所有人（`@全体成员`）
      * @property name 被提及的用户的名称，视情况有可能是昵称 / 备注 / 群名片 / `@全体成员`
      */
-    class Mention internal constructor(
+    data class Mention internal constructor(
         val uin: Long? = null,
         val name: String,
     ) : BotIncomingSegment() {
@@ -35,7 +35,7 @@ sealed class BotIncomingSegment {
      * @property summary 表情的文本描述
      * @property isLarge 是否为超级表情
      */
-    class Face internal constructor(
+    data class Face internal constructor(
         val faceId: Int,
         val summary: String,
         val isLarge: Boolean,
@@ -49,7 +49,7 @@ sealed class BotIncomingSegment {
      * @property senderUin 被回复的消息的发送者的 QQ 号
      * @property segments 被回复的消息的内容
      */
-    class Reply internal constructor(
+    data class Reply internal constructor(
         val sequence: Long,
         val senderUin: Long,
         val segments: List<BotIncomingSegment>,
@@ -65,7 +65,7 @@ sealed class BotIncomingSegment {
      * @property subType 图片子类型
      * @property summary 图片的文本描述
      */
-    class Image internal constructor(
+    data class Image internal constructor(
         val fileId: String,
         val width: Int,
         val height: Int,
@@ -80,7 +80,7 @@ sealed class BotIncomingSegment {
      * @property fileId 语音的文件 ID
      * @property duration 语音的时长（秒）
      */
-    class Record internal constructor(
+    data class Record internal constructor(
         val fileId: String,
         val duration: Int,
     ) : BotIncomingSegment() {
@@ -94,7 +94,7 @@ sealed class BotIncomingSegment {
      * @property width 视频的宽度
      * @property height 视频的高度
      */
-    class Video internal constructor(
+    data class Video internal constructor(
         val fileId: String,
         val duration: Int,
         val width: Int,
@@ -110,7 +110,7 @@ sealed class BotIncomingSegment {
      * @property fileSize 文件大小（字节）
      * @property fileHash 文件的 TriSHA1 哈希值，仅在私聊文件中存在
      */
-    class File internal constructor(
+    data class File internal constructor(
         val fileId: String,
         val fileName: String,
         val fileSize: Long,
@@ -126,7 +126,7 @@ sealed class BotIncomingSegment {
      * @property preview 转发消息的预览文本列表，形如 `XXX: 你好！`
      * @property summary 转发消息的文本描述，形如 `查看1条转发消息`
      */
-    class Forward internal constructor(
+    data class Forward internal constructor(
         val resId: String,
         val title: String,
         val preview: List<String>,
@@ -143,7 +143,7 @@ sealed class BotIncomingSegment {
      * @property emojiPackageId 市场表情所属的套图 ID
      * @property key 市场表情的 key
      */
-    class MarketFace internal constructor(
+    data class MarketFace internal constructor(
         val url: String,
         val summary: String,
         val emojiId: String,
@@ -158,7 +158,7 @@ sealed class BotIncomingSegment {
      * @property appName 小程序 App Name
      * @property jsonPayload 小程序的 JSON 负载
      */
-    class LightApp internal constructor(
+    data class LightApp internal constructor(
         val appName: String,
         val jsonPayload: String,
     ) : BotIncomingSegment() {
