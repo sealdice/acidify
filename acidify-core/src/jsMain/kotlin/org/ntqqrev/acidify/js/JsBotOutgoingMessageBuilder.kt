@@ -1,10 +1,8 @@
 package org.ntqqrev.acidify.js
 
-import kotlinx.coroutines.await
 import org.ntqqrev.acidify.message.BotOutgoingMessageBuilder
 import org.ntqqrev.acidify.message.ImageFormat
 import org.ntqqrev.acidify.message.ImageSubType
-import kotlin.js.Promise
 
 @JsExport
 @JsName("BotOutgoingMessageBuilder")
@@ -57,10 +55,10 @@ class JsBotOutgoingMessageBuilder internal constructor(
         underlying.video(raw, width, height, duration, thumb, thumbFormat)
     }
 
-    fun forward(block: (JsBotForwardBlockBuilder) -> Promise<Unit>) {
+    fun forward(block: (JsBotForwardBlockBuilder) -> Unit) {
         underlying.forward {
             val jsBuilder = JsBotForwardBlockBuilder(this)
-            block(jsBuilder).await()
+            block(jsBuilder)
         }
     }
 }

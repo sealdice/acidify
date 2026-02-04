@@ -132,11 +132,11 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
 
     fun sendFriendMessage(
         friendUin: Long,
-        build: (JsBotOutgoingMessageBuilder) -> Promise<Unit>
+        build: (JsBotOutgoingMessageBuilder) -> Unit
     ): Promise<BotOutgoingMessageResult> = promise {
         bot.sendFriendMessage(friendUin) {
             val b = JsBotOutgoingMessageBuilder(this)
-            build(b).await()
+            build(b)
         }
     }
 
@@ -144,21 +144,21 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
         friendUin: Long,
         clientSequence: Long,
         random: Int,
-        build: (JsBotOutgoingMessageBuilder) -> Promise<Unit>
+        build: (JsBotOutgoingMessageBuilder) -> Unit
     ): Promise<BotOutgoingMessageResult> = promise {
         bot.sendFriendMessage(friendUin, clientSequence, random) {
             val b = JsBotOutgoingMessageBuilder(this)
-            build(b).await()
+            build(b)
         }
     }
 
     fun sendGroupMessage(
         groupUin: Long,
-        build: (JsBotOutgoingMessageBuilder) -> Promise<Unit>
+        build: (JsBotOutgoingMessageBuilder) -> Unit
     ): Promise<BotOutgoingMessageResult> = promise {
         bot.sendGroupMessage(groupUin) {
             val b = JsBotOutgoingMessageBuilder(this)
-            build(b).await()
+            build(b)
         }
     }
 
@@ -166,11 +166,11 @@ class JsBot internal constructor(private val bot: Bot) : CoroutineScope by bot {
         groupUin: Long,
         clientSequence: Long,
         random: Int,
-        build: (JsBotOutgoingMessageBuilder) -> Promise<Unit>
+        build: (JsBotOutgoingMessageBuilder) -> Unit
     ): Promise<BotOutgoingMessageResult> = promise {
         bot.sendGroupMessage(groupUin, clientSequence, random) {
             val b = JsBotOutgoingMessageBuilder(this)
-            build(b).await()
+            build(b)
         }
     }
 

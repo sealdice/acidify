@@ -28,19 +28,20 @@ import org.ntqqrev.acidify.internal.service.message.SendLongMsg
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 import org.ntqqrev.acidify.internal.util.sha1
-import org.ntqqrev.acidify.message.*
+import org.ntqqrev.acidify.message.BotOutgoingSegment
+import org.ntqqrev.acidify.message.MessageScene
 import kotlin.math.max
 import kotlin.random.Random
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 internal class MessageBuildingContext(
     val bot: Bot,
     val scene: MessageScene,
     val peerUin: Long,
     val peerUid: String,
+    val segments: List<BotOutgoingSegment>,
     private val nestedForwardTrace: MutableMap<String, List<CommonMessage>>? = null
-) : BotOutgoingMessageBuilder {
+) {
     private val logger = bot.createLogger(this)
     private val elemsList = mutableListOf<Deferred<List<Elem>>>()
 
@@ -52,11 +53,11 @@ internal class MessageBuildingContext(
         elemsList.add(bot.async { elems() })
     }
 
-    override fun text(text: String) = addAsync {
+    fun BotOutgoingSegment.Text.build() = addAsync {
         Elem(text = Text(textMsg = text))
     }
 
-    override fun mention(uin: Long?, name: String) = addAsync {
+    fun BotOutgoingSegment.Mention.build() = addAsync {
         Elem(
             text = Text(
                 textMsg = "@$name",
@@ -69,7 +70,7 @@ internal class MessageBuildingContext(
         )
     }
 
-    override fun face(faceId: Int, isLarge: Boolean) = addAsync {
+    fun BotOutgoingSegment.Face.build() = addAsync {
         val faceDetail = bot.faceDetailMap[faceId.toString()]
             ?: throw NoSuchElementException("要发送的表情 ID 不存在: $faceId")
 
@@ -109,7 +110,7 @@ internal class MessageBuildingContext(
         Elem(face = Face(index = faceId))
     }
 
-    override fun reply(sequence: Long) = addMultipleAsync {
+    fun BotOutgoingSegment.Reply.build() = addMultipleAsync {
         val replied = when (scene) {
             MessageScene.FRIEND -> bot::getFriendHistoryMessages
             MessageScene.GROUP -> bot::getGroupHistoryMessages
@@ -160,14 +161,7 @@ internal class MessageBuildingContext(
         }
     }
 
-    override fun image(
-        raw: ByteArray,
-        format: ImageFormat,
-        width: Int,
-        height: Int,
-        subType: ImageSubType,
-        summary: String
-    ) = addMultipleAsync {
+    fun BotOutgoingSegment.Image.build() = addMultipleAsync {
         val imageMd5Bytes = MD5.hash(raw)
         val imageMd5 = imageMd5Bytes.toHexString()
         val imageSha1Bytes = raw.sha1()
@@ -251,7 +245,7 @@ internal class MessageBuildingContext(
         )
     }
 
-    override fun record(rawSilk: ByteArray, duration: Long) = addAsync {
+    fun BotOutgoingSegment.Record.build() = addAsync {
         val recordMd5Bytes = MD5.hash(rawSilk)
         val recordMd5 = recordMd5Bytes.toHexString()
         val recordSha1Bytes = rawSilk.sha1()
@@ -312,14 +306,7 @@ internal class MessageBuildingContext(
         )
     }
 
-    override fun video(
-        raw: ByteArray,
-        width: Int,
-        height: Int,
-        duration: Long,
-        thumb: ByteArray,
-        thumbFormat: ImageFormat
-    ) = addAsync {
+    fun BotOutgoingSegment.Video.build() = addAsync {
         val videoMd5Bytes = MD5.hash(raw)
         val videoMd5 = videoMd5Bytes.toHexString()
         val videoSha1Bytes = raw.sha1()
@@ -409,17 +396,16 @@ internal class MessageBuildingContext(
         )
     }
 
-    override fun forward(block: suspend BotForwardBlockBuilder.() -> Unit) = addAsync {
-        val forwardCtx = Forward(this)
-        forwardCtx.block()
-        val fakeMessages = forwardCtx.build()
+    fun BotOutgoingSegment.Forward.build() = addAsync {
+        val outerThis = this@MessageBuildingContext
+        val forwardCtx = Forward(outerThis, nodes)
+        val commonMessages = forwardCtx.build()
         val uuid = Random.nextBytes(16).let {
             "${it.sliceArray(0..3).toHexString()}-${it.sliceArray(4..5).toHexString()}-" +
                     "${it.sliceArray(6..7).toHexString()}-${it.sliceArray(8..9).toHexString()}-" +
                     it.sliceArray(10..15).toHexString()
         }
-        val commonMessages = fakeMessages.map { it.commonMsg }
-        this.nestedForwardTrace?.set(uuid, commonMessages)
+        nestedForwardTrace?.set(uuid, commonMessages)
 
         val resId = bot.client.callService(
             SendLongMsg,
@@ -428,7 +414,7 @@ internal class MessageBuildingContext(
                 peerUin = peerUin,
                 peerUid = peerUid,
                 messages = commonMessages,
-                nestedForwardTrace = if (this.nestedForwardTrace == null)
+                nestedForwardTrace = if (nestedForwardTrace == null)
                     forwardCtx.nestedForwardTrace
                 else mutableMapOf()
             )
@@ -445,24 +431,24 @@ internal class MessageBuildingContext(
             meta = buildJsonObject {
                 put("detail", buildJsonObject {
                     put("news", buildJsonArray {
-                        fakeMessages.take(max(4, fakeMessages.size)).forEach {
+                        preview.forEach {
                             add(buildJsonObject {
-                                put("text", "${it.senderName}: ${it.preview}")
+                                put("text", it)
                             })
                         }
                     })
                     put("resid", resId)
-                    put("source", "群聊的聊天记录")
-                    put("summary", "查看${fakeMessages.size}条转发消息")
+                    put("source", title)
+                    put("summary", summary)
                     put("uniseq", uuid)
                 })
             },
             desc = "[聊天记录]",
             extra = Json.encodeToString(buildJsonObject {
                 put("filename", uuid)
-                put("tsum", max(4, fakeMessages.size))
+                put("tsum", nodes.size)
             }),
-            prompt = "[聊天记录]",
+            prompt = prompt,
             ver = "0.0.0.5",
             view = "contact"
         )
@@ -478,148 +464,88 @@ internal class MessageBuildingContext(
         )
     }
 
-    suspend fun build(): List<Elem> = elemsList.awaitAll().flatten()
+    suspend fun build(): List<Elem> {
+        segments.forEach {
+            when (it) {
+                is BotOutgoingSegment.Text -> it.build()
+                is BotOutgoingSegment.Mention -> it.build()
+                is BotOutgoingSegment.Face -> it.build()
+                is BotOutgoingSegment.Reply -> it.build()
+                is BotOutgoingSegment.Image -> it.build()
+                is BotOutgoingSegment.Record -> it.build()
+                is BotOutgoingSegment.Video -> it.build()
+                is BotOutgoingSegment.Forward -> it.build()
+            }
+        }
+        return elemsList.awaitAll().flatten()
+    }
 
     internal class Forward(
-        val ctx: MessageBuildingContext
-    ) : BotForwardBlockBuilder {
-        private val commonMsgList = mutableListOf<Deferred<FakeMessage>>()
+        val ctx: MessageBuildingContext,
+        val nodes: List<BotOutgoingSegment.Forward.Node>,
+    ) {
+        private val commonMsgList = mutableListOf<Deferred<CommonMessage>>()
         val nestedForwardTrace = mutableMapOf<String, List<CommonMessage>>()
 
-        private fun addAsync(elem: suspend () -> FakeMessage) {
+        private fun addAsync(elem: suspend () -> CommonMessage) {
             commonMsgList.add(ctx.bot.async { elem() })
         }
 
-        @OptIn(ExperimentalTime::class)
-        override fun node(
-            senderUin: Long,
-            senderName: String,
-            block: suspend BotOutgoingMessageBuilder.() -> Unit
-        ) = addAsync {
+        fun BotOutgoingSegment.Forward.Node.build() = addAsync {
             val subCtx = MessageBuildingContext(
                 bot = ctx.bot,
                 scene = ctx.scene,
                 peerUin = ctx.peerUin,
                 peerUid = ctx.peerUid,
+                segments = segments,
                 nestedForwardTrace = ctx.nestedForwardTrace ?: nestedForwardTrace,
             )
-            val subBuilder = SubBuilder(subCtx)
-            subBuilder.block()
             val subElems = subCtx.build()
-            val preview = subBuilder.preview
             val fakeSequence = Random.nextInt(1000000, 9999999).toLong()
-            FakeMessage(
-                senderUin = senderUin,
-                senderName = senderName,
-                preview = preview,
-                commonMsg = CommonMessage(
-                    routingHead = RoutingHead(
-                        fromUin = senderUin,
-                        toUid = ctx.bot.uid,
-                        commonC2C = if (ctx.scene == MessageScene.FRIEND) {
-                            RoutingHead.CommonC2C(name = senderName)
-                        } else {
-                            RoutingHead.CommonC2C()
-                        },
-                        group = if (ctx.scene == MessageScene.GROUP) {
-                            RoutingHead.CommonGroup(
-                                groupCode = ctx.peerUin,
-                                groupCard = senderName,
-                                groupCardType = 2,
-                            )
-                        } else {
-                            RoutingHead.CommonGroup()
-                        }
+            CommonMessage(
+                routingHead = RoutingHead(
+                    fromUin = senderUin,
+                    toUid = ctx.bot.uid,
+                    commonC2C = if (ctx.scene == MessageScene.FRIEND) {
+                        RoutingHead.CommonC2C(name = senderName)
+                    } else {
+                        RoutingHead.CommonC2C()
+                    },
+                    group = if (ctx.scene == MessageScene.GROUP) {
+                        RoutingHead.CommonGroup(
+                            groupCode = ctx.peerUin,
+                            groupCard = senderName,
+                            groupCardType = 2,
+                        )
+                    } else {
+                        RoutingHead.CommonGroup()
+                    }
+                ),
+                contentHead = ContentHead(
+                    type = when (ctx.scene) {
+                        MessageScene.FRIEND -> PushMsgType.FriendMessage.value
+                        MessageScene.GROUP -> PushMsgType.GroupMessage.value
+                        MessageScene.TEMP -> PushMsgType.TempMessage.value
+                    },
+                    random = Random.nextInt(),
+                    sequence = fakeSequence,
+                    time = Clock.System.now().epochSeconds,
+                    clientSequence = fakeSequence,
+                    msgUid = Random.nextLong(1000000000000, 9999999999999),
+                    forwardExt = ContentHead.Forward(
+                        field3 = 2,
+                        avatar = "https://q.qlogo.cn/headimg_dl?dst_uin=$senderUin&spec=640&img_type=jpg"
                     ),
-                    contentHead = ContentHead(
-                        type = when (ctx.scene) {
-                            MessageScene.FRIEND -> PushMsgType.FriendMessage.value
-                            MessageScene.GROUP -> PushMsgType.GroupMessage.value
-                            MessageScene.TEMP -> PushMsgType.TempMessage.value
-                        },
-                        random = Random.nextInt(),
-                        sequence = fakeSequence,
-                        time = Clock.System.now().epochSeconds,
-                        clientSequence = fakeSequence,
-                        msgUid = Random.nextLong(1000000000000, 9999999999999),
-                        forwardExt = ContentHead.Forward(
-                            field3 = 2,
-                            avatar = "https://q.qlogo.cn/headimg_dl?dst_uin=$senderUin&spec=640&img_type=jpg"
-                        ),
-                    ),
-                    messageBody = MessageBody(
-                        richText = RichText(elems = subElems)
-                    ),
-                )
+                ),
+                messageBody = MessageBody(
+                    richText = RichText(elems = subElems)
+                ),
             )
         }
 
-        suspend fun build() = commonMsgList.awaitAll()
-
-        internal class FakeMessage(
-            val senderUin: Long,
-            val senderName: String,
-            val preview: String,
-            val commonMsg: CommonMessage
-        )
-
-        internal class SubBuilder(val parent: MessageBuildingContext) : BotOutgoingMessageBuilder {
-            private val previewBuilder = StringBuilder()
-            val preview: String
-                get() = previewBuilder.toString()
-
-            override fun text(text: String) {
-                parent.text(text)
-                previewBuilder.append(text)
-            }
-
-            override fun face(faceId: Int, isLarge: Boolean) {
-                parent.face(faceId, isLarge)
-                previewBuilder.append("[表情]")
-            }
-
-            override fun mention(uin: Long?, name: String) {
-                parent.mention(uin, name)
-                previewBuilder.append("@$name")
-            }
-
-            override fun reply(sequence: Long) {
-                parent.reply(sequence)
-            }
-
-            override fun image(
-                raw: ByteArray,
-                format: ImageFormat,
-                width: Int,
-                height: Int,
-                subType: ImageSubType,
-                summary: String
-            ) {
-                parent.image(raw, format, width, height, subType, summary)
-                previewBuilder.append(summary)
-            }
-
-            override fun record(rawSilk: ByteArray, duration: Long) {
-                parent.record(rawSilk, duration)
-                previewBuilder.append("[语音]")
-            }
-
-            override fun video(
-                raw: ByteArray,
-                width: Int,
-                height: Int,
-                duration: Long,
-                thumb: ByteArray,
-                thumbFormat: ImageFormat
-            ) {
-                parent.video(raw, width, height, duration, thumb, thumbFormat)
-                previewBuilder.append("[视频]")
-            }
-
-            override fun forward(block: suspend BotForwardBlockBuilder.() -> Unit) {
-                parent.forward(block)
-                previewBuilder.append("[聊天记录]")
-            }
+        suspend fun build(): List<CommonMessage> {
+            nodes.forEach { it.build() }
+            return commonMsgList.awaitAll()
         }
     }
 }

@@ -164,58 +164,63 @@ suspend fun Application.transformSegment(segment: BotIncomingSegment): IncomingS
     }
 }
 
-class YogurtMessageBuildingContext(
-    val application: Application,
-    val builder: BotOutgoingMessageBuilder,
-    val scene: MessageScene,
-    val peerUin: Long
-) : BotOutgoingMessageBuilder by builder {
-    fun switchTo(newBuilder: BotOutgoingMessageBuilder): YogurtMessageBuildingContext {
-        return YogurtMessageBuildingContext(application, newBuilder, scene, peerUin)
-    }
-}
-
-suspend fun YogurtMessageBuildingContext.applySegment(segment: OutgoingSegment) {
-    val bot = application.dependencies.resolve<Bot>()
+suspend fun transformSegment(
+    bot: Bot,
+    scene: MessageScene,
+    peerUin: Long,
+    segment: OutgoingSegment,
+): BotOutgoingSegment {
     val logger = bot.createLogger("MessageTransform")
     when (segment) {
         is OutgoingSegment.Text -> {
-            text(segment.data.text)
+            return BotOutgoingSegment.Text(
+                text = segment.data.text
+            )
         }
 
         is OutgoingSegment.Mention -> {
             if (scene == MessageScene.FRIEND) {
                 // 私聊不支持 at，转换为文本
-                text("@${segment.data.userId} ")
-                return
+                BotOutgoingSegment.Text("@${segment.data.userId} ")
             }
-            val bot = application.dependencies.resolve<Bot>()
             val group = bot.getGroup(peerUin)
             val member = group?.getMember(segment.data.userId)
-            mention(
-                segment.data.userId,
-                member?.card?.takeIf { it.isNotEmpty() }
+            return BotOutgoingSegment.Mention(
+                uin = segment.data.userId,
+                name = member?.card?.takeIf { it.isNotEmpty() }
                     ?: member?.nickname
                     ?: segment.data.userId.toString(),
             )
         }
 
         is OutgoingSegment.MentionAll -> {
-            mention(null, "全体成员")
+            if (scene == MessageScene.FRIEND) {
+                // 私聊不支持 at，转换为文本
+                BotOutgoingSegment.Text("@全体成员 ")
+            }
+            return BotOutgoingSegment.Mention(
+                uin = null,
+                name = "全体成员",
+            )
         }
 
         is OutgoingSegment.Face -> {
-            face(segment.data.faceId.toInt())
+            return BotOutgoingSegment.Face(
+                faceId = segment.data.faceId.toInt(),
+                isLarge = false,
+            )
         }
 
         is OutgoingSegment.Reply -> {
-            reply(segment.data.messageSeq)
+            return BotOutgoingSegment.Reply(
+                sequence = segment.data.messageSeq,
+            )
         }
 
         is OutgoingSegment.Image -> {
             val imageData = resolveUri(segment.data.uri)
             val imageInfo = getImageInfo(imageData)
-            image(
+            return BotOutgoingSegment.Image(
                 raw = imageData,
                 format = imageInfo.format.toAcidifyFormat(),
                 width = imageInfo.width,
@@ -227,7 +232,7 @@ suspend fun YogurtMessageBuildingContext.applySegment(segment: OutgoingSegment) 
 
         is OutgoingSegment.Record -> {
             val audioData = resolveUri(segment.data.uri)
-            // try to convert to pcm, if fails, assume it's already pcm
+            // 尝试转换为 PCM，若失败则假设已是 PCM 格式
             val pcmData = try {
                 audioToPcm(audioData)
             } catch (e: Exception) {
@@ -235,10 +240,9 @@ suspend fun YogurtMessageBuildingContext.applySegment(segment: OutgoingSegment) 
                 audioData
             }
             val silkData = silkEncode(pcmData)
-            logger.d { "语音 ${segment.data.uri} 编码完成" }
             val duration = calculatePcmDuration(pcmData)
-            logger.d { "语音时长 ${duration.inWholeSeconds} 秒" }
-            record(
+            logger.d { "语音 ${segment.data.uri} 编码完成，时长 ${duration.inWholeSeconds} 秒" }
+            return BotOutgoingSegment.Record(
                 rawSilk = silkData,
                 duration = duration.inWholeSeconds
             )
@@ -247,15 +251,14 @@ suspend fun YogurtMessageBuildingContext.applySegment(segment: OutgoingSegment) 
         is OutgoingSegment.Video -> {
             val videoData = resolveUri(segment.data.uri)
             val videoInfo = getVideoInfo(videoData)
-            logger.d { "视频宽高 ${videoInfo.width}x${videoInfo.height}，时长 ${videoInfo.duration.inWholeSeconds} 秒" }
+            logger.d { "视频 ${segment.data.uri} 信息：${videoInfo.width}x${videoInfo.height}，时长 ${videoInfo.duration.inWholeSeconds} 秒" }
             val thumbData = if (segment.data.thumbUri != null) {
                 resolveUri(segment.data.thumbUri!!)
             } else {
                 getVideoFirstFrameJpg(videoData)
             }
             val thumbInfo = getImageInfo(thumbData)
-
-            video(
+            return BotOutgoingSegment.Video(
                 raw = videoData,
                 width = videoInfo.width,
                 height = videoInfo.height,
@@ -266,16 +269,17 @@ suspend fun YogurtMessageBuildingContext.applySegment(segment: OutgoingSegment) 
         }
 
         is OutgoingSegment.Forward -> {
-            forward {
-                segment.data.messages.forEach { forwardedMsg ->
-                    node(forwardedMsg.userId, forwardedMsg.senderName) {
-                        val nodeContext = this@applySegment.switchTo(this@node)
-                        forwardedMsg.segments.forEach { seg ->
-                            nodeContext.applySegment(seg)
+            return BotOutgoingSegment.Forward(
+                nodes = segment.data.messages.map { msg ->
+                    BotOutgoingSegment.Forward.Node(
+                        senderUin = msg.userId,
+                        senderName = msg.senderName,
+                        segments = msg.segments.map { seg ->
+                            transformSegment(bot, scene, peerUin, seg)
                         }
-                    }
+                    )
                 }
-            }
+            )
         }
     }
 }

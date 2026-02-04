@@ -6,32 +6,42 @@ import org.ntqqrev.acidify.common.AcidifyDsl
  * 构建发送消息
  */
 @AcidifyDsl
-interface BotOutgoingMessageBuilder {
+class BotOutgoingMessageBuilder {
+    val segments = mutableListOf<BotOutgoingSegment>()
+
     /**
      * 添加文本消息段
      * @param text 文本内容
      */
-    fun text(text: String)
+    fun text(text: String) {
+        segments.add(BotOutgoingSegment.Text(text))
+    }
 
     /**
      * 添加提及（At）消息段
      * @param uin 被提及的用户的 QQ 号，为 `null` 表示提及了所有人（`@全体成员`）
      * @param name 被提及的用户的外显名称（仅在电脑端可见）
      */
-    fun mention(uin: Long?, name: String)
+    fun mention(uin: Long?, name: String) {
+        segments.add(BotOutgoingSegment.Mention(uin, name))
+    }
 
     /**
      * 添加表情消息段
      * @param faceId 表情 ID
      * @param isLarge 是否为超级表情
      */
-    fun face(faceId: Int, isLarge: Boolean = false)
+    fun face(faceId: Int, isLarge: Boolean = false) {
+        segments.add(BotOutgoingSegment.Face(faceId, isLarge))
+    }
 
     /**
      * 添加回复消息段
      * @param sequence 被回复的消息的序列号
      */
-    fun reply(sequence: Long)
+    fun reply(sequence: Long) {
+        segments.add(BotOutgoingSegment.Reply(sequence))
+    }
 
     /**
      * 添加图片消息段
@@ -49,7 +59,18 @@ interface BotOutgoingMessageBuilder {
         height: Int,
         subType: ImageSubType = ImageSubType.NORMAL,
         summary: String = "[图片]"
-    )
+    ) {
+        segments.add(
+            BotOutgoingSegment.Image(
+                raw,
+                format,
+                width,
+                height,
+                subType,
+                summary
+            )
+        )
+    }
 
     /**
      * 添加语音消息段
@@ -59,7 +80,9 @@ interface BotOutgoingMessageBuilder {
     fun record(
         rawSilk: ByteArray,
         duration: Long
-    )
+    ) {
+        segments.add(BotOutgoingSegment.Record(rawSilk, duration))
+    }
 
     /**
      * 添加视频消息段
@@ -77,13 +100,55 @@ interface BotOutgoingMessageBuilder {
         duration: Long,
         thumb: ByteArray,
         thumbFormat: ImageFormat
-    )
+    ) {
+        segments.add(
+            BotOutgoingSegment.Video(
+                raw,
+                width,
+                height,
+                duration,
+                thumb,
+                thumbFormat
+            )
+        )
+    }
 
     /**
      * 添加合并转发消息段
      * @param block 构建合并转发消息
      */
-    fun forward(block: suspend BotForwardBlockBuilder.() -> Unit)
+    inline fun forward(block: Forward.() -> Unit) {
+        val forwardBuilder = Forward()
+        forwardBuilder.block()
+        segments.add(BotOutgoingSegment.Forward(forwardBuilder.nodes))
+    }
+
+    @AcidifyDsl
+    class Forward {
+        val nodes = mutableListOf<BotOutgoingSegment.Forward.Node>()
+
+        /**
+         * 添加一个伪造合并转发消息
+         * @param senderUin 该消息的发送者 QQ 号
+         * @param senderName 该消息的发送者昵称
+         * @param block 构建该消息的内容
+         */
+        inline fun node(
+            senderUin: Long,
+            senderName: String,
+            block: BotOutgoingMessageBuilder.() -> Unit
+        ) {
+            val messageBuilder = BotOutgoingMessageBuilder()
+            messageBuilder.block()
+            nodes.add(
+                BotOutgoingSegment.Forward.Node(
+                    senderUin,
+                    senderName,
+                    messageBuilder.segments
+                )
+            )
+        }
+    }
 
     operator fun String.unaryPlus() = text(this)
 }

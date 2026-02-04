@@ -2,6 +2,8 @@ package org.ntqqrev.yogurt.api.handler
 
 import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.*
 import org.ntqqrev.acidify.message.MessageScene
 import org.ntqqrev.milky.*
@@ -13,20 +15,19 @@ val SendPrivateMessage = ApiEndpoint.SendPrivateMessage.define {
     val bot = application.dependencies.resolve<Bot>()
     bot.getFriend(it.userId)
         ?: throw MilkyApiException(-404, "Friend not found")
-    val result = bot.sendFriendMessage(it.userId) {
-        with(
-            YogurtMessageBuildingContext(
-                application,
-                this,
-                MessageScene.FRIEND,
-                it.userId
-            )
-        ) {
-            it.message.forEach { segment ->
-                applySegment(segment)
+    val result = bot.sendFriendMessage(
+        friendUin = it.userId,
+        segments = it.message.map { segment ->
+            bot.async {
+                transformSegment(
+                    bot = bot,
+                    scene = MessageScene.FRIEND,
+                    peerUin = it.userId,
+                    segment = segment
+                )
             }
-        }
-    }
+        }.awaitAll()
+    )
     SendPrivateMessageOutput(
         messageSeq = result.sequence,
         time = result.sendTime
@@ -37,20 +38,19 @@ val SendGroupMessage = ApiEndpoint.SendGroupMessage.define {
     val bot = application.dependencies.resolve<Bot>()
     bot.getGroup(it.groupId)
         ?: throw MilkyApiException(-404, "Group not found")
-    val result = bot.sendGroupMessage(it.groupId) {
-        with(
-            YogurtMessageBuildingContext(
-                application,
-                this,
-                MessageScene.GROUP,
-                it.groupId
-            )
-        ) {
-            it.message.forEach { segment ->
-                applySegment(segment)
+    val result = bot.sendGroupMessage(
+        groupUin = it.groupId,
+        segments = it.message.map { segment ->
+            bot.async {
+                transformSegment(
+                    bot = bot,
+                    scene = MessageScene.GROUP,
+                    peerUin = it.groupId,
+                    segment = segment
+                )
             }
-        }
-    }
+        }.awaitAll()
+    )
     SendGroupMessageOutput(
         messageSeq = result.sequence,
         time = result.sendTime

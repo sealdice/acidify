@@ -18,23 +18,22 @@ import kotlin.random.Random
  * @param friendUin 好友 QQ 号
  * @param clientSequence 客户端消息序列号，默认随机生成，可用于 IM 开发
  * @param random 消息随机数，默认随机生成，可用于 IM 开发
- * @param block 消息构建块
+ * @param segments 消息段列表
  */
 suspend fun Bot.sendFriendMessage(
     friendUin: Long,
     clientSequence: Long = Random.nextLong(),
     random: Int = Random.nextInt(),
-    block: suspend BotOutgoingMessageBuilder.() -> Unit
+    segments: List<BotOutgoingSegment>,
 ): BotOutgoingMessageResult {
     val friendUid = getUidByUin(friendUin)
-    val context = MessageBuildingContext(
+    val elems = MessageBuildingContext(
         bot = this,
         scene = MessageScene.FRIEND,
         peerUin = friendUin,
-        peerUid = friendUid
-    )
-    context.block()
-    val elems = context.build()
+        peerUid = friendUid,
+        segments = segments,
+    ).build()
     val resp = client.callService(
         SendFriendMessage,
         SendFriendMessage.Req(
@@ -52,26 +51,44 @@ suspend fun Bot.sendFriendMessage(
 }
 
 /**
+ * 发送好友消息
+ * @param friendUin 好友 QQ 号
+ * @param clientSequence 客户端消息序列号，默认随机生成，可用于 IM 开发
+ * @param random 消息随机数，默认随机生成，可用于 IM 开发
+ * @param builderAction 消息段构建器
+ */
+suspend inline fun Bot.sendFriendMessage(
+    friendUin: Long,
+    clientSequence: Long = Random.nextLong(),
+    random: Int = Random.nextInt(),
+    builderAction: BotOutgoingMessageBuilder.() -> Unit,
+) = sendFriendMessage(
+    friendUin = friendUin,
+    clientSequence = clientSequence,
+    random = random,
+    segments = BotOutgoingMessageBuilder().apply(builderAction).segments
+)
+
+/**
  * 发送群消息
  * @param groupUin 群号
  * @param clientSequence 客户端消息序列号，默认随机生成，可用于 IM 开发
  * @param random 消息随机数，默认随机生成，可用于 IM 开发
- * @param block 消息构建块
+ * @param segments 消息段列表
  */
 suspend fun Bot.sendGroupMessage(
     groupUin: Long,
     clientSequence: Long = Random.nextLong(),
     random: Int = Random.nextInt(),
-    block: suspend BotOutgoingMessageBuilder.() -> Unit
+    segments: List<BotOutgoingSegment>,
 ): BotOutgoingMessageResult {
-    val context = MessageBuildingContext(
+    val elems = MessageBuildingContext(
         bot = this,
         scene = MessageScene.GROUP,
         peerUin = groupUin,
         peerUid = groupUin.toString(),
-    )
-    block(context)
-    val elems = context.build()
+        segments = segments,
+    ).build()
     val resp = client.callService(
         SendGroupMessage,
         SendGroupMessage.Req(
@@ -86,6 +103,25 @@ suspend fun Bot.sendGroupMessage(
     }
     return BotOutgoingMessageResult(resp.sequence, resp.sendTime)
 }
+
+/**
+ * 发送群消息
+ * @param groupUin 群号
+ * @param clientSequence 客户端消息序列号，默认随机生成，可用于 IM 开发
+ * @param random 消息随机数，默认随机生成，可用于 IM 开发
+ * @param builderAction 消息段构建器
+ */
+suspend inline fun Bot.sendGroupMessage(
+    groupUin: Long,
+    clientSequence: Long = Random.nextLong(),
+    random: Int = Random.nextInt(),
+    builderAction: BotOutgoingMessageBuilder.() -> Unit,
+) = sendGroupMessage(
+    groupUin = groupUin,
+    clientSequence = clientSequence,
+    random = random,
+    segments = BotOutgoingMessageBuilder().apply(builderAction).segments
+)
 
 /**
  * 撤回好友消息
