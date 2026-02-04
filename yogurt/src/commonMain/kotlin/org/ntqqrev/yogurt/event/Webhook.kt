@@ -7,11 +7,12 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import org.ntqqrev.acidify.Bot
+import org.ntqqrev.milky.Event
 import org.ntqqrev.milky.milkyJsonModule
 import org.ntqqrev.yogurt.YogurtApp.config
-import org.ntqqrev.yogurt.transform.transformAcidifyEvent
 
 val webhookClient = HttpClient {
     install(ContentNegotiation) {
@@ -21,22 +22,21 @@ val webhookClient = HttpClient {
 
 fun Application.configureMilkyEventWebhook() = launch {
     val bot = dependencies.resolve<Bot>()
+    val flow = dependencies.resolve<SharedFlow<Event>>()
     val logger = bot.createLogger("WebhookModule")
-    bot.eventFlow.collect { event ->
-        transformAcidifyEvent(event)?.let {
-            config.webhookConfig.url.forEach { webhookUrl ->
-                launch {
-                    try {
-                        webhookClient.post(webhookUrl) {
-                            if (config.webhookConfig.accessToken.isNotEmpty()) {
-                                bearerAuth(config.webhookConfig.accessToken)
-                            }
-                            contentType(ContentType.Application.Json)
-                            setBody(it)
+    flow.collect {
+        config.webhookConfig.url.forEach { webhookUrl ->
+            launch {
+                try {
+                    webhookClient.post(webhookUrl) {
+                        if (config.webhookConfig.accessToken.isNotEmpty()) {
+                            bearerAuth(config.webhookConfig.accessToken)
                         }
-                    } catch (e: Exception) {
-                        logger.w(e) { "发送事件到 Webhook URL $webhookUrl 失败" }
+                        contentType(ContentType.Application.Json)
+                        setBody(it)
                     }
+                } catch (e: Exception) {
+                    logger.w(e) { "发送事件到 Webhook URL $webhookUrl 失败" }
                 }
             }
         }

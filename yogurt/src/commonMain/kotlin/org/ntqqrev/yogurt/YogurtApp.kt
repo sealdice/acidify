@@ -16,6 +16,11 @@ import io.ktor.server.routing.*
 import io.ktor.server.sse.*
 import io.ktor.server.websocket.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
@@ -28,6 +33,7 @@ import org.ntqqrev.acidify.common.SessionStore
 import org.ntqqrev.acidify.common.UrlSignProvider
 import org.ntqqrev.acidify.login
 import org.ntqqrev.acidify.offline
+import org.ntqqrev.milky.Event
 import org.ntqqrev.milky.milkyJsonModule
 import org.ntqqrev.milky.milkyPackageVersion
 import org.ntqqrev.milky.milkyVersion
@@ -38,6 +44,7 @@ import org.ntqqrev.yogurt.event.configureMilkyEventAuth
 import org.ntqqrev.yogurt.event.configureMilkyEventSse
 import org.ntqqrev.yogurt.event.configureMilkyEventWebSocket
 import org.ntqqrev.yogurt.event.configureMilkyEventWebhook
+import org.ntqqrev.yogurt.transform.transformAcidifyEvent
 import org.ntqqrev.yogurt.util.*
 
 object YogurtApp {
@@ -132,7 +139,16 @@ object YogurtApp {
 
         dependencies {
             provide { bot } cleanup {
-                runBlocking { bot.offline() }
+                runBlocking { it.offline() }
+            }
+            provide<SharedFlow<Event>> {
+                bot.eventFlow
+                    .map(this@embeddedServer::transformAcidifyEvent)
+                    .filterNotNull()
+                    .shareIn(
+                        scope = this@embeddedServer,
+                        started = SharingStarted.Lazily,
+                    )
             }
         }
 
