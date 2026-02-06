@@ -400,16 +400,9 @@ suspend fun Bot.getGroupNotifications(
         if (isFiltered) FetchGroupNotifications.Filtered else FetchGroupNotifications.Normal,
         FetchGroupNotifications.Req(startSequence ?: 0, count)
     )
-    val notifications = resp.notifications
-        .map {
-            async {
-                runCatching {
-                    parseNotification(it, isFiltered)
-                }
-            }
-        }
-        .awaitAll()
-        .mapNotNull { it.getOrNull() }
+    val notifications = resp.notifications.map {
+        async { runCatching { parseNotification(it, isFiltered) } }
+    }.awaitAll().mapNotNull { it.getOrNull() }
     return notifications to resp.nextSequence.takeIf { it != 0L }
 }
 

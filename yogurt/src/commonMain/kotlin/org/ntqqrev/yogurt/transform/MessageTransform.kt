@@ -28,7 +28,9 @@ suspend fun Application.transformMessage(msg: BotIncomingMessage): IncomingMessa
                 messageSeq = msg.sequence,
                 senderId = msg.senderUin,
                 time = msg.timestamp,
-                segments = msg.segments.map { transformSegment(it) },
+                segments = msg.segments.map {
+                    async { transformSegment(it) }
+                }.awaitAll(),
                 friend = friend.toMilkyEntity()
             )
         }
@@ -41,7 +43,9 @@ suspend fun Application.transformMessage(msg: BotIncomingMessage): IncomingMessa
                 messageSeq = msg.sequence,
                 senderId = msg.senderUin,
                 time = msg.timestamp,
-                segments = msg.segments.map { transformSegment(it) },
+                segments = msg.segments.map {
+                    async { transformSegment(it) }
+                }.awaitAll(),
                 group = group.toMilkyEntity(),
                 groupMember = member.toMilkyEntity(),
             )
@@ -164,19 +168,17 @@ suspend fun Application.transformSegment(segment: BotIncomingSegment): IncomingS
     }
 }
 
-suspend fun transformSegment(
-    bot: Bot,
+suspend fun Application.transformSegment(
     scene: MessageScene,
     peerUin: Long,
     segment: OutgoingSegment,
 ): BotOutgoingSegment {
+    val bot = dependencies.resolve<Bot>()
     val logger = bot.createLogger("MessageTransform")
-    when (segment) {
-        is OutgoingSegment.Text -> {
-            return BotOutgoingSegment.Text(
-                text = segment.data.text
-            )
-        }
+    return when (segment) {
+        is OutgoingSegment.Text -> BotOutgoingSegment.Text(
+            text = segment.data.text
+        )
 
         is OutgoingSegment.Mention -> {
             if (scene == MessageScene.FRIEND) {
@@ -185,7 +187,7 @@ suspend fun transformSegment(
             }
             val group = bot.getGroup(peerUin)
             val member = group?.getMember(segment.data.userId)
-            return BotOutgoingSegment.Mention(
+            BotOutgoingSegment.Mention(
                 uin = segment.data.userId,
                 name = member?.card?.takeIf { it.isNotEmpty() }
                     ?: member?.nickname
@@ -193,34 +195,27 @@ suspend fun transformSegment(
             )
         }
 
-        is OutgoingSegment.MentionAll -> {
-            if (scene == MessageScene.FRIEND) {
-                // 私聊不支持 at，转换为文本
-                BotOutgoingSegment.Text("@全体成员 ")
-            }
-            return BotOutgoingSegment.Mention(
-                uin = null,
-                name = "全体成员",
-            )
-        }
+        is OutgoingSegment.MentionAll -> if (scene == MessageScene.FRIEND) {
+            // 私聊不支持 at，转换为文本
+            BotOutgoingSegment.Text("@全体成员 ")
+        } else BotOutgoingSegment.Mention(
+            uin = null,
+            name = "全体成员",
+        )
 
-        is OutgoingSegment.Face -> {
-            return BotOutgoingSegment.Face(
-                faceId = segment.data.faceId.toInt(),
-                isLarge = false,
-            )
-        }
+        is OutgoingSegment.Face -> BotOutgoingSegment.Face(
+            faceId = segment.data.faceId.toInt(),
+            isLarge = false,
+        )
 
-        is OutgoingSegment.Reply -> {
-            return BotOutgoingSegment.Reply(
-                sequence = segment.data.messageSeq,
-            )
-        }
+        is OutgoingSegment.Reply -> BotOutgoingSegment.Reply(
+            sequence = segment.data.messageSeq,
+        )
 
         is OutgoingSegment.Image -> {
             val imageData = resolveUri(segment.data.uri)
             val imageInfo = getImageInfo(imageData)
-            return BotOutgoingSegment.Image(
+            BotOutgoingSegment.Image(
                 raw = imageData,
                 format = imageInfo.format.toAcidifyFormat(),
                 width = imageInfo.width,
@@ -242,7 +237,7 @@ suspend fun transformSegment(
             val silkData = silkEncode(pcmData)
             val duration = calculatePcmDuration(pcmData)
             logger.d { "语音 ${segment.data.uri} 编码完成，时长 ${duration.inWholeSeconds} 秒" }
-            return BotOutgoingSegment.Record(
+            BotOutgoingSegment.Record(
                 rawSilk = silkData,
                 duration = duration.inWholeSeconds
             )
@@ -258,7 +253,7 @@ suspend fun transformSegment(
                 getVideoFirstFrameJpg(videoData)
             }
             val thumbInfo = getImageInfo(thumbData)
-            return BotOutgoingSegment.Video(
+            BotOutgoingSegment.Video(
                 raw = videoData,
                 width = videoInfo.width,
                 height = videoInfo.height,
@@ -268,19 +263,17 @@ suspend fun transformSegment(
             )
         }
 
-        is OutgoingSegment.Forward -> {
-            return BotOutgoingSegment.Forward(
-                nodes = segment.data.messages.map { msg ->
-                    BotOutgoingSegment.Forward.Node(
-                        senderUin = msg.userId,
-                        senderName = msg.senderName,
-                        segments = msg.segments.map { seg ->
-                            transformSegment(bot, scene, peerUin, seg)
-                        }
-                    )
-                }
-            )
-        }
+        is OutgoingSegment.Forward -> BotOutgoingSegment.Forward(
+            nodes = segment.data.messages.map { msg ->
+                BotOutgoingSegment.Forward.Node(
+                    senderUin = msg.userId,
+                    senderName = msg.senderName,
+                    segments = msg.segments.map { seg ->
+                        async { transformSegment(scene, peerUin, seg) }
+                    }.awaitAll()
+                )
+            }
+        )
     }
 }
 
@@ -295,7 +288,7 @@ suspend fun Application.transformEssenceMessage(msg: BotEssenceMessage): GroupEs
         operatorName = msg.operatorName,
         operationTime = msg.operationTime,
         segments = msg.segments.map { segment ->
-            async { transformEssenceSegment(segment) } // parallel transform
+            async { transformEssenceSegment(segment) }
         }.awaitAll()
     )
 }

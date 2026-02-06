@@ -1,9 +1,6 @@
 package org.ntqqrev.acidify
 
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.withLock
 import org.ntqqrev.acidify.event.QRCodeGeneratedEvent
 import org.ntqqrev.acidify.event.QRCodeStateQueryEvent
@@ -278,9 +275,9 @@ suspend fun Bot.getCustomFaceUrl(): List<String> = client.callService(FetchCusto
  */
 suspend fun Bot.getPins(): BotPinnedChats {
     val resp = client.callService(FetchPins)
-    val friendUins = resp.friendUids.mapNotNull {
-        runCatching { getUinByUid(it) }.getOrNull()
-    }
+    val friendUins = resp.friendUids.map {
+        async { runCatching { getUinByUid(it) } }
+    }.awaitAll().mapNotNull { it.getOrNull() }
     return BotPinnedChats(
         friendUins = friendUins,
         groupUins = resp.groupUins

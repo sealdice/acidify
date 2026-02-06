@@ -1,6 +1,8 @@
 package org.ntqqrev.acidify.event.internal
 
 import io.ktor.http.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -515,19 +517,21 @@ internal object MsgPushSignal : AbstractSignal("trpc.msg.olpush.OlPushService.Ms
         val displaySuffix = content.tipInfo?.tip ?: ""
 
         return content.recallMessages.map { recall ->
-            val authorUid = recall.authorUid
-            val authorUin = bot.getUinByUid(authorUid)
-            MessageRecallEvent(
-                scene = MessageScene.GROUP,
-                peerUin = groupUin,
-                messageSeq = recall.sequence.toLong(),
-                senderUin = authorUin,
-                senderUid = authorUid,
-                operatorUin = operatorUin,
-                operatorUid = operatorUid,
-                displaySuffix = displaySuffix
-            )
-        }
+            bot.async {
+                val authorUid = recall.authorUid
+                val authorUin = bot.getUinByUid(authorUid)
+                MessageRecallEvent(
+                    scene = MessageScene.GROUP,
+                    peerUin = groupUin,
+                    messageSeq = recall.sequence.toLong(),
+                    senderUin = authorUin,
+                    senderUid = authorUid,
+                    operatorUin = operatorUin,
+                    operatorUid = operatorUid,
+                    displaySuffix = displaySuffix
+                )
+            }
+        }.awaitAll()
     }
 
     private suspend fun parseGroupSubType16(

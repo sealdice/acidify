@@ -1,5 +1,7 @@
 package org.ntqqrev.acidify
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.internal.service.friend.*
 import org.ntqqrev.acidify.internal.service.message.SendFriendNudge
 import org.ntqqrev.acidify.struct.BotFriendRequest
@@ -53,11 +55,13 @@ suspend fun Bot.deleteFriend(
  */
 suspend fun Bot.getFriendRequests(isFiltered: Boolean = false, limit: Int = 20): List<BotFriendRequest> {
     return if (isFiltered) {
-        client.callService(FetchFriendRequests.Filtered, limit)
-            .map { parseFilteredFriendRequest(it) }
+        client.callService(FetchFriendRequests.Filtered, limit).map {
+            async { runCatching { parseFilteredFriendRequest(it) } }
+        }.awaitAll().mapNotNull { it.getOrNull() }
     } else {
-        client.callService(FetchFriendRequests.Normal, limit)
-            .map { parseFriendRequest(it) }
+        client.callService(FetchFriendRequests.Normal, limit).map {
+            async { runCatching { parseFriendRequest(it) } }
+        }.awaitAll().mapNotNull { it.getOrNull() }
     }
 }
 

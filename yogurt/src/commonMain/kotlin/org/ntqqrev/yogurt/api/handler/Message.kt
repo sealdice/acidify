@@ -17,13 +17,14 @@ val SendPrivateMessage = ApiEndpoint.SendPrivateMessage.define {
     val result = bot.sendFriendMessage(
         friendUin = it.userId,
         segments = it.message.map { segment ->
-            bot.async {
-                transformSegment(
-                    bot = bot,
-                    scene = MessageScene.FRIEND,
-                    peerUin = it.userId,
-                    segment = segment
-                )
+            with(application) {
+                async {
+                    transformSegment(
+                        scene = MessageScene.FRIEND,
+                        peerUin = it.userId,
+                        segment = segment
+                    )
+                }
             }
         }.awaitAll()
     )
@@ -39,13 +40,14 @@ val SendGroupMessage = ApiEndpoint.SendGroupMessage.define {
     val result = bot.sendGroupMessage(
         groupUin = it.groupId,
         segments = it.message.map { segment ->
-            bot.async {
-                transformSegment(
-                    bot = bot,
-                    scene = MessageScene.GROUP,
-                    peerUin = it.groupId,
-                    segment = segment
-                )
+            with(application) {
+                async {
+                    transformSegment(
+                        scene = MessageScene.GROUP,
+                        peerUin = it.groupId,
+                        segment = segment
+                    )
+                }
             }
         }.awaitAll()
     )
@@ -151,15 +153,19 @@ val GetResourceTempUrl = ApiEndpoint.GetResourceTempUrl.define {
 val GetForwardedMessages = ApiEndpoint.GetForwardedMessages.define {
     val forwardedMessages = bot.getForwardedMessages(it.forwardId)
     val transformedMessages = forwardedMessages.map { msg ->
-        IncomingForwardedMessage(
-            senderName = msg.senderName,
-            avatarUrl = msg.avatarUrl,
-            time = msg.timestamp,
-            segments = msg.segments.map { segment ->
-                application.transformSegment(segment)
+        with(application) {
+            async {
+                IncomingForwardedMessage(
+                    senderName = msg.senderName,
+                    avatarUrl = msg.avatarUrl,
+                    time = msg.timestamp,
+                    segments = msg.segments.map { segment ->
+                        async { transformSegment(segment) }
+                    }.awaitAll()
+                )
             }
-        )
-    }
+        }
+    }.awaitAll()
     GetForwardedMessagesOutput(
         messages = transformedMessages
     )
