@@ -81,6 +81,20 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(FieldSpec.Type.STRING, "name", "Yogurt")
         buildConfigField(FieldSpec.Type.STRING, "version", "${project.version}-dev.${runNumberProvider.get()}")
+        buildConfigField(
+            FieldSpec.Type.STRING,
+            "coreVersion",
+            project(":acidify-core").let {
+                "${it.name} ${it.version}"
+            }
+        )
+        buildConfigField(
+            FieldSpec.Type.STRING,
+            "milkyVersion",
+            libs.milky.types.get().let {
+                "${it.module.name} ${it.version}"
+            }
+        )
         buildConfigField(FieldSpec.Type.STRING, "commitHash", gitHashProvider.get())
         buildConfigField(FieldSpec.Type.STRING, "buildTime", buildTimeProvider.get())
     }
