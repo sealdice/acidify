@@ -221,24 +221,21 @@ internal class MessageBuildingContext(
         }
 
         buildList {
-            /*
-            TODO: Make CustomFace fields complete
             when (scene) {
                 MessageScene.FRIEND -> add(
                     Elem(
-                        notOnlineImage = uploadResp.compatQMsg.pbDecode<NotOnlineImage>()
+                        notOnlineImage = uploadResp.compatQMsg
                     )
                 )
 
                 MessageScene.GROUP -> add(
                     Elem(
-                        customFace = uploadResp.compatQMsg.pbDecode<CustomFace>()
+                        customFace = uploadResp.compatQMsg
                     )
                 )
 
                 MessageScene.TEMP -> {}
             }
-            */
 
             add(
                 Elem(
