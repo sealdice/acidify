@@ -66,6 +66,11 @@ class AndroidSessionStore(
         )
     }
 
+    fun clear() {
+        wloginSigs.clear()
+        state = State()
+    }
+
     companion object {
         fun empty(uin: Long, password: String): AndroidSessionStore {
             return AndroidSessionStore(

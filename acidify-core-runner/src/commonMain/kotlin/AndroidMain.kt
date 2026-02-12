@@ -14,7 +14,7 @@ import org.ntqqrev.acidify.common.android.AndroidUrlSignProvider
 import org.ntqqrev.acidify.event.AndroidSessionStoreUpdatedEvent
 import org.ntqqrev.acidify.logging.LogLevel
 import org.ntqqrev.acidify.logging.SimpleLogHandler
-import org.ntqqrev.acidify.login
+import org.ntqqrev.acidify.passwordLogin
 import org.ntqqrev.acidify.online
 
 fun main(): Unit = runBlocking {
@@ -48,7 +48,7 @@ fun main(): Unit = runBlocking {
         }
     }
     if (bot.sessionStore.wloginSigs.a2.isEmpty()) {
-        bot.login(
+        bot.passwordLogin(
             onRequireCaptchaTicket = { captchaUrl ->
                 val queryParams = captchaUrl.split("?")[1].replace("uin=0", "uin=${bot.uin}")
                 println("Captcha at: https://captcha.lagrangecore.org/?$queryParams")

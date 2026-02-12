@@ -106,9 +106,11 @@ suspend fun Bot.login(queryInterval: Long = 3000L, preloadContacts: Boolean = fa
 
 /**
  * 使用 [org.ntqqrev.acidify.common.android.AndroidSessionStore] 中的密码进行登录。
+ * @param onRequireCaptchaTicket 当需要验证码时的回调，参数为验证码 URL，返回值为验证码 Ticket
+ * @param onRequireSmsCode 当需要短信验证码时的回调，参数为国家码、手机号和短信验证 URL，返回值为短信验证码
  * @param preloadContacts 是否预加载好友和群信息以初始化内存缓存
  */
-suspend fun AndroidBot.login(
+suspend fun AndroidBot.passwordLogin(
     onRequireCaptchaTicket: suspend (captchaUrl: String) -> String,
     onRequireSmsCode: suspend (countryCode: String, phone: String, smsUrl: String) -> String,
     preloadContacts: Boolean = false
@@ -217,4 +219,31 @@ suspend fun AndroidBot.login(
     }
     sharedEventFlow.emit(AndroidSessionStoreUpdatedEvent(sessionStore))
     online(preloadContacts)
+}
+
+/**
+ * 如果 Session 为空则调用 [passwordLogin] 进行登录。
+ * 如果 Session 不为空则尝试使用现有的 Session 信息登录，若失败则调用 [passwordLogin] 重新登录。
+ * @param onRequireCaptchaTicket 当需要验证码时的回调，参数为验证码 URL，返回值为验证码 Ticket
+ * @param onRequireSmsCode 当需要短信验证码时的回调，参数为国家码、手机号和短信验证 URL，返回值为短信验证码
+ * @param preloadContacts 是否预加载好友和群信息以初始化内存缓存
+ */
+suspend fun AndroidBot.login(
+    onRequireCaptchaTicket: suspend (captchaUrl: String) -> String,
+    onRequireSmsCode: suspend (countryCode: String, phone: String, smsUrl: String) -> String,
+    preloadContacts: Boolean = false
+) {
+    if (sessionStore.wloginSigs.a2.isEmpty()) {
+        logger.i { "Session 为空，尝试密码登录" }
+        passwordLogin(onRequireCaptchaTicket, onRequireSmsCode, preloadContacts)
+    } else {
+        try {
+            online(preloadContacts)
+        } catch (e: Exception) {
+            logger.w(e) { "使用现有 Session 登录失败，尝试密码登录" }
+            sessionStore.clear()
+            // sharedEventFlow.emit(AndroidSessionStoreUpdatedEvent(sessionStore))
+            passwordLogin(onRequireCaptchaTicket, onRequireSmsCode, preloadContacts)
+        }
+    }
 }

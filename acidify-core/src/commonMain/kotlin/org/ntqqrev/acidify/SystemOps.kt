@@ -11,7 +11,7 @@ import org.ntqqrev.acidify.struct.*
 
 /**
  * 尝试使用现有的 Session 信息上线。
- * 请优先调用 [login]，该方法会在现有 Session 失效时自动调用 [qrCodeLogin]。
+ * 请优先调用 [login]，该方法会在现有 Session 失效时自动调用 [qrCodeLogin] 或 [passwordLogin]。
  * 若确定 Session 有效且不希望进行二维码登录，可调用此方法。
  * @param preloadContacts 是否预加载好友和群信息以初始化内存缓存
  */
