@@ -3,7 +3,6 @@ package org.ntqqrev.acidify.common.android
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.ntqqrev.acidify.common.AppInfo
 
 /**
  * Bot 登录所模拟的 Android QQ 客户端信息

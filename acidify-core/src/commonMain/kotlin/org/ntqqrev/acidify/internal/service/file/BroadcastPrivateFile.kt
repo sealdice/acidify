@@ -10,7 +10,6 @@ import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 import kotlin.random.Random
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 internal object BroadcastPrivateFile :
     Service<BroadcastPrivateFile.Req, BroadcastPrivateFile.Resp>("MessageSvc.PbSendMsg") {
@@ -31,7 +30,6 @@ internal object BroadcastPrivateFile :
         val sequence: Long
     )
 
-    @OptIn(ExperimentalTime::class)
     override fun build(client: AbstractClient, payload: Req): ByteArray =
         PbSendMsgReq(
             routingHead = SendRoutingHead(

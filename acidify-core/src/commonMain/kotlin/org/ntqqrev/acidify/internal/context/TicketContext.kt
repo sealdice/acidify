@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package org.ntqqrev.acidify.internal.context
 
 import io.ktor.client.*
@@ -14,7 +12,6 @@ import org.ntqqrev.acidify.internal.service.system.AndroidFetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchPSKey
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
 internal class TicketContext(client: AbstractClient) : AbstractContext(client) {
     internal class KeyWithLifetime(var value: String, var expireTime: Long) {

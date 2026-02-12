@@ -22,7 +22,6 @@ import org.ntqqrev.acidify.logging.shortenPackageName
 import org.ntqqrev.acidify.message.MessageScene
 import org.ntqqrev.yogurt.YogurtApp
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 val timeFormat = LocalDateTime.Format {
@@ -33,7 +32,6 @@ val timeFormat = LocalDateTime.Format {
     second()
 }
 
-@OptIn(ExperimentalTime::class)
 fun formatColoredLog(
     level: LogLevel,
     tag: String,

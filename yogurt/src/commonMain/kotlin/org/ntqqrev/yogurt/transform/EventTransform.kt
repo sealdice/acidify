@@ -8,9 +8,7 @@ import org.ntqqrev.acidify.message.MessageScene
 import org.ntqqrev.milky.Event
 import org.ntqqrev.yogurt.YogurtApp.config
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
 suspend fun Application.transformAcidifyEvent(event: AcidifyEvent): Event? {
     val bot = dependencies.resolve<AbstractBot>()
     return when (event) {
