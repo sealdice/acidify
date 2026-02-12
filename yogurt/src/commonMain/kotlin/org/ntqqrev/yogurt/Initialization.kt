@@ -145,6 +145,14 @@ suspend fun Application.initializeAndroid(): AndroidBot {
     val sessionStore: AndroidSessionStore = if (SystemFileSystem.exists(androidSessionStorePath)) {
         SystemFileSystem.source(androidSessionStorePath).buffered().use {
             AndroidSessionStore.fromJson(it.readString())
+        }.takeIf {
+            it.uin == config.androidCredentials.uin && it.password == config.androidCredentials.password
+        } ?: run {
+            t.println("找到的 SessionStore 与配置的 uin 不匹配，正在创建新的 SessionStore...")
+            AndroidSessionStore.empty(
+                uin = config.androidCredentials.uin,
+                password = config.androidCredentials.password
+            )
         }
     } else AndroidSessionStore.empty(
         uin = config.androidCredentials.uin,
