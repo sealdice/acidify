@@ -60,7 +60,7 @@ Yogurt 使用的协议类型。可选值有：
 - 指定具体的协议版本号，例如 `39038`、`9.1.60`。目前仅有如下几种内置的协议版本可用：
   - `Linux` 的 `39038` 版本
   - `AndroidPhone` 的 `9.1.60` 版本
-  - `AndroidPad` 的 `9.2.20` 版本、
+  - `AndroidPad` 的 `9.2.20` 版本
 - `custom`：启动时从工作目录下的 `app-info.json` 文件获取版本信息。
 
 ### `androidCredentials`
