@@ -30,7 +30,7 @@ val bundledAndroidAppInfo = mapOf(
     "AndroidPhone/9.1.60" to AndroidAppInfo(
         os = "Android",
         vendorOs = "android",
-        qua = "V1_AND_SQ_9.1.60_11520_YYB_D",
+        qua = "V1_AND_SQ_9.1.60_9388_YYB_D",
         currentVersion = "9.1.60.045f5d19",
         ptVersion = "9.1.60",
         ssoVersion = 22,
@@ -53,7 +53,7 @@ val bundledAndroidAppInfo = mapOf(
     "AndroidPad/9.1.60" to AndroidAppInfo(
         os = "ANDROID",
         vendorOs = "android",
-        qua = "V1_AND_SQ_9.1.60_11525_YYB_D",
+        qua = "V1_AND_SQ_9.1.60_9388_YYB_D",
         currentVersion = "9.1.60.045f5d19",
         ptVersion = "9.1.60",
         ssoVersion = 22,
@@ -99,7 +99,7 @@ val bundledAndroidAppInfo = mapOf(
     "AndroidPad/9.1.70" to AndroidAppInfo(
         os = "ANDROID",
         vendorOs = "android",
-        qua = "V1_AND_SQ_9.1.70_9903_YYB_D",
+        qua = "V1_AND_SQ_9.1.70_9898_YYB_D",
         currentVersion = "9.1.70.88c475c0",
         ptVersion = "9.1.70",
         ssoVersion = 22,
