@@ -8,7 +8,6 @@ import org.ntqqrev.acidify.exception.ServiceException
 import org.ntqqrev.acidify.internal.proto.system.SsoSecureInfo
 import org.ntqqrev.acidify.internal.service.Service
 import org.ntqqrev.acidify.internal.service.system.BotOnline
-import org.ntqqrev.acidify.internal.service.system.Heartbeat
 import org.ntqqrev.acidify.logging.Logger
 
 internal class LagrangeClient(
@@ -71,9 +70,10 @@ internal class LagrangeClient(
             command = service.cmd,
             sequence = sequence,
             payload = byteArray,
+            ssoReservedMsgType = 0,
+            timeoutMillis = timeout,
             requestType = service.ssoRequestType,
             encryptType = service.ssoEncryptType,
-            timeoutMillis = timeout,
             ssoSecureInfo = if (signRequiredCommand.contains(service.cmd)) {
                 signProvider.sign(
                     cmd = service.cmd,

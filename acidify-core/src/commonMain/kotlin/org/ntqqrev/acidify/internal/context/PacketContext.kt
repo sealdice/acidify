@@ -127,26 +127,29 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
         command: String,
         sequence: Int,
         payload: ByteArray,
-        requestType: RequestType,
-        encryptType: EncryptType,
-        timeoutMillis: Long,
-        ssoSecureInfo: SsoSecureInfo?
+        ssoReservedMsgType: Int,
+        timeoutMillis: Long = 10_000L,
+        requestType: RequestType = RequestType.D2Auth,
+        encryptType: EncryptType = EncryptType.WithD2Key,
+        ssoSecureInfo: SsoSecureInfo? = null,
     ): SsoResponse {
         val packet = when (requestType) {
             RequestType.D2Auth -> client.buildProtocol12(
                 command = command,
                 payload = payload,
                 sequence = sequence,
-                ssoSecureInfo = ssoSecureInfo,
                 encryptType = encryptType,
+                ssoReservedMsgType = ssoReservedMsgType,
+                ssoSecureInfo = ssoSecureInfo,
             )
 
             RequestType.Simple -> client.buildProtocol13(
                 command = command,
                 payload = payload,
                 sequence = sequence,
-                ssoSecureInfo = ssoSecureInfo,
                 encryptType = encryptType,
+                ssoReservedMsgType = ssoReservedMsgType,
+                ssoSecureInfo = ssoSecureInfo,
             )
         }
         val deferred = CompletableDeferred<SsoResponse>()
@@ -201,17 +204,21 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
         0x00, 0x00, 0x00, 0x00,
     )
 
-    private fun AbstractClient.buildSsoReserved(secureInfo: SsoSecureInfo?) = when (this) {
+    private fun AbstractClient.buildSsoReserved(
+        msgType: Int,
+        secureInfo: SsoSecureInfo?
+    ) = when (this) {
         is LagrangeClient -> SsoReservedFields(
             trace = generateTrace(),
             uid = uid,
+            msgType = msgType,
             secureInfo = secureInfo,
         )
 
         is KuromeClient -> SsoReservedFields(
             trace = generateTrace(),
             uid = uid,
-            msgType = 32,
+            msgType = msgType,
             secureInfo = secureInfo,
             ntCoreVersion = 100,
         )
@@ -221,8 +228,9 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
         command: String,
         payload: ByteArray,
         sequence: Int,
-        ssoSecureInfo: SsoSecureInfo?,
         encryptType: EncryptType,
+        ssoReservedMsgType: Int,
+        ssoSecureInfo: SsoSecureInfo?,
     ): Buffer = Buffer().apply {
         barrier(Prefix.UINT_32 or Prefix.INCLUDE_PREFIX) {
             writeInt(12)
@@ -248,7 +256,13 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
                     writeString(guid.toHexString(), Prefix.UINT_32 or Prefix.INCLUDE_PREFIX)
                     writeBytes(ByteArray(0), Prefix.UINT_32 or Prefix.INCLUDE_PREFIX) // unknown
                     writeString(currentVersion, Prefix.UINT_16 or Prefix.INCLUDE_PREFIX)
-                    writeBytes(buildSsoReserved(ssoSecureInfo), Prefix.UINT_32 or Prefix.INCLUDE_PREFIX)
+                    writeBytes(
+                        buildSsoReserved(
+                            msgType = ssoReservedMsgType,
+                            secureInfo = ssoSecureInfo,
+                        ),
+                        Prefix.UINT_32 or Prefix.INCLUDE_PREFIX
+                    )
                 }
                 writeBytes(payload, Prefix.UINT_32 or Prefix.INCLUDE_PREFIX)
             }
@@ -264,8 +278,9 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
         command: String,
         payload: ByteArray,
         sequence: Int,
-        ssoSecureInfo: SsoSecureInfo?,
         encryptType: EncryptType,
+        ssoReservedMsgType: Int,
+        ssoSecureInfo: SsoSecureInfo?,
     ): Buffer = Buffer().apply {
         barrier(Prefix.UINT_32 or Prefix.INCLUDE_PREFIX) {
             writeInt(13)
@@ -277,7 +292,13 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
                 barrier(Prefix.UINT_32 or Prefix.INCLUDE_PREFIX) {
                     writeString(command, Prefix.UINT_32 or Prefix.INCLUDE_PREFIX)
                     writeInt(4) // uint 32 with prefix, ByteArray(0)
-                    writeBytes(buildSsoReserved(ssoSecureInfo), Prefix.UINT_32 or Prefix.INCLUDE_PREFIX)
+                    writeBytes(
+                        buildSsoReserved(
+                            msgType = ssoReservedMsgType,
+                            secureInfo = ssoSecureInfo,
+                        ),
+                        Prefix.UINT_32 or Prefix.INCLUDE_PREFIX
+                    )
                 }
                 writeBytes(payload, Prefix.UINT_32 or Prefix.INCLUDE_PREFIX)
             }

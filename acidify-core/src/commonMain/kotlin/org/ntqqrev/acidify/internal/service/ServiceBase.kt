@@ -5,6 +5,7 @@ import org.ntqqrev.acidify.internal.AbstractClient
 internal abstract class Service<T, R>(val cmd: String) {
     open val ssoRequestType = RequestType.D2Auth
     open val ssoEncryptType = EncryptType.WithD2Key
+    open val androidSsoReservedMsgType: Int? = null
 
     abstract fun build(client: AbstractClient, payload: T): ByteArray
     abstract fun parse(client: AbstractClient, payload: ByteArray): R

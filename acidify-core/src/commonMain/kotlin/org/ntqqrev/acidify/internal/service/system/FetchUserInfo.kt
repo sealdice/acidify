@@ -48,6 +48,8 @@ internal object FetchUserInfo {
     }
 
     internal object ByUin : OidbService<Long, BotUserInfo>(0xfe1, 2, true) {
+        override val androidSsoReservedMsgType = 0
+
         override fun buildOidb(client: AbstractClient, payload: Long): ByteArray = FetchUserInfoByUinReq(
             uin = payload,
             keys = fetchKeys,

@@ -6,8 +6,6 @@ import kotlinx.coroutines.launch
 import org.ntqqrev.acidify.common.*
 import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.proto.system.SsoSecureInfo
-import org.ntqqrev.acidify.internal.service.EncryptType
-import org.ntqqrev.acidify.internal.service.RequestType
 import org.ntqqrev.acidify.logging.LogHandler
 import org.ntqqrev.acidify.logging.LogLevel
 import kotlin.js.JsStatic
@@ -45,8 +43,7 @@ class Bot internal constructor(
             command = cmd,
             sequence = sequence,
             payload = payload,
-            requestType = RequestType.D2Auth,
-            encryptType = EncryptType.WithD2Key,
+            ssoReservedMsgType = 0,
             timeoutMillis = timeoutMillis,
             ssoSecureInfo = if (client.signRequiredCommand.contains(cmd)) {
                 client.signProvider.sign(

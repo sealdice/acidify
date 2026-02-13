@@ -7,7 +7,6 @@ import org.ntqqrev.acidify.common.android.AndroidSignProvider
 import org.ntqqrev.acidify.exception.ServiceException
 import org.ntqqrev.acidify.internal.proto.system.SsoSecureInfo
 import org.ntqqrev.acidify.internal.service.Service
-import org.ntqqrev.acidify.internal.service.system.AndroidHeartbeat
 import org.ntqqrev.acidify.internal.service.system.AndroidInfoSync
 import org.ntqqrev.acidify.logging.Logger
 
@@ -480,9 +479,10 @@ internal class KuromeClient(
             command = service.cmd,
             sequence = sequence,
             payload = byteArray,
+            ssoReservedMsgType = service.androidSsoReservedMsgType ?: 32,
+            timeoutMillis = timeout,
             requestType = service.ssoRequestType,
             encryptType = service.ssoEncryptType,
-            timeoutMillis = timeout,
             ssoSecureInfo = if (signRequiredCommand.contains(service.cmd)) {
                 signProvider.sign(
                     uin = uin,
