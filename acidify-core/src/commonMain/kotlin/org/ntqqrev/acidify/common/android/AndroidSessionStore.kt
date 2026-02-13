@@ -100,7 +100,7 @@ class AndroidSessionStore(
                 ),
                 guid = Random.nextBytes(16),
                 androidId = Random.nextBytes(8).toHexString(),
-                qimei = "",
+                qimei = Random.nextBytes(18).toHexString(),
                 deviceName = "Lagrange-${Random.nextBytes(3).toHexString()}",
             )
         }
