@@ -1,6 +1,8 @@
 # 快速开始
 
-欢迎来到 Acidify 的文档！Acidify 是一个用 Kotlin 编写的跨平台 PC NTQQ 协议支持库。
+欢迎来到 Acidify 的文档！
+
+`acidify-core` 是一个用 Kotlin 编写的跨平台 PC & Android NTQQ 协议支持库，发布于 Maven Central 和 npm。Acidify 的代码仓库还包含一个基于 `acidify-core` 实现的 QQ 协议端 Yogurt。
 
 ## 使用
 

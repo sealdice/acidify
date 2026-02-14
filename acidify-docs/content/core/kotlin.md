@@ -97,6 +97,8 @@ Bot 的所有功能需要在登录后才能使用。调用 [`Bot.login`](/kdoc/a
 
 如果你在初始化时正确配置了 `logHandler`，在首次登录时即可以在控制台看到二维码 URL。稍后将会介绍如何监听在登录过程中产生的事件。
 
+`Bot.login` 接收一个可选的 `preloadContacts` 参数，表示是否在登录完成后预加载好友和群聊等联系人的信息。预加载联系人可以提升部分操作的响应速度，同时修复部分情况下无法解析 uid 的问题，但会显著增加启动时间和内存占用。默认值为 `false`。
+
 ### 好友和群聊管理
 
 Bot 提供了丰富的 API 来操作好友和群聊等功能。以下是一些示例：
@@ -295,3 +297,47 @@ bot.eventFlow
         }
     }
 ```
+
+## Android 登录
+
+从版本 `0.10.0` 开始，Acidify 还支持使用 Android 协议登录。要使用 Android 协议，同样需要准备相对应的 `AndroidAppInfo`、`AndroidSessionStore` 和 `AndroidSignProvider`，并用它们创建一个 `AndroidBot` 实例：
+
+```kotlin
+val androidAppInfo = AndroidAppInfo.Bundled.AndroidPhone
+val androidSessionStore = if (File("session-store-android.json").exists()) {
+    val json = File("session-store-android.json").readText()
+    AndroidSessionStore.fromJson(json)
+} else {
+    AndroidSessionStore.empty(uin, password)
+}
+val androidSignProvider = AndroidUrlSignProvider("...")
+val scope = CoroutineScope(SupervisorJob())
+
+val androidBot = AndroidBot.create(
+    appInfo = androidAppInfo,
+    sessionStore = androidSessionStore,
+    signProvider = androidSignProvider,
+    scope = scope,
+    minLogLevel = LogLevel.DEBUG,
+    logHandler = SimpleLogHandler,
+)
+```
+
+登录需要调用 [`AndroidBot.login`](/kdoc/acidify-core/org.ntqqrev.acidify/-android-bot/login.html) 方法。`AndroidBot` 的登录 API 与 `Bot` 稍有不同，需要提供额外的两个参数：
+
+```kotlin
+suspend fun AndroidBot.login(
+    onRequireCaptchaTicket: suspend (captchaUrl: String) -> String,
+    onRequireSmsCode: suspend (
+        countryCode: String,
+        phone: String,
+        smsUrl: String
+    ) -> String,
+    preloadContacts: Boolean = false
+)
+```
+
+- `onRequireCaptchaTicket` 在登录过程中需要用户完成图形验证码时被调用，`captchaUrl` 是验证码图片的 URL，函数需要返回完成验证码后抓取到的 `ticket`。
+- `onRequireSmsCode` 在登录过程中需要用户完成短信验证时被调用，参数 `countryCode` 和 `phone` 是短信发送到的手机号的国家码和号码，函数需要返回用户输入的短信验证码。如果用户没有收到验证码，可以通过 `smsUrl` 参数提供的 URL 来手动验证，这时函数可以返回一个空字符串。
+
+与 `Bot.login` 类似，`AndroidBot.login` 也会先尝试使用现有的 Session 信息登录，如果失败则调用上述的回调函数来完成登录流程。登录成功后，会触发 [`AndroidSessionStoreUpdatedEvent`](/kdoc/acidify-core/org.ntqqrev.acidify.event/-android-session-store-updated-event/index.html)，你可以监听该事件来获取新的 Session 信息并保存以便下次登录使用。
