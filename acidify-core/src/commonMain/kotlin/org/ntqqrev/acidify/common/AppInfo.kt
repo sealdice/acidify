@@ -28,8 +28,17 @@ data class AppInfo(
     @SerialName("SubSigMap") val subSigMap: Int,
     @SerialName("NTLoginType") val ntLoginType: Int
 ) {
+    companion object {
+        private val jsonModule = Json { ignoreUnknownKeys = true }
+
+        @JsStatic
+        fun fromJson(json: String): AppInfo = jsonModule.decodeFromString(json)
+    }
+
+    fun toJson() = jsonModule.encodeToString(this)
+
     object Bundled {
-        val Linux = AppInfo(
+        val `Linux/39038` = AppInfo(
             os = "Linux",
             kernel = "Linux",
             vendorOs = "linux",
@@ -46,14 +55,7 @@ data class AppInfo(
             subSigMap = 0,
             ntLoginType = 1
         )
+
+        val Linux = `Linux/39038`
     }
-
-    companion object {
-        private val jsonModule = Json { ignoreUnknownKeys = true }
-
-        @JsStatic
-        fun fromJson(json: String): AppInfo = jsonModule.decodeFromString(json)
-    }
-
-    fun toJson() = jsonModule.encodeToString(this)
 }
