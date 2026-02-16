@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
 @Serializable
-class AndroidThirdPartyLoginResponse(
+internal class AndroidThirdPartyLoginResponse(
     @ProtoNumber(1) val seq: Long = 0L,
     @ProtoNumber(9) val commonInfo: RespCommonInfo = RespCommonInfo(),
 ) {
