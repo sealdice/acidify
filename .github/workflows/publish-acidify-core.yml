@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: write
   id-token: write
 
 jobs:
@@ -12,6 +13,20 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
+      - name: Extract release metadata
+        id: release
+        shell: bash
+        run: |
+          VERSION="$(sed -nE 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' acidify-core/build.gradle.kts | head -n1)"
+          if [[ -z "$VERSION" ]]; then
+            echo "Cannot find version in acidify-core/build.gradle.kts" >&2
+            exit 1
+          fi
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Resolved release version: ${VERSION} (${TAG})"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
@@ -58,15 +73,9 @@ jobs:
         run: |
           python3 <<'PY'
           import json
-          import re
           from pathlib import Path
 
-          gradle_file = Path("acidify-core") / "build.gradle.kts"
-          gradle_content = gradle_file.read_text(encoding="utf-8")
-          match = re.search(r'version\s*=\s*"([^"]+)"', gradle_content)
-          if not match:
-              raise RuntimeError("Cannot find version in acidify-core/build.gradle.kts")
-          version = match.group(1)
+          version = "${{ steps.release.outputs.version }}"
 
           package_json = Path("acidify-core-js/package.json")
           data = json.loads(package_json.read_text(encoding="utf-8"))
@@ -79,3 +88,33 @@ jobs:
         run: |
           cd acidify-core-js
           npm publish --access public
+
+      - name: Create and push Git tag
+        shell: bash
+        run: |
+          TAG="${{ steps.release.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on remote." >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+      - name: Create GitHub release draft
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          name: acidify-core ${{ steps.release.outputs.version }}
+          draft: true
+          generate_release_notes: true
+          body: |
+            ## acidify-core ${{ steps.release.outputs.version }}
+            
+            Maven Central: `org.ntqqrev:acidify-core:${{ steps.release.outputs.version }}`
+            npm: `@acidify/core@${{ steps.release.outputs.version }}`
+            
+            (Release Notes Here)
+            
+            > 在寻找 Yogurt？请查看 https://acidify.ntqqrev.org/yogurt/start
