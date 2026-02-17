@@ -16,7 +16,7 @@
 
 - `acidify-core` - PC & Android NTQQ 协议的核心实现 [![Maven Central](https://img.shields.io/maven-central/v/org.ntqqrev/acidify-core?label=Maven%20Central&logo=maven&color=blue)](https://central.sonatype.com/artifact/org.ntqqrev/acidify-core)
   - `@acidify/core` - `acidify-core` 的 Kotlin/JS 导出版本 [![npm](https://img.shields.io/npm/v/%40acidify%2Fcore)](https://www.npmjs.com/package/@acidify/core)
-- `yogurt` - 基于 `acidify-core` 的 QQ 协议端
+- `yogurt` - 基于 `acidify-core` 的 QQ 协议端 [![GitHub Release](https://img.shields.io/github/v/release/SaltifyDev/yogurt-releases?label=GitHub%20release)](https://github.com/SaltifyDev/yogurt-releases)
   - `@acidify/yogurt` - Yogurt 的预编译二进制包 [![npm](https://img.shields.io/npm/v/%40acidify%2Fyogurt)](https://www.npmjs.com/package/@acidify/yogurt)
   - `yogurt-jvm` - Yogurt 的 JVM 平台适配 (Workaround for Ktor plugin's incompatibility issue)
 
