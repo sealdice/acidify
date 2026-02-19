@@ -475,6 +475,17 @@ internal class MessageBuildingContext(
         )
     }
 
+    fun BotOutgoingSegment.LightApp.build() = addAsync {
+        val buffer = Buffer()
+        buffer.writeByte(0x01)
+        buffer.write(Deflater.deflate(jsonPayload.encodeToByteArray(), raw = false))
+        Elem(
+            lightAppElem = LightAppElem(
+                bytesData = buffer.readByteArray()
+            )
+        )
+    }
+
     suspend fun build(): List<Elem> {
         segments.forEach {
             when (it) {
@@ -486,6 +497,7 @@ internal class MessageBuildingContext(
                 is BotOutgoingSegment.Record -> it.build()
                 is BotOutgoingSegment.Video -> it.build()
                 is BotOutgoingSegment.Forward -> it.build()
+                is BotOutgoingSegment.LightApp -> it.build()
             }
         }
         return elemsList.awaitAll().flatten()

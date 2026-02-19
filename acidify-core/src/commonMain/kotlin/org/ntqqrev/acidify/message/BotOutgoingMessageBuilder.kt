@@ -1,6 +1,11 @@
 package org.ntqqrev.acidify.message
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.buildJsonObject
 import org.ntqqrev.acidify.common.AcidifyDsl
+import kotlin.js.JsName
 
 /**
  * 构建发送消息
@@ -149,6 +154,32 @@ class BotOutgoingMessageBuilder {
             )
         }
     }
+
+    /**
+     * 添加小程序消息段
+     * @param jsonPayload 小程序消息的 JSON 负载
+     */
+    fun lightApp(jsonPayload: String) {
+        segments.add(BotOutgoingSegment.LightApp(jsonPayload))
+    }
+
+    /**
+     * 添加小程序消息段
+     * @param jsonPayload 小程序消息的 JSON 负载
+     */
+    @JsName("lightAppFromJsonElem")
+    fun lightApp(jsonPayload: JsonElement) = lightApp(Json.encodeToString(jsonPayload))
+
+    /**
+     * 通过构建 JSON 对象的方式添加小程序消息段
+     * @param block 构建 JSON 对象
+     */
+    @JsName("lightAppFromJsonBuilder")
+    inline fun lightApp(block: JsonObjectBuilder.() -> Unit) = lightApp(
+        buildJsonObject {
+            block()
+        }
+    )
 
     operator fun String.unaryPlus() = text(this)
 }

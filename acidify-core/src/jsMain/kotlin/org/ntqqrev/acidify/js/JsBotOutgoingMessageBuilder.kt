@@ -61,4 +61,12 @@ class JsBotOutgoingMessageBuilder internal constructor(
             block(jsBuilder)
         }
     }
+
+    fun lightApp(jsonPayload: String) {
+        underlying.lightApp(jsonPayload)
+    }
+
+    fun lightAppFromJsObject(jsObject: dynamic) {
+        underlying.lightApp(JSON.stringify(jsObject))
+    }
 }

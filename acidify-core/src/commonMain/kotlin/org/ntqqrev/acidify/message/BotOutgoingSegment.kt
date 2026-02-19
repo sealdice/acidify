@@ -146,4 +146,12 @@ sealed class BotOutgoingSegment {
             val segments: List<BotOutgoingSegment>,
         )
     }
+
+    /**
+     * 小程序消息段
+     * @property jsonPayload 小程序的 JSON 负载
+     */
+    data class LightApp(
+        val jsonPayload: String
+    ) : BotOutgoingSegment()
 }
