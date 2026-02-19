@@ -5,9 +5,9 @@ import kotlinx.serialization.protobuf.ProtoNumber
 
 @Serializable
 internal class SendRoutingHead(
-    @ProtoNumber(1) val c2c: C2C = C2C(),
-    @ProtoNumber(2) val group: Grp = Grp(),
-    @ProtoNumber(15) val trans211: Trans211 = Trans211(),
+    @ProtoNumber(1) val c2c: C2C? = null,
+    @ProtoNumber(2) val group: Grp? = null,
+    @ProtoNumber(15) val trans211: Trans211? = null,
 ) {
     @Serializable
     internal class C2C(
