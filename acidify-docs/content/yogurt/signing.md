@@ -31,7 +31,7 @@ Content-Type: application/json
 {
   "platform": "Linux",
   "version": "3.2.19-39038",
-  "data": {
+  "value": {
     "sign": "0123456789abcdef",
     "token": "0123456789abcdef",
     "extra": "0123456789abcdef"
@@ -43,7 +43,7 @@ Content-Type: application/json
 
 - `platform` 的值必须与初始化所用的 `AppInfo` 的 `Os` 相同；
 - `version` 的值必须与初始化所用的 `AppInfo` 的 `CurrentVersion` 相同；
-- `data` 中的 `sign`、`token` 和 `extra` 为签名所需字段，必须是 HEX 字符串或空字符串，下同。
+- `value` 中的 `sign`、`token` 和 `extra` 为签名所需字段，必须是 HEX 字符串或空字符串，下同。
 
 以上所列为响应中必须包含的字段，开发者可以根据实际情况添加其他字段，下同，不再赘述。
 
