@@ -32,19 +32,17 @@ class JsBot internal constructor(override val bot: Bot) : JsAbstractBot(bot) {
             jsScope: JsCoroutineScope,
             minLogLevel: LogLevel,
             logHandler: LogHandler
-        ): Promise<JsBot> = jsScope.value.promise {
-            JsBot(
-                Bot.create(
-                    appInfo = appInfo,
-                    sessionStore = sessionStore,
-                    signProvider = { cmd, src, seq ->
-                        signProvider.sign(cmd, src, seq).await()
-                    },
-                    scope = jsScope.value,
-                    minLogLevel = minLogLevel,
-                    logHandler = logHandler,
-                )
+        ) = JsBot(
+            Bot(
+                appInfo = appInfo,
+                sessionStore = sessionStore,
+                signProvider = { cmd, src, seq ->
+                    signProvider.sign(cmd, src, seq).await()
+                },
+                scope = jsScope.value,
+                minLogLevel = minLogLevel,
+                logHandler = logHandler,
             )
-        }
+        )
     }
 }

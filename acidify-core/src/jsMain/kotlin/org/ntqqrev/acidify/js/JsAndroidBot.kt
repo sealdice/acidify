@@ -40,44 +40,42 @@ class JsAndroidBot internal constructor(override val bot: AndroidBot) : JsAbstra
             jsScope: JsCoroutineScope,
             minLogLevel: LogLevel,
             logHandler: LogHandler
-        ): Promise<JsAndroidBot> = jsScope.value.promise {
-            JsAndroidBot(
-                AndroidBot.create(
-                    appInfo = appInfo,
-                    sessionStore = sessionStore,
-                    signProvider = object : AndroidSignProvider {
-                        override suspend fun sign(
-                            uin: Long,
-                            cmd: String,
-                            buffer: ByteArray,
-                            guid: String,
-                            seq: Int,
-                            version: String,
-                            qua: String,
-                        ) = signProvider.sign(uin, cmd, buffer, guid, seq, version, qua).await()
+        ) = JsAndroidBot(
+            AndroidBot(
+                appInfo = appInfo,
+                sessionStore = sessionStore,
+                signProvider = object : AndroidSignProvider {
+                    override suspend fun sign(
+                        uin: Long,
+                        cmd: String,
+                        buffer: ByteArray,
+                        guid: String,
+                        seq: Int,
+                        version: String,
+                        qua: String,
+                    ) = signProvider.sign(uin, cmd, buffer, guid, seq, version, qua).await()
 
-                        override suspend fun energy(
-                            uin: Long,
-                            data: String,
-                            guid: String,
-                            ver: String,
-                            version: String,
-                            qua: String,
-                        ) = signProvider.energy(uin, data, guid, ver, version, qua).await()
+                    override suspend fun energy(
+                        uin: Long,
+                        data: String,
+                        guid: String,
+                        ver: String,
+                        version: String,
+                        qua: String,
+                    ) = signProvider.energy(uin, data, guid, ver, version, qua).await()
 
-                        override suspend fun getDebugXwid(
-                            uin: Long,
-                            data: String,
-                            guid: String,
-                            version: String,
-                            qua: String,
-                        ) = signProvider.getDebugXwid(uin, data, guid, version, qua).await()
-                    },
-                    scope = jsScope.value,
-                    minLogLevel = minLogLevel,
-                    logHandler = logHandler,
-                )
+                    override suspend fun getDebugXwid(
+                        uin: Long,
+                        data: String,
+                        guid: String,
+                        version: String,
+                        qua: String,
+                    ) = signProvider.getDebugXwid(uin, data, guid, version, qua).await()
+                },
+                scope = jsScope.value,
+                minLogLevel = minLogLevel,
+                logHandler = logHandler,
             )
-        }
+        )
     }
 }

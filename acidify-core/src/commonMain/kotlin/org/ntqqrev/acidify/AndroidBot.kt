@@ -9,7 +9,7 @@ import org.ntqqrev.acidify.logging.LogHandler
 import org.ntqqrev.acidify.logging.LogLevel
 import kotlin.js.JsStatic
 
-class AndroidBot internal constructor(
+class AndroidBot(
     val appInfo: AndroidAppInfo,
     val sessionStore: AndroidSessionStore,
     signProvider: AndroidSignProvider,
@@ -29,7 +29,8 @@ class AndroidBot internal constructor(
 
     companion object {
         @JsStatic
-        suspend fun create(
+        @Deprecated("请直接使用 AndroidBot 构造器创建实例")
+        fun create(
             appInfo: AndroidAppInfo,
             sessionStore: AndroidSessionStore,
             signProvider: AndroidSignProvider,
@@ -43,8 +44,6 @@ class AndroidBot internal constructor(
             scope = scope,
             minLogLevel = minLogLevel,
             logHandler = logHandler,
-        ).apply {
-            client.packetContext.startConnectLoop()
-        }
+        )
     }
 }

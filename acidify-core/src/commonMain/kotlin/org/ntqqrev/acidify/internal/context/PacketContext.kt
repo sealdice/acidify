@@ -31,10 +31,16 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
     private lateinit var input: ByteReadChannel
     private lateinit var output: ByteWriteChannel
     private val pending = mutableMapOf<Int, CompletableDeferred<SsoResponse>>()
-    private val headerLength = 4
     private val sendPacketMutex = Mutex()
     private val mapQueryMutex = Mutex()
+    private var startConnectLoopJob: Job? = null
     private var heartbeatJob: Job? = null
+
+    init {
+        startConnectLoopJob = client.launch {
+            startConnectLoop()
+        }
+    }
 
     override suspend fun postOnline() {
         heartbeatJob = when (client) {
@@ -48,6 +54,7 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
                     delay(270_000L) // 4.5min
                 }
             }
+
             is KuromeClient -> client.launch {
                 var aliveCount = 0
                 while (isActive) {
@@ -133,6 +140,7 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
         encryptType: EncryptType = EncryptType.WithD2Key,
         ssoSecureInfo: SsoSecureInfo? = null,
     ): SsoResponse {
+        startConnectLoopJob?.join()
         val packet = when (requestType) {
             RequestType.D2Auth -> client.buildProtocol12(
                 command = command,
@@ -166,7 +174,7 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
 
     private suspend fun handleReceiveLoop() {
         while (currentCoroutineContext().isActive) {
-            val header = input.readByteArray(headerLength)
+            val header = input.readByteArray(4)
             val packetLength = header.readUInt32BE(0)
             val packet = input.readByteArray(packetLength.toInt() - 4)
             val sso = client.parseSsoFrame(packet)

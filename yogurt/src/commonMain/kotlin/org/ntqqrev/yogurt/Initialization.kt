@@ -50,7 +50,7 @@ suspend fun Application.initializePC(): Bot {
             ?: throw IllegalStateException("未找到匹配的内置 AppInfo，请检查配置的 OS 和 Version 是否正确")
     }
     t.println("使用协议 ${appInfo.os} ${appInfo.currentVersion} (AppId: ${appInfo.subAppId})")
-    val bot = Bot.create(
+    val bot = Bot(
         appInfo = appInfo,
         sessionStore = sessionStore,
         signProvider = signProvider,
@@ -127,7 +127,7 @@ suspend fun Application.initializeAndroid(): AndroidBot {
         )
     }
     t.println("使用协议 ${config.protocol.os} ${appInfo.ptVersion} (AppId: ${appInfo.subAppId})")
-    val androidBot = AndroidBot.create(
+    val androidBot = AndroidBot(
         appInfo = appInfo,
         sessionStore = sessionStore,
         signProvider = signProvider,

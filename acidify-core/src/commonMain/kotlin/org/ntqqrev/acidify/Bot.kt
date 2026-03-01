@@ -12,7 +12,7 @@ import kotlin.js.JsStatic
 /**
  * Acidify Bot 实例
  */
-class Bot internal constructor(
+class Bot(
     val appInfo: AppInfo,
     val sessionStore: SessionStore,
     signProvider: SignProvider,
@@ -32,7 +32,8 @@ class Bot internal constructor(
 
     companion object {
         @JsStatic
-        suspend fun create(
+        @Deprecated("请直接使用 Bot 构造器创建实例")
+        fun create(
             appInfo: AppInfo,
             sessionStore: SessionStore,
             signProvider: SignProvider,
@@ -46,8 +47,6 @@ class Bot internal constructor(
             scope = scope,
             minLogLevel = minLogLevel,
             logHandler = logHandler,
-        ).apply {
-            client.packetContext.startConnectLoop()
-        }
+        )
     }
 }

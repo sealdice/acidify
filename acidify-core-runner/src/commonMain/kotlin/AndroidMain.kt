@@ -18,7 +18,7 @@ import org.ntqqrev.acidify.passwordLogin
 import org.ntqqrev.acidify.online
 
 fun main(): Unit = runBlocking {
-    val bot = AndroidBot.create(
+    val bot = AndroidBot(
         appInfo = AndroidAppInfo.Bundled.AndroidPad,
         sessionStore = if (SystemFileSystem.exists(Path("session-store-android.json"))) {
             SystemFileSystem.source(Path("session-store-android.json")).buffered().use { source ->
