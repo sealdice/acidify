@@ -28,16 +28,5 @@ kotlin {
         }
     }
 
-    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>()
-        .matching { it.name == "linuxArm64" }
-        .all {
-            binaries.configureEach {
-                val libgccPath = providers.gradleProperty("linuxArm64LibgccPath").orNull
-                    ?: System.getenv("LINUX_ARM64_LIBGCC")
-                    ?: "/usr/lib/gcc-cross/aarch64-linux-gnu/11/libgcc.a"
-                linkerOpts(libgccPath)
-            }
-        }
-
     jvmToolchain(25)
 }
