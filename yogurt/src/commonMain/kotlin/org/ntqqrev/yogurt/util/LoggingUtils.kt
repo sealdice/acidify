@@ -96,7 +96,7 @@ private val BotGroup.displayString: String
     get() = green("$name ($uin)")
 
 private val BotGroupMember.displayString: String
-    get() = blue("$displayName ($uin)")
+    get() = brightCyan("$displayName ($uin)")
 
 @Suppress("duplicatedCode")
 fun Application.configureEventLogging() = launch {
