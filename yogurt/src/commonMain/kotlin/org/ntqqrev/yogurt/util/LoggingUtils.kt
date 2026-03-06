@@ -47,7 +47,7 @@ fun formatColoredLog(
         when (level) {
             LogLevel.VERBOSE -> gray("TRACE")
             LogLevel.DEBUG -> brightBlue("DEBUG")
-            LogLevel.INFO -> brightGreen(" INFO")
+            LogLevel.INFO -> green(" INFO")
             LogLevel.WARN -> brightYellow(" WARN")
             LogLevel.ERROR -> brightRed("ERROR")
         }
@@ -93,7 +93,7 @@ private val BotFriend.displayString: String
     get() = yellow("$displayName ($uin)")
 
 private val BotGroup.displayString: String
-    get() = green("$name ($uin)")
+    get() = brightGreen("$name ($uin)")
 
 private val BotGroupMember.displayString: String
     get() = brightCyan("$displayName ($uin)")
