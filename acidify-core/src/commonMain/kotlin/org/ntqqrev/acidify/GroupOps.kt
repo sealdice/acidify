@@ -10,12 +10,11 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.ntqqrev.acidify.exception.WebApiException
-import org.ntqqrev.acidify.internal.json.GroupAnnounceResponse
-import org.ntqqrev.acidify.internal.json.GroupAnnounceSendResponse
-import org.ntqqrev.acidify.internal.json.GroupEssenceResponse
+import org.ntqqrev.acidify.internal.json.*
 import org.ntqqrev.acidify.internal.service.group.*
 import org.ntqqrev.acidify.internal.util.unescapeHttp
 import org.ntqqrev.acidify.message.BotEssenceMessageResult
+import org.ntqqrev.acidify.message.ImageFormat
 import org.ntqqrev.acidify.message.internal.toBotEssenceMessage
 import org.ntqqrev.acidify.struct.BotGroupAnnouncement
 import org.ntqqrev.acidify.struct.BotGroupNotification
@@ -214,13 +213,17 @@ suspend fun AbstractBot.sendGroupAnnouncement(
     groupUin: Long,
     content: String,
     imageData: ByteArray? = null,
+    imageFormat: ImageFormat? = null,
     showEditCard: Boolean = false,
     showTipWindow: Boolean = true,
     confirmRequired: Boolean = true,
     isPinned: Boolean = false,
 ): String {
-    if (imageData != null) {
-        TODO("暂不支持带图片的群公告")
+    val announceImage = if (imageData != null) {
+        requireNotNull(imageFormat) { "imageFormat is required when imageData is provided" }
+        uploadGroupAnnouncementImage(imageData, imageFormat)
+    } else {
+        null
     }
 
     val bkn = getCsrfToken()
@@ -237,6 +240,11 @@ suspend fun AbstractBot.sendGroupAnnouncement(
                     append("text", content)
                     append("pinned", if (isPinned) "1" else "0")
                     append("type", "1")
+                    announceImage?.let {
+                        append("pic", it.id)
+                        append("imgWidth", it.width)
+                        append("imgHeight", it.height)
+                    }
                     append(
                         "settings",
                         Json.encodeToString(
@@ -258,6 +266,56 @@ suspend fun AbstractBot.sendGroupAnnouncement(
 
     val sendResp = response.body<GroupAnnounceSendResponse>()
     return sendResp.noticeId
+}
+
+private suspend fun AbstractBot.uploadGroupAnnouncementImage(
+    imageData: ByteArray,
+    imageFormat: ImageFormat
+): GroupAnnounceImage {
+    val response = httpClient.post("https://web.qun.qq.com/cgi-bin/announce/upload_img") {
+        withBkn()
+        withCookies("qun.qq.com")
+        setBody(
+            MultiPartFormDataContent(
+                formData {
+                    append("bkn", getCsrfToken().toString())
+                    append("source", "troopNotice")
+                    append("m", "0")
+                    append(
+                        "pic_up",
+                        imageData,
+                        Headers.build {
+                            append(
+                                HttpHeaders.ContentDisposition,
+                                "filename=\"group-announcement.${imageFormat.ext}\""
+                            )
+                            append(HttpHeaders.ContentType, imageFormat.toContentType().toString())
+                        }
+                    )
+                }
+            )
+        )
+    }
+
+    if (!response.status.isSuccess()) {
+        throw WebApiException("上传群公告图片失败", response.status.value)
+    }
+
+    val uploadResp = response.body<GroupAnnounceUploadResponse>()
+    if (uploadResp.errorCode != 0) {
+        throw WebApiException("上传群公告图片失败", uploadResp.errorCode)
+    }
+
+    return Json.decodeFromString(uploadResp.imageInfo.unescapeHttp())
+}
+
+private fun ImageFormat.toContentType() = when (this) {
+    ImageFormat.PNG -> ContentType.Image.PNG
+    ImageFormat.GIF -> ContentType.Image.GIF
+    ImageFormat.JPEG -> ContentType.Image.JPEG
+    ImageFormat.BMP -> ContentType.Image.Any
+    ImageFormat.WEBP -> ContentType.parse("image/webp")
+    ImageFormat.TIFF -> ContentType.parse("image/tiff")
 }
 
 /**

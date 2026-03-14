@@ -8,10 +8,7 @@ import kotlinx.coroutines.promise
 import org.ntqqrev.acidify.*
 import org.ntqqrev.acidify.common.UnsafeAcidifyApi
 import org.ntqqrev.acidify.event.*
-import org.ntqqrev.acidify.message.BotForwardedMessage
-import org.ntqqrev.acidify.message.BotHistoryMessages
-import org.ntqqrev.acidify.message.BotOutgoingMessageResult
-import org.ntqqrev.acidify.message.BotOutgoingSegment
+import org.ntqqrev.acidify.message.*
 import org.ntqqrev.acidify.struct.*
 import kotlin.js.Promise
 
@@ -288,12 +285,22 @@ abstract class JsAbstractBot internal constructor(
         groupUin: Long,
         content: String,
         imageData: ByteArray? = null,
+        imageFormat: ImageFormat? = null,
         showEditCard: Boolean = false,
         showTipWindow: Boolean = true,
         confirmRequired: Boolean = true,
         isPinned: Boolean = false,
     ): Promise<String> = promise {
-        bot.sendGroupAnnouncement(groupUin, content, imageData, showEditCard, showTipWindow, confirmRequired, isPinned)
+        bot.sendGroupAnnouncement(
+            groupUin,
+            content,
+            imageData,
+            imageFormat,
+            showEditCard,
+            showTipWindow,
+            confirmRequired,
+            isPinned
+        )
     }
 
     fun deleteGroupAnnouncement(groupUin: Long, announcementId: String) = promise {

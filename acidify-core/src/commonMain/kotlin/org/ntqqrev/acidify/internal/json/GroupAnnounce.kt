@@ -34,3 +34,9 @@ internal class GroupAnnounceResponse(
 internal class GroupAnnounceSendResponse(
     @SerialName("new_fid") val noticeId: String = ""
 )
+
+@Serializable
+internal class GroupAnnounceUploadResponse(
+    @SerialName("ec") val errorCode: Int = -1,
+    @SerialName("id") val imageInfo: String = ""
+)
