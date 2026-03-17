@@ -79,7 +79,8 @@ class AndroidLegacyUrlSignProvider(
         uin = uin,
         data = data,
         guid = guid,
-        sdkVersion = ver,
+        ver = ver,
+        version = version,
         allowRegisterRetry = true,
     )
 
@@ -160,21 +161,22 @@ class AndroidLegacyUrlSignProvider(
         uin: Long,
         data: String,
         guid: String,
-        sdkVersion: String,
+        ver: String,
+        version: String,
         allowRegisterRetry: Boolean,
     ): ByteArray {
         val response = client.get {
             url {
                 takeFrom(base)
                 appendPathSegments("energy")
-                parameters.append("ver", fullVersion)
+                parameters.append("ver", version)
                 parameters.append("fekit_ver", fekitVersion)
                 parameters.append("uin", uin.toString())
                 parameters.append("data", data)
                 parameters.append("android_id", androidId)
                 parameters.append("qimei36", qimei36)
                 parameters.append("guid", guid)
-                parameters.append("version", sdkVersion)
+                parameters.append("version", ver)
             }
         }
         response.ensureSuccess()
@@ -185,7 +187,8 @@ class AndroidLegacyUrlSignProvider(
                     uin = uin,
                     data = data,
                     guid = guid,
-                    sdkVersion = sdkVersion,
+                    ver = ver,
+                    version = version,
                     allowRegisterRetry = false,
                 )
             }
