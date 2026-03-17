@@ -9,7 +9,7 @@ Acidify 的核心实现库 `acidify-core` 发布在 Maven Central 上。`acidify
 - Kotlin/JVM
 - Kotlin/Native
   - Windows via `mingwX64`
-  - macOS via `macosX64` and `macosArm64`
+  - macOS via `macosArm64`
   - Linux via `linuxX64` and `linuxArm64`
 - Kotlin/JS (Node.js only)
 
@@ -38,7 +38,7 @@ kotlin {
 | 平台                             | 推荐引擎              |
 | -------------------------------- | --------------------- |
 | Windows (`mingwX64`)             | `ktor-client-winhttp` |
-| macOS (`macosX64`, `macosArm64`) | `ktor-client-darwin`  |
+| macOS (`macosArm64`)             | `ktor-client-darwin`  |
 | Linux (`linuxX64`, `linuxArm64`) | `ktor-client-curl`    |
 
 ## 初始化 Bot

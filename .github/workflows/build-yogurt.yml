@@ -29,11 +29,6 @@ jobs:
             platform: windows-x64
 
           - runs-on: macos-latest
-            target: macosX64
-            gradle-target: MacosX64
-            platform: macos-x64
-
-          - runs-on: macos-latest
             target: macosArm64
             gradle-target: MacosArm64
             platform: macos-arm64
@@ -167,11 +162,6 @@ jobs:
                   "binary": "yogurt.kexe",
               },
               {
-                  "package": "yogurt-darwin-x64",
-                  "artifact": "yogurt-macos-x64",
-                  "binary": "yogurt.kexe",
-              },
-              {
                   "package": "yogurt-darwin-arm64",
                   "artifact": "yogurt-macos-arm64",
                   "binary": "yogurt.kexe",
@@ -207,7 +197,6 @@ jobs:
               packages_dir / "yogurt-win32-x64" / "package.json",
               packages_dir / "yogurt-linux-x64" / "package.json",
               packages_dir / "yogurt-linux-arm64" / "package.json",
-              packages_dir / "yogurt-darwin-x64" / "package.json",
               packages_dir / "yogurt-darwin-arm64" / "package.json",
               packages_dir / "yogurt" / "package.json",
           ]
@@ -236,7 +225,6 @@ jobs:
             "yogurt-npm-packages/yogurt-win32-x64"
             "yogurt-npm-packages/yogurt-linux-x64"
             "yogurt-npm-packages/yogurt-linux-arm64"
-            "yogurt-npm-packages/yogurt-darwin-x64"
             "yogurt-npm-packages/yogurt-darwin-arm64"
             "yogurt-npm-packages/yogurt"
           )

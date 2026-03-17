@@ -29,8 +29,8 @@ npm install -g @acidify/yogurt
 | OS      | Arch       |
 |---------|------------|
 | Windows | x64        |
+| macOS   | arm64      |
 | Linux   | x64, arm64 |
-| macOS   | x64, arm64 |
 
 ### 从 Releases 下载和运行
 
@@ -39,8 +39,8 @@ Yogurt 的构建产物发布在 [SaltifyDev/yogurt-releases](https://github.com/
 | OS      | Arch       |
 |---------|------------|
 | Windows | x64        |
+| macOS   | arm64      |
 | Linux   | x64, arm64 |
-| macOS   | x64, arm64 |
 
 Yogurt 的构建产物中还包含可在 JVM 上运行的 fat-jar。配置 Java 25+ 运行时，然后在 Releases 中下载 `yogurt-jvm-all.jar`，运行：
 

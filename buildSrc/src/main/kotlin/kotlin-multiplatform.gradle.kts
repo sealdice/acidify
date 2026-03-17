@@ -12,7 +12,6 @@ kotlin {
         // is run from GitHub Actions - build Yogurt, improving dependency pulling time
         "jvm" -> {} // already added
         "mingwX64" -> mingwX64()
-        "macosX64" -> macosX64()
         "macosArm64" -> macosArm64()
         "linuxX64" -> linuxX64()
         "linuxArm64" -> linuxArm64()
@@ -21,7 +20,6 @@ kotlin {
         else -> {
             jvm()
             mingwX64()
-            macosX64()
             macosArm64()
             linuxX64()
             linuxArm64()

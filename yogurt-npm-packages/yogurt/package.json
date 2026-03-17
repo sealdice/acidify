@@ -19,9 +19,8 @@
   "packageManager": "pnpm@10.26.0",
   "optionalDependencies": {
     "@acidify/yogurt-win32-x64": "__VERSION__",
+    "@acidify/yogurt-darwin-arm64": "__VERSION__",
     "@acidify/yogurt-linux-x64": "__VERSION__",
-    "@acidify/yogurt-linux-arm64": "__VERSION__",
-    "@acidify/yogurt-darwin-x64": "__VERSION__",
-    "@acidify/yogurt-darwin-arm64": "__VERSION__"
+    "@acidify/yogurt-linux-arm64": "__VERSION__"
   }
 }
