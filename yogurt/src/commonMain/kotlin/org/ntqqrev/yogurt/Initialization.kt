@@ -13,19 +13,13 @@ import org.ntqqrev.acidify.*
 import org.ntqqrev.acidify.common.AppInfo
 import org.ntqqrev.acidify.common.SessionStore
 import org.ntqqrev.acidify.common.UrlSignProvider
-import org.ntqqrev.acidify.common.android.AndroidAppInfo
-import org.ntqqrev.acidify.common.android.AndroidSessionStore
-import org.ntqqrev.acidify.common.android.AndroidSignProvider
-import org.ntqqrev.acidify.common.android.AndroidUrlSignProvider
+import org.ntqqrev.acidify.common.android.*
 import org.ntqqrev.acidify.exception.UnstableNetworkException
-import org.ntqqrev.acidify.exception.UrlSignException
 import org.ntqqrev.acidify.exception.WtLoginException
 import org.ntqqrev.milky.Event
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
 import org.ntqqrev.yogurt.transform.transformAcidifyEvent
-import org.ntqqrev.yogurt.util.AndroidLegacyUrlSignProvider
-import org.ntqqrev.yogurt.util.legacyMetainfoMap
 import org.ntqqrev.yogurt.util.logHandler
 
 suspend fun Application.initializePC(): Bot {
@@ -78,11 +72,6 @@ suspend fun Application.initializeAndroid(): AndroidBot {
     require(config.androidCredentials.uin != 0L && config.androidCredentials.password.isNotEmpty()) {
         "请在配置文件中填写 androidCredentials 的 uin 和 password 字段"
     }
-    val signProvider: AndroidSignProvider = if (!config.androidUseLegacySign) {
-        AndroidUrlSignProvider(config.signApiUrl)
-    } else {
-        AndroidLegacyUrlSignProvider(config.signApiUrl)
-    }
     val sessionStore: AndroidSessionStore = if (SystemFileSystem.exists(androidSessionStorePath)) {
         SystemFileSystem.source(androidSessionStorePath).buffered().use {
             AndroidSessionStore.fromJson(it.readString())
@@ -104,6 +93,21 @@ suspend fun Application.initializeAndroid(): AndroidBot {
             sink.writeString(it.toJson())
         }
     }
+    val signProvider: AndroidSignProvider = if (!config.androidUseLegacySign) {
+        AndroidUrlSignProvider(config.signApiUrl)
+    } else {
+        val (fullVersion, fekitVersion) = bundledAndroidLegacyAppInfo[config.protocol.version]
+            ?: throw IllegalStateException(
+                "未找到协议版本 ${config.protocol.version} 对应的 fullVersion 和 fekitVersion，请检查配置或联系开发者添加支持"
+            )
+        AndroidLegacyUrlSignProvider(
+            url = config.signApiUrl,
+            fullVersion = fullVersion,
+            fekitVersion = fekitVersion,
+            androidId = sessionStore.androidId,
+            qimei36 = sessionStore.qimei,
+        )
+    }
     val appInfo: AndroidAppInfo = when (config.protocol.version) {
         "fetched" -> throw IllegalStateException("Android 协议不支持通过 Sign API 获取 AppInfo，请使用内置版本或自定义版本")
 
@@ -117,45 +121,6 @@ suspend fun Application.initializeAndroid(): AndroidBot {
 
         else -> bundledAndroidAppInfo["${config.protocol.os}/${config.protocol.version}"]
             ?: throw IllegalStateException("未找到匹配的内置 AppInfo，请检查配置的 OS 和 Version 是否正确")
-    }
-    if (signProvider is AndroidLegacyUrlSignProvider) {
-        try {
-            // Preflight sign request
-            signProvider.sign(
-                uin = sessionStore.uin,
-                cmd = "trpc.login.ecdh.EcdhService.SsoKeyExchange",
-                buffer = "00aaff00aaff00aaff".hexToByteArray(),
-                guid = sessionStore.guid.toHexString(),
-                seq = 28655,
-                version = appInfo.ptVersion,
-                qua = appInfo.qua,
-            )
-        } catch (e: UrlSignException) {
-            if (e.code != 1) throw e
-
-            // Manually register device info to Sign API
-            t.println("正在注册设备信息到 Sign API...")
-            legacyMetainfoMap[config.protocol.version]
-                ?.let { (fullVersion, fekitVersion) ->
-                    signProvider.registerDevice(
-                        ver = fullVersion,
-                        fekitVer = fekitVersion,
-                        uin = sessionStore.uin,
-                        qimei = sessionStore.qimei,
-                        guid = sessionStore.guid.toHexString(),
-                    )
-                }
-                ?: run {
-                    t.println("未找到协议版本 ${config.protocol.version} 对应的 fullVersion 和 fekitVersion。")
-                    t.println("将直接提供协议版本、uin、qimei 和 guid 给 Sign API 进行注册，注册可能失败")
-                    signProvider.registerDeviceBySign(
-                        qua = appInfo.qua,
-                        uin = sessionStore.uin,
-                        qimei = sessionStore.qimei,
-                        guid = sessionStore.guid.toHexString(),
-                    )
-                }
-        }
     }
     t.println("使用协议 ${config.protocol.os} ${appInfo.ptVersion} (AppId: ${appInfo.subAppId})")
     val androidBot = AndroidBot(
