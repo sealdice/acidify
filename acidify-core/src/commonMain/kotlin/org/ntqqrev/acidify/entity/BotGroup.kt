@@ -50,6 +50,36 @@ class BotGroup internal constructor(
         get() = data.capacity
 
     /**
+     * 群备注
+     */
+    val remark: String
+        get() = data.remark
+
+    /**
+     * 群创建时间
+     */
+    val createdAt: Long
+        get() = data.createdAt
+
+    /**
+     * 群介绍
+     */
+    val description: String
+        get() = data.description
+
+    /**
+     * 入群问题
+     */
+    val question: String
+        get() = data.question
+
+    /**
+     * 群公告预览
+     */
+    val announcementPreview: String
+        get() = data.announcementPreview
+
+    /**
      * 群主
      */
     lateinit var owner: BotGroupMember

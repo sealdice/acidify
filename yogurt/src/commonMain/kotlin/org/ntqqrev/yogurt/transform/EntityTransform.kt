@@ -22,7 +22,12 @@ fun BotGroup.toMilkyEntity() = GroupEntity(
     groupId = uin,
     groupName = name,
     memberCount = memberCount,
-    maxMemberCount = capacity
+    maxMemberCount = capacity,
+    remark = remark,
+    createdTime = createdAt,
+    description = description,
+    question = question,
+    announcement = announcementPreview,
 )
 
 fun BotGroupMember.toMilkyEntity() = GroupMemberEntity(

@@ -92,14 +92,14 @@ internal class FetchGroupsResp(
         ) {
             @Serializable
             internal class Member(
+                @ProtoNumber(2) val uid: String = "",
                 @ProtoNumber(3) val remark: String = "",
             )
         }
 
         @Serializable
         internal class CustomInfo(
-            @ProtoNumber(1) val lastSpeakTime: Long = 0L,
-            @ProtoNumber(5) val lastestSeq: Int = 0,
+            @ProtoNumber(3) val remark: String = "",
         )
     }
 }

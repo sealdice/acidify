@@ -66,12 +66,16 @@ internal object FetchGroups : NoInputOidbService<List<BotGroupData>>(0xfe5, 2) {
         val resp = payload.pbDecode<FetchGroupsResp>()
 
         return resp.groups.map { group ->
-            val info = group.info
             BotGroupData(
                 uin = group.groupUin,
-                name = info.groupName,
-                memberCount = info.memberCount,
-                capacity = info.memberMax
+                name = group.info.groupName,
+                memberCount = group.info.memberCount,
+                capacity = group.info.memberMax,
+                remark = group.customInfo.remark,
+                createdAt = group.info.createdTime,
+                description = group.info.description,
+                question = group.info.question,
+                announcementPreview = group.info.announcement,
             )
         }
     }
