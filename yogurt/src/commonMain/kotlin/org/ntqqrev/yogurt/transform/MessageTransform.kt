@@ -13,6 +13,7 @@ import org.ntqqrev.acidify.message.*
 import org.ntqqrev.acidify.message.ImageFormat
 import org.ntqqrev.milky.*
 import org.ntqqrev.yogurt.YogurtApp
+import org.ntqqrev.yogurt.util.FFMpegCodec
 import org.ntqqrev.yogurt.util.resolveUri
 
 suspend fun Application.transformMessage(msg: BotIncomingMessage): IncomingMessage? {
@@ -245,12 +246,12 @@ suspend fun Application.transformSegment(
             val audioData = resolveUri(segment.data.uri)
             // 尝试转换为 PCM，若失败则假设已是 PCM 格式
             val pcmData = try {
-                audioToPcm(audioData)
+                FFMpegCodec.audioToPcm(audioData)
             } catch (e: Exception) {
                 logger.w(e) { "语音 ${segment.data.uri} 转 PCM 失败，尝试直接编码" }
                 audioData
             }
-            val silkData = silkEncode(pcmData)
+            val silkData = FFMpegCodec.silkEncode(pcmData)
             val duration = calculatePcmDuration(pcmData)
             logger.d { "语音 ${segment.data.uri} 编码完成，时长 ${duration.inWholeSeconds} 秒" }
             BotOutgoingSegment.Record(
@@ -261,12 +262,12 @@ suspend fun Application.transformSegment(
 
         is OutgoingSegment.Video -> {
             val videoData = resolveUri(segment.data.uri)
-            val videoInfo = getVideoInfo(videoData)
+            val videoInfo = FFMpegCodec.getVideoInfo(videoData)
             logger.d { "视频 ${segment.data.uri} 信息：${videoInfo.width}x${videoInfo.height}，时长 ${videoInfo.duration.inWholeSeconds} 秒" }
             val thumbData = if (segment.data.thumbUri != null) {
                 resolveUri(segment.data.thumbUri!!)
             } else {
-                getVideoFirstFrameJpg(videoData)
+                FFMpegCodec.getVideoFirstFrameJpg(videoData)
             }
             val thumbInfo = getImageInfo(thumbData)
             BotOutgoingSegment.Video(
