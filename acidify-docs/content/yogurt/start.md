@@ -60,17 +60,15 @@ java -jar yogurt-jvm-all.jar
 >
 > 构建产物发布在 SaltifyDev/yogurt-releases，并非原仓库 LagrangeDev/acidify；后者用于记录 `acidify-core` 的版本迭代，并不包含 Yogurt 的构建产物。
 
-### 通过 Docker 部署（第三方社区实现）
+### 通过 Docker 部署
 
-> [!warning]
+> [!note]
 >
-> 以下 Docker 部署方案由第三方社区项目维护，并非 Acidify / Yogurt 官方提供或支持的发行方式。使用前请自行审查镜像、Dockerfile 和部署配置。
-
-> [!tip]
->
-> 项目地址：[`shoucandanghehe/yogurt-docker`](https://github.com/shoucandanghehe/yogurt-docker)
+> Docker 部署方案由社区项目维护，并非官方提供或支持的发行方式。详细说明请在 [`shoucandanghehe/yogurt-docker`](https://github.com/shoucandanghehe/yogurt-docker) 仓库查看。
 
 #### 使用 Docker Compose 部署
+
+以下是一个简单的 `docker-compose.yml` 示例：
 
 ```yaml
 services:
@@ -88,21 +86,23 @@ volumes:
   data:
 ```
 
-首次运行前先创建空配置文件，避免 Docker 将挂载目标创建为目录：
+在包含 `docker-compose.yml` 的目录下运行以下命令：
 
 ```bash
+# 先创建空配置文件，避免 Docker 将挂载目标创建为目录
 touch config.json
 docker compose up
-# 看到 Yogurt 生成默认配置后按 Ctrl+C 停止
 ```
 
-随后编辑 `config.json`，补全 QQ 号、签名 API 地址等必要配置，再重新启动容器：
+在 Yogurt 首次启动生成默认配置后按 Ctrl+C 停止，随后编辑 `config.json`，补全 QQ 号、签名 API 地址等必要配置，再重新启动容器：
 
 ```bash
 docker compose up -d
 ```
 
 #### 使用 Docker 部署
+
+以下是不使用 Docker Compose，直接通过 `docker run` 命令部署的示例：
 
 ```bash
 docker run -d \
@@ -113,5 +113,3 @@ docker run -d \
   -p 3000:3000 \
   ghcr.io/shoucandanghehe/yogurt-docker:latest
 ```
-
-详细使用方法、镜像细节和最新说明请查看 [README](https://github.com/shoucandanghehe/yogurt-docker)。
