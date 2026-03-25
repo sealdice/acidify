@@ -19,7 +19,7 @@ import org.ntqqrev.acidify.internal.proto.system.SsoReservedFields
 import org.ntqqrev.acidify.internal.proto.system.SsoSecureInfo
 import org.ntqqrev.acidify.internal.service.EncryptType
 import org.ntqqrev.acidify.internal.service.RequestType
-import org.ntqqrev.acidify.internal.service.system.AndroidHeartbeat
+import org.ntqqrev.acidify.internal.service.system.Alive
 import org.ntqqrev.acidify.internal.service.system.Heartbeat
 import org.ntqqrev.acidify.internal.util.*
 
@@ -68,33 +68,20 @@ internal class PacketContext(client: AbstractClient) : AbstractContext(client) {
 
     override suspend fun postOnline() {
         recentPushSequenceCache.clear()
-        heartbeatJob = when (client) {
-            is LagrangeClient -> client.launch {
-                while (isActive) {
-                    try {
-                        client.callService(Heartbeat)
-                    } catch (e: Exception) {
-                        logger.w(e) { "心跳包发送失败" }
+        heartbeatJob = client.launch {
+            var aliveCount = 0
+            while (isActive) {
+                aliveCount++
+                try {
+                    client.callService(Alive)
+                    if (aliveCount % 27 == 0) {
+                        client.callService(Heartbeat) // 270s per Heartbeat
+                        aliveCount = 0
                     }
-                    delay(270_000L) // 4.5min
+                } catch (e: Exception) {
+                    logger.w(e) { "心跳包发送失败" }
                 }
-            }
-
-            is KuromeClient -> client.launch {
-                var aliveCount = 0
-                while (isActive) {
-                    aliveCount++
-                    try {
-                        client.callService(AndroidHeartbeat)
-                        if (aliveCount % 27 == 0) {
-                            client.callService(Heartbeat) // 270s per Heartbeat
-                            aliveCount = 0
-                        }
-                    } catch (e: Exception) {
-                        logger.w(e) { "心跳包发送失败" }
-                    }
-                    delay(10_000L) // 10s
-                }
+                delay(10_000L) // 10s
             }
         }
     }
