@@ -25,6 +25,7 @@ import org.ntqqrev.yogurt.api.configureMilkyApiAuth
 import org.ntqqrev.yogurt.api.configureMilkyApiHttpRoutes
 import org.ntqqrev.yogurt.api.configureMilkyApiLoginProtect
 import org.ntqqrev.yogurt.config.loadConfigAndUpdate
+import org.ntqqrev.yogurt.debug.configureDebugFaceDetailsApi
 import org.ntqqrev.yogurt.event.configureMilkyEventAuth
 import org.ntqqrev.yogurt.event.configureMilkyEventSse
 import org.ntqqrev.yogurt.event.configureMilkyEventWebSocket
@@ -143,7 +144,9 @@ object YogurtApp {
                 configureMilkyEventSse()
             }
             route("$prefix/debug") {
-
+                if (config.debug.enableFaceDetailsApi) {
+                    configureDebugFaceDetailsApi()
+                }
             }
         }
 
