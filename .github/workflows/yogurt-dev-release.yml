@@ -1,0 +1,122 @@
+name: Build Yogurt Dev Release
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yogurt-dev-release
+  cancel-in-progress: true
+
+jobs:
+  build-native:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.runs-on }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+            target: mingwX64
+            gradle-target: MingwX64
+            platform: windows-x64
+
+          - runs-on: macos-latest
+            target: macosArm64
+            gradle-target: MacosArm64
+            platform: macos-arm64
+
+          - runs-on: ubuntu-latest
+            target: linuxX64
+            gradle-target: LinuxX64
+            platform: linux-x64
+
+          - runs-on: ubuntu-latest
+            target: linuxArm64
+            gradle-target: LinuxArm64
+            platform: linux-arm64
+
+    env:
+      GITHUB_ACTIONS_BUILD_TARGET: ${{ matrix.target }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Cache konan
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ matrix.target }}-${{ hashFiles('**/gradle/libs.versions.toml') }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrappers
+          key: ${{ runner.os }}-gradleNativeBuild-${{ matrix.target }}-${{ hashFiles('**/gradle/libs.versions.toml') }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Build Yogurt for ${{ matrix.target }}
+        run: ./gradlew :yogurt:linkReleaseExecutable${{ matrix.gradle-target }} --no-daemon
+
+      - name: Upload ${{ matrix.platform }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yogurt-${{ matrix.platform }}
+          path: yogurt/build/bin/${{ matrix.target }}/releaseExecutable/**
+
+  release-dev:
+    name: Refresh dev release
+    needs:
+      - build-native
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download native artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: yogurt-*
+          path: release-input
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+
+          for dir in release-input/yogurt-*; do
+            [ -d "$dir" ] || continue
+            base="$(basename "$dir")"
+            (cd "$dir" && zip -r "../../release-assets/${base}.zip" .)
+          done
+
+          ls -lah release-assets
+
+      - name: Recreate dev release
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh release delete dev --yes --cleanup-tag || true
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/dev" || true
+
+          gh release create dev release-assets/* \
+            --target "${GITHUB_SHA}" \
+            --title "dev" \
+            --notes "Auto-updated Yogurt dev binaries for ${GITHUB_SHA}"
