@@ -24,7 +24,6 @@ kotlin {
             implementation(libs.milky.types)
             implementation(libs.acidify.codec)
             implementation(libs.qr.matrix)
-            implementation(libs.quickjs.kt)
             implementation(libs.mordant)
         }
         jvmMain.dependencies {

@@ -1,6 +1,5 @@
 package org.ntqqrev.yogurt
 
-import com.dokar.quickjs.QuickJs
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.terminal.Terminal
 import io.ktor.http.*
@@ -30,8 +29,6 @@ import org.ntqqrev.yogurt.event.configureMilkyEventAuth
 import org.ntqqrev.yogurt.event.configureMilkyEventSse
 import org.ntqqrev.yogurt.event.configureMilkyEventWebSocket
 import org.ntqqrev.yogurt.event.configureMilkyEventWebhook
-import org.ntqqrev.yogurt.script.createScriptEnvironment
-import org.ntqqrev.yogurt.script.loadScripts
 import org.ntqqrev.yogurt.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -121,12 +118,6 @@ object YogurtApp {
             allowHeader(HttpHeaders.ContentType)
             allowHeader(HttpHeaders.Authorization)
         }
-
-        val qjs = createScriptEnvironment()
-        dependencies {
-            provide<QuickJs> { qjs } cleanup { it.close() }
-        }
-
         routing {
             val prefix = config.milky.http.prefix.removeSuffix("/")
             route("$prefix/api") {
@@ -150,10 +141,6 @@ object YogurtApp {
             }
         }
 
-        if (!SystemFileSystem.exists(scriptsPath)) {
-            SystemFileSystem.createDirectories(scriptsPath)
-        }
-
         monitor.subscribe(ApplicationStarted) {
             if (config.milky.webhook.endpoints.isNotEmpty()) {
                 configureMilkyEventWebhook()
@@ -164,7 +151,6 @@ object YogurtApp {
 
             launch {
                 botLogin()
-                loadScripts()
             }
         }
     }
