@@ -24,7 +24,6 @@ kotlin {
             implementation(libs.milky.types)
             implementation(libs.acidify.codec)
             implementation(libs.qr.matrix)
-            implementation(libs.mordant)
         }
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
@@ -38,6 +37,9 @@ kotlin {
         }
         linuxMain.dependencies {
             implementation(libs.ktor.client.curl)
+        }
+        findByName("androidNativeArm64Main")?.dependencies {
+                implementation(libs.ktor.client.cio)
         }
     }
 
@@ -57,6 +59,15 @@ kotlin {
                 "-lgcc",
                 "-Wl,-Bdynamic",
             )
+        }
+    }
+}
+
+configurations.configureEach {
+    if (name.contains("androidNativeArm64", ignoreCase = true)) {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("org.ntqqrev:acidify-codec"))
+                .using(module("com.github.sealdice.acidify-codec:acidify-codec-androidnativearm64:1e7b7ee"))
         }
     }
 }

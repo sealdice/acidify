@@ -1,6 +1,6 @@
 package org.ntqqrev.yogurt.util
 
-import com.github.ajalt.mordant.rendering.TextColors.*
+import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles.bold
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
@@ -41,30 +41,30 @@ fun formatColoredLog(
     val b = StringBuilder()
     val now: Instant = Clock.System.now()
     val localNow: LocalDateTime = now.toLocalDateTime(TimeZone.currentSystemDefault())
-    b.append(bold(green(timeFormat.format(localNow))))
+    b.append(bold(TextColors.green(timeFormat.format(localNow))))
     b.append(" ")
     b.append(
         when (level) {
-            LogLevel.VERBOSE -> gray("TRACE")
-            LogLevel.DEBUG -> brightBlue("DEBUG")
-            LogLevel.INFO -> green(" INFO")
-            LogLevel.WARN -> brightYellow(" WARN")
-            LogLevel.ERROR -> brightRed("ERROR")
+            LogLevel.VERBOSE -> TextColors.gray("TRACE")
+            LogLevel.DEBUG -> TextColors.brightBlue("DEBUG")
+            LogLevel.INFO -> TextColors.green(" INFO")
+            LogLevel.WARN -> TextColors.brightYellow(" WARN")
+            LogLevel.ERROR -> TextColors.brightRed("ERROR")
         }
     )
     b.append(" ")
     b.append(
         when (level) {
-            LogLevel.VERBOSE -> gray
-            LogLevel.ERROR -> brightRed
-            else -> cyan
+            LogLevel.VERBOSE -> TextColors::gray
+            LogLevel.ERROR -> TextColors::brightRed
+            else -> TextColors::cyan
         }(shortenPackageName(tag))
     )
     b.append(" ")
     b.append(
         when (level) {
-            LogLevel.VERBOSE -> gray(message)
-            LogLevel.ERROR -> brightRed(message)
+            LogLevel.VERBOSE -> TextColors.gray(message)
+            LogLevel.ERROR -> TextColors.brightRed(message)
             else -> message
         }
     )
@@ -72,9 +72,9 @@ fun formatColoredLog(
         b.append("\n")
         b.append(
             when (level) {
-                LogLevel.ERROR -> brightRed
-                LogLevel.WARN -> brightYellow
-                else -> gray
+                LogLevel.ERROR -> TextColors::brightRed
+                LogLevel.WARN -> TextColors::brightYellow
+                else -> TextColors::gray
             }(stackTrace)
         )
     }
@@ -90,13 +90,13 @@ private val BotGroupMember.displayName
     get() = card.ifBlank { nickname }.joinToSingleLine()
 
 private val BotFriend.displayString: String
-    get() = yellow("$displayName ($uin)")
+    get() = TextColors.yellow("$displayName ($uin)")
 
 private val BotGroup.displayString: String
-    get() = brightGreen("$name ($uin)")
+    get() = TextColors.brightGreen("$name ($uin)")
 
 private val BotGroupMember.displayString: String
-    get() = brightCyan("$displayName ($uin)")
+    get() = TextColors.brightCyan("$displayName ($uin)")
 
 @Suppress("duplicatedCode")
 fun Application.configureEventLogging() = launch {
