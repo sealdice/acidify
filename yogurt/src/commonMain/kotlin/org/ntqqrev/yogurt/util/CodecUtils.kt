@@ -1,29 +1,36 @@
 package org.ntqqrev.yogurt.util
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.ntqqrev.acidify.codec.VideoInfo
+import kotlin.time.Duration
 
-object FFMpegCodec {
-    val ffmpegMutex = Mutex()
-
-    suspend fun audioToPcm(input: ByteArray): ByteArray = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.audioToPcm(input)
-    }
-
-    suspend fun silkDecode(input: ByteArray): ByteArray = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.silkDecode(input)
-    }
-
-    suspend fun silkEncode(input: ByteArray): ByteArray = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.silkEncode(input)
-    }
-
-    suspend fun getVideoInfo(videoData: ByteArray): VideoInfo = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.getVideoInfo(videoData)
-    }
-
-    suspend fun getVideoFirstFrameJpg(videoData: ByteArray): ByteArray = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.getVideoFirstFrameJpg(videoData)
-    }
+enum class CodecImageFormat {
+    PNG,
+    GIF,
+    JPEG,
+    BMP,
+    WEBP,
+    TIFF,
 }
+
+data class CodecImageInfo(
+    val format: CodecImageFormat,
+    val width: Int,
+    val height: Int,
+)
+
+data class CodecVideoInfo(
+    val width: Int,
+    val height: Int,
+    val duration: Duration,
+)
+
+expect object FFMpegCodec {
+    suspend fun audioToPcm(input: ByteArray): ByteArray
+    suspend fun silkDecode(input: ByteArray): ByteArray
+    suspend fun silkEncode(input: ByteArray): ByteArray
+    suspend fun getVideoInfo(videoData: ByteArray): CodecVideoInfo
+    suspend fun getVideoFirstFrameJpg(videoData: ByteArray): ByteArray
+}
+
+expect fun getCodecImageInfo(input: ByteArray): CodecImageInfo
+
+expect fun calculatePcmDurationCompat(input: ByteArray): Duration

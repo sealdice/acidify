@@ -11,6 +11,7 @@ kotlin {
     when (actionsTarget) {
         // is run from GitHub Actions - build Yogurt, improving dependency pulling time
         "jvm" -> {} // already added
+        "androidNativeArm64" -> androidNativeArm64()
         "mingwX64" -> mingwX64()
         "macosArm64" -> macosArm64()
         "linuxX64" -> linuxX64()

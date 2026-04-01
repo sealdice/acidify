@@ -7,6 +7,14 @@ dependencyResolutionManagement {
     // Use Maven Central as the default repository (where Gradle will download dependencies) in all subprojects.
     @Suppress("UnstableApiUsage")
     repositories {
+        exclusiveContent {
+            forRepository {
+                maven("https://jitpack.io")
+            }
+            filter {
+                includeGroup("com.github.sealdice.acidify-codec")
+            }
+        }
         mavenCentral()
     }
 }

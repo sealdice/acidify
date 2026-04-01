@@ -42,6 +42,11 @@ jobs:
             gradle-target: LinuxArm64
             platform: linux-arm64
 
+          - runs-on: ubuntu-latest
+            target: androidNativeArm64
+            gradle-target: AndroidNativeArm64
+            platform: android-arm64
+
     env:
       GITHUB_ACTIONS_BUILD_TARGET: ${{ matrix.target }}
 
@@ -68,6 +73,19 @@ jobs:
         with:
           distribution: temurin
           java-version: 25
+
+      - name: Setup Android SDK
+        if: matrix.target == 'androidNativeArm64'
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Android NDK
+        if: matrix.target == 'androidNativeArm64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager "ndk;27.2.12479018"
+          echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/27.2.12479018" >> "$GITHUB_ENV"
 
       - name: Build Yogurt for ${{ matrix.target }}
         run: ./gradlew :yogurt:linkReleaseExecutable${{ matrix.gradle-target }} --no-daemon

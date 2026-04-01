@@ -15,6 +15,7 @@ version = "0.1.0"
 
 kotlin {
     sourceSets {
+        val commonMain = getByName("commonMain")
         commonMain.dependencies {
             implementation(project(":acidify-core"))
             implementation(libs.kotlinx.datetime)
@@ -22,22 +23,79 @@ kotlin {
             implementation(libs.bundles.ktor.server)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.milky.types)
-            implementation(libs.acidify.codec)
             implementation(libs.qr.matrix)
-            implementation(libs.mordant)
         }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.cio)
-            implementation(libs.logback.classic)
+
+        val codecMain by creating {
+            dependsOn(commonMain)
+
+            dependencies {
+                implementation(libs.acidify.codec)
+            }
         }
-        mingwMain.dependencies {
-            implementation(libs.ktor.client.winhttp)
+
+        val nativeMain = if (
+            findByName("androidNativeArm64Main") != null ||
+            findByName("linuxX64Main") != null ||
+            findByName("linuxArm64Main") != null ||
+            findByName("macosArm64Main") != null ||
+            findByName("mingwX64Main") != null
+        ) {
+            maybeCreate("nativeMain").apply {
+                dependsOn(commonMain)
+            }
+        } else {
+            null
         }
-        appleMain.dependencies {
-            implementation(libs.ktor.client.darwin)
+
+        findByName("jvmMain")?.apply {
+            dependsOn(codecMain)
+
+            dependencies {
+                implementation(libs.ktor.client.cio)
+                implementation(libs.logback.classic)
+            }
         }
-        linuxMain.dependencies {
-            implementation(libs.ktor.client.curl)
+
+        if (findByName("mingwX64Main") != null) {
+            val mingwMain = maybeCreate("mingwMain")
+            nativeMain?.let { mingwMain.dependsOn(it) }
+            mingwMain.dependsOn(codecMain)
+            mingwMain.dependencies {
+                implementation(libs.ktor.client.winhttp)
+            }
+            findByName("mingwX64Main")?.dependsOn(mingwMain)
+        }
+
+        if (findByName("macosArm64Main") != null) {
+            val appleMain = maybeCreate("appleMain")
+            nativeMain?.let { appleMain.dependsOn(it) }
+            appleMain.dependsOn(codecMain)
+            appleMain.dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
+            findByName("macosArm64Main")?.dependsOn(appleMain)
+        }
+
+        if (findByName("linuxX64Main") != null || findByName("linuxArm64Main") != null) {
+            val linuxMain = maybeCreate("linuxMain")
+            nativeMain?.let { linuxMain.dependsOn(it) }
+            linuxMain.dependsOn(codecMain)
+            linuxMain.dependencies {
+                implementation(libs.ktor.client.curl)
+            }
+            findByName("linuxX64Main")?.dependsOn(linuxMain)
+            findByName("linuxArm64Main")?.dependsOn(linuxMain)
+        }
+
+        if (findByName("androidNativeArm64Main") != null) {
+            val androidNativeMain = maybeCreate("androidNativeMain")
+            nativeMain?.let { androidNativeMain.dependsOn(it) } ?: androidNativeMain.dependsOn(commonMain)
+            androidNativeMain.dependencies {
+                implementation(libs.ktor.client.cio)
+                implementation(libs.acidify.codec.androidnativearm64)
+            }
+            findByName("androidNativeArm64Main")?.dependsOn(androidNativeMain)
         }
     }
 
@@ -49,14 +107,16 @@ kotlin {
         }
     }
 
-    mingwX64 {
-        binaries.all {
-            linkerOpts(
-                "-Wl,-Bstatic",
-                "-lstdc++",
-                "-lgcc",
-                "-Wl,-Bdynamic",
-            )
+    targets.withType<KotlinNativeTarget>().configureEach {
+        if (name == "mingwX64") {
+            binaries.all {
+                linkerOpts(
+                    "-Wl,-Bstatic",
+                    "-lstdc++",
+                    "-lgcc",
+                    "-Wl,-Bdynamic",
+                )
+            }
         }
     }
 }

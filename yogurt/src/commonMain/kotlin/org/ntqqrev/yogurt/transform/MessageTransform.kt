@@ -5,15 +5,16 @@ import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.AbstractBot
-import org.ntqqrev.acidify.codec.ImageInfo
-import org.ntqqrev.acidify.codec.calculatePcmDuration
-import org.ntqqrev.acidify.codec.getImageInfo
 import org.ntqqrev.acidify.getDownloadUrl
 import org.ntqqrev.acidify.getFriend
 import org.ntqqrev.acidify.getGroup
 import org.ntqqrev.acidify.message.*
 import org.ntqqrev.milky.*
+import org.ntqqrev.yogurt.util.CodecImageFormat
+import org.ntqqrev.yogurt.util.CodecImageInfo
 import org.ntqqrev.yogurt.util.FFMpegCodec
+import org.ntqqrev.yogurt.util.calculatePcmDurationCompat
+import org.ntqqrev.yogurt.util.getCodecImageInfo
 import org.ntqqrev.yogurt.util.resolveUri
 
 suspend fun Application.transformMessage(msg: BotIncomingMessage): IncomingMessage? {
@@ -218,7 +219,7 @@ suspend fun Application.transformSegment(
 
         is OutgoingSegment.Image -> {
             val imageData = resolveUri(segment.data.uri)
-            val imageInfo = getImageInfo(imageData)
+            val imageInfo = getCodecImageInfo(imageData)
             BotOutgoingSegment.Image(
                 raw = imageData,
                 format = imageInfo.format.toAcidifyFormat(),
@@ -239,7 +240,7 @@ suspend fun Application.transformSegment(
                 audioData
             }
             val silkData = FFMpegCodec.silkEncode(pcmData)
-            val duration = calculatePcmDuration(pcmData)
+            val duration = calculatePcmDurationCompat(pcmData)
             logger.d { "语音 ${segment.data.uri} 编码完成，时长 ${duration.inWholeSeconds} 秒" }
             BotOutgoingSegment.Record(
                 rawSilk = silkData,
@@ -256,7 +257,7 @@ suspend fun Application.transformSegment(
             } else {
                 FFMpegCodec.getVideoFirstFrameJpg(videoData)
             }
-            val thumbInfo = getImageInfo(thumbData)
+            val thumbInfo = getCodecImageInfo(thumbData)
             BotOutgoingSegment.Video(
                 raw = videoData,
                 width = videoInfo.width,
@@ -330,11 +331,11 @@ suspend fun Application.transformEssenceSegment(segment: BotEssenceSegment): Inc
         is BotEssenceSegment.Image -> {
             val imageData = resolveUri(segment.imageUrl)
             val imageInfo = try {
-                getImageInfo(imageData)
+                getCodecImageInfo(imageData)
             } catch (e: Exception) {
                 logger.w(e) { "解析精华消息图像信息失败，使用缺省值" }
-                ImageInfo(
-                    format = org.ntqqrev.acidify.codec.ImageFormat.PNG,
+                CodecImageInfo(
+                    format = CodecImageFormat.PNG,
                     width = 300,
                     height = 300
                 )
@@ -354,7 +355,7 @@ suspend fun Application.transformEssenceSegment(segment: BotEssenceSegment): Inc
         is BotEssenceSegment.Video -> {
             // also transform to image
             val imageData = resolveUri(segment.thumbnailUrl)
-            val imageInfo = getImageInfo(imageData)
+            val imageInfo = getCodecImageInfo(imageData)
             IncomingSegment.Image(
                 data = IncomingSegment.Image.Data(
                     resourceId = segment.thumbnailUrl,
@@ -387,11 +388,11 @@ fun String.toMessageScene() = when (this) {
     else -> throw IllegalArgumentException("Unknown message scene: $this")
 }
 
-fun org.ntqqrev.acidify.codec.ImageFormat.toAcidifyFormat() = when (this) {
-    org.ntqqrev.acidify.codec.ImageFormat.PNG -> ImageFormat.PNG
-    org.ntqqrev.acidify.codec.ImageFormat.GIF -> ImageFormat.GIF
-    org.ntqqrev.acidify.codec.ImageFormat.JPEG -> ImageFormat.JPEG
-    org.ntqqrev.acidify.codec.ImageFormat.BMP -> ImageFormat.BMP
-    org.ntqqrev.acidify.codec.ImageFormat.WEBP -> ImageFormat.WEBP
-    org.ntqqrev.acidify.codec.ImageFormat.TIFF -> ImageFormat.TIFF
+fun CodecImageFormat.toAcidifyFormat() = when (this) {
+    CodecImageFormat.PNG -> ImageFormat.PNG
+    CodecImageFormat.GIF -> ImageFormat.GIF
+    CodecImageFormat.JPEG -> ImageFormat.JPEG
+    CodecImageFormat.BMP -> ImageFormat.BMP
+    CodecImageFormat.WEBP -> ImageFormat.WEBP
+    CodecImageFormat.TIFF -> ImageFormat.TIFF
 }
