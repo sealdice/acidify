@@ -1,4 +1,4 @@
-package org.ntqqrev.yogurt.api
+package org.ntqqrev.acidify.milky.api
 
 class MilkyApiException(
     val retcode: Int,

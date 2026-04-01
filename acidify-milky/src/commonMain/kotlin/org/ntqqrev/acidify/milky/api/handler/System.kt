@@ -1,16 +1,13 @@
-package org.ntqqrev.yogurt.api.handler
+package org.ntqqrev.acidify.milky.api.handler
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.*
+import org.ntqqrev.acidify.milky.api.MilkyApiException
+import org.ntqqrev.acidify.milky.api.define
+import org.ntqqrev.acidify.milky.transform.toMilkyEntity
+import org.ntqqrev.acidify.milky.transform.toMilkyOutput
 import org.ntqqrev.milky.*
-import org.ntqqrev.yogurt.BuildKonfig
-import org.ntqqrev.yogurt.YogurtApp.config
-import org.ntqqrev.yogurt.api.MilkyApiException
-import org.ntqqrev.yogurt.api.define
-import org.ntqqrev.yogurt.transform.toMilkyEntity
-import org.ntqqrev.yogurt.transform.toMilkyOutput
-import org.ntqqrev.yogurt.util.resolveUri
 
 val GetLoginInfo = ApiEndpoint.GetLoginInfo.define {
     GetLoginInfoOutput(
@@ -19,27 +16,22 @@ val GetLoginInfo = ApiEndpoint.GetLoginInfo.define {
     )
 }
 
-private fun String.toMilkyProtocolOs() = when (this) {
-    "Windows" -> "windows"
-    "Linux" -> "linux"
-    "Mac" -> "macos"
-    "AndroidPhone" -> "android_phone"
-    "AndroidPad" -> "android_pad"
-    else -> throw MilkyApiException(-400, "Unknown protocol OS: $this")
-}
-
 val GetImplInfo = ApiEndpoint.GetImplInfo.define {
     GetImplInfoOutput(
-        implName = BuildKonfig.name,
-        implVersion = BuildKonfig.version,
+        implName = implName,
+        implVersion = implVersion,
         qqProtocolVersion = when (bot) {
             is Bot -> bot.appInfo.currentVersion
             is AndroidBot -> bot.appInfo.ptVersion
         },
-        qqProtocolType = when (bot) {
-            is Bot -> bot.appInfo.os
-            is AndroidBot -> config.protocol.os
-        }.toMilkyProtocolOs(),
+        qqProtocolType = when (protocolOs) {
+            "Windows" -> "windows"
+            "Linux" -> "linux"
+            "Mac" -> "macos"
+            "AndroidPhone" -> "android_phone"
+            "AndroidPad" -> "android_pad"
+            else -> throw MilkyApiException(-400, "Unknown protocol OS: $protocolOs")
+        },
         milkyVersion = milkyVersion,
     )
 }
@@ -101,10 +93,10 @@ val GetPeerPins = ApiEndpoint.GetPeerPins.define {
     val pins = bot.getPins()
     GetPeerPinsOutput(
         friends = pins.friendUins.map { friendUin ->
-            application.async { bot.getFriend(friendUin)?.toMilkyEntity() }
+            async { bot.getFriend(friendUin)?.toMilkyEntity() }
         }.awaitAll().filterNotNull(),
         groups = pins.groupUins.map { groupUin ->
-            application.async { bot.getGroup(groupUin)?.toMilkyEntity() }
+            async { bot.getGroup(groupUin)?.toMilkyEntity() }
         }.awaitAll().filterNotNull(),
     )
 }

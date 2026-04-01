@@ -1,4 +1,4 @@
-package org.ntqqrev.yogurt.api
+package org.ntqqrev.acidify.milky.api
 
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.di.*
@@ -9,10 +9,11 @@ import kotlinx.serialization.json.encodeToJsonElement
 import org.ntqqrev.acidify.AbstractBot
 import org.ntqqrev.acidify.exception.OidbException
 import org.ntqqrev.acidify.exception.ServiceException
+import org.ntqqrev.acidify.milky.MilkyContext
+import org.ntqqrev.acidify.milky.api.handler.*
 import org.ntqqrev.milky.ApiEndpoint
 import org.ntqqrev.milky.ApiGeneralResponse
 import org.ntqqrev.milky.milkyJsonModule
-import org.ntqqrev.yogurt.api.handler.*
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 
@@ -20,11 +21,12 @@ inline fun <reified T : Any, reified R : Any> ApiEndpoint<T, R>.define(
     noinline handler: suspend MilkyApiContext.(T) -> R
 ) = MilkyApiHandler(this.path, handler)
 
+context(ctx: MilkyContext)
 private inline fun <reified T : Any, reified R : Any> Route.serve(
     handler: MilkyApiHandler<T, R>
 ) = post(handler.path) {
     val bot = application.dependencies.resolve<AbstractBot>()
-    val context = MilkyApiContext(bot, application)
+    val context = MilkyApiContext(bot, ctx)
     val logger = bot.createLogger("HttpModule")
     try {
         val payload = call.receive<T>()
@@ -98,7 +100,8 @@ private inline fun <reified T : Any, reified R : Any> Route.serve(
     }
 }
 
-fun Route.configureMilkyApiHttpRoutes() {
+context(ctx: MilkyContext)
+fun Route.apiRoutes() {
     serve(GetLoginInfo)
     serve(GetImplInfo)
     serve(GetUserProfile)

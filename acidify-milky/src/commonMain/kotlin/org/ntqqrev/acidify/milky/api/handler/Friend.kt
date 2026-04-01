@@ -1,9 +1,9 @@
-package org.ntqqrev.yogurt.api.handler
+package org.ntqqrev.acidify.milky.api.handler
 
 import org.ntqqrev.acidify.*
+import org.ntqqrev.acidify.milky.api.define
+import org.ntqqrev.acidify.milky.transform.toMilkyEntity
 import org.ntqqrev.milky.*
-import org.ntqqrev.yogurt.api.define
-import org.ntqqrev.yogurt.transform.toMilkyEntity
 
 val SendFriendNudge = ApiEndpoint.SendFriendNudge.define {
     bot.sendFriendNudge(it.userId, it.isSelf)

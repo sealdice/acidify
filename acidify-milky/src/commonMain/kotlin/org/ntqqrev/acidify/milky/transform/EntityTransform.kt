@@ -1,4 +1,4 @@
-package org.ntqqrev.yogurt.transform
+package org.ntqqrev.acidify.milky.transform
 
 import org.ntqqrev.acidify.entity.BotFriend
 import org.ntqqrev.acidify.entity.BotGroup

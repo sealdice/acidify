@@ -1,16 +1,16 @@
-package org.ntqqrev.yogurt.api.handler
+package org.ntqqrev.acidify.milky.api.handler
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.*
 import org.ntqqrev.acidify.message.MessageScene
+import org.ntqqrev.acidify.milky.api.MilkyApiException
+import org.ntqqrev.acidify.milky.api.define
+import org.ntqqrev.acidify.milky.transform.toMessageScene
+import org.ntqqrev.acidify.milky.transform.transformForwardedMessage
+import org.ntqqrev.acidify.milky.transform.transformMessage
+import org.ntqqrev.acidify.milky.transform.transformSegment
 import org.ntqqrev.milky.*
-import org.ntqqrev.yogurt.api.MilkyApiException
-import org.ntqqrev.yogurt.api.define
-import org.ntqqrev.yogurt.transform.toMessageScene
-import org.ntqqrev.yogurt.transform.transformForwardedMessage
-import org.ntqqrev.yogurt.transform.transformMessage
-import org.ntqqrev.yogurt.transform.transformSegment
 
 val SendPrivateMessage = ApiEndpoint.SendPrivateMessage.define {
     bot.getFriend(it.userId)
@@ -104,7 +104,7 @@ val GetMessage = ApiEndpoint.GetMessage.define {
     }
     val message = messages.messages.firstOrNull()
         ?: throw MilkyApiException(-404, "Message not found")
-    val transformedMessage = application.transformMessage(message)
+    val transformedMessage = transformMessage(message)
         ?: throw MilkyApiException(-404, "Message transformation failed")
     GetMessageOutput(
         message = transformedMessage
@@ -137,7 +137,7 @@ val GetHistoryMessages = ApiEndpoint.GetHistoryMessages.define {
         else -> throw MilkyApiException(-400, "Unsupported message scene")
     }
     val transformedMessages = historyMessages.messages.mapNotNull { msg ->
-        application.transformMessage(msg)
+        transformMessage(msg)
     }
     GetHistoryMessagesOutput(
         messages = transformedMessages,

@@ -3,7 +3,6 @@ package org.ntqqrev.yogurt
 import com.github.ajalt.mordant.rendering.TextColors
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
@@ -14,10 +13,8 @@ import org.ntqqrev.acidify.common.*
 import org.ntqqrev.acidify.common.android.*
 import org.ntqqrev.acidify.exception.UnstableNetworkException
 import org.ntqqrev.acidify.exception.WtLoginException
-import org.ntqqrev.milky.Event
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
-import org.ntqqrev.yogurt.transform.transformAcidifyEvent
 import org.ntqqrev.yogurt.util.logHandler
 
 suspend fun Application.initializePC(): Bot {
@@ -90,15 +87,6 @@ suspend fun Application.initializePC(): Bot {
     )
     dependencies {
         provide<AbstractBot> { bot } cleanup { runBlocking { it.offline() } }
-        provide<SharedFlow<Event>> {
-            bot.eventFlow
-                .map(this@initializePC::transformAcidifyEvent)
-                .filterNotNull()
-                .shareIn(
-                    scope = this@initializePC,
-                    started = SharingStarted.Lazily,
-                )
-        }
     }
     return bot
 }
@@ -168,15 +156,6 @@ suspend fun Application.initializeAndroid(): AndroidBot {
     )
     dependencies {
         provide<AbstractBot> { androidBot } cleanup { runBlocking { it.offline() } }
-        provide<SharedFlow<Event>> {
-            androidBot.eventFlow
-                .map(this@initializeAndroid::transformAcidifyEvent)
-                .filterNotNull()
-                .shareIn(
-                    scope = this@initializeAndroid,
-                    started = SharingStarted.Lazily,
-                )
-        }
     }
     return androidBot
 }

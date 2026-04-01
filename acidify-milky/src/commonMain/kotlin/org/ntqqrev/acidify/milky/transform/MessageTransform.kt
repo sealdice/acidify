@@ -1,23 +1,19 @@
-package org.ntqqrev.yogurt.transform
+package org.ntqqrev.acidify.milky.transform
 
-import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.AbstractBot
-import org.ntqqrev.acidify.codec.ImageInfo
-import org.ntqqrev.acidify.codec.calculatePcmDuration
-import org.ntqqrev.acidify.codec.getImageInfo
 import org.ntqqrev.acidify.getDownloadUrl
 import org.ntqqrev.acidify.getFriend
 import org.ntqqrev.acidify.getGroup
 import org.ntqqrev.acidify.message.*
+import org.ntqqrev.acidify.milky.ImageInfo
+import org.ntqqrev.acidify.milky.MilkyContext
 import org.ntqqrev.milky.*
-import org.ntqqrev.yogurt.util.FFMpegCodec
-import org.ntqqrev.yogurt.util.resolveUri
 
-suspend fun Application.transformMessage(msg: BotIncomingMessage): IncomingMessage? {
-    val bot = dependencies.resolve<AbstractBot>()
+suspend fun MilkyContext.transformMessage(msg: BotIncomingMessage): IncomingMessage? {
+    val bot = application.dependencies.resolve<AbstractBot>()
     return when (msg.scene) {
         MessageScene.FRIEND -> {
             val friend = bot.getFriend(msg.peerUin) ?: return null
@@ -53,7 +49,7 @@ suspend fun Application.transformMessage(msg: BotIncomingMessage): IncomingMessa
     }
 }
 
-suspend fun Application.transformForwardedMessage(msg: BotForwardedMessage): IncomingForwardedMessage {
+suspend fun MilkyContext.transformForwardedMessage(msg: BotForwardedMessage): IncomingForwardedMessage {
     return IncomingForwardedMessage(
         messageSeq = msg.sequence,
         senderName = msg.senderName,
@@ -65,8 +61,8 @@ suspend fun Application.transformForwardedMessage(msg: BotForwardedMessage): Inc
     )
 }
 
-suspend fun Application.transformSegment(segment: BotIncomingSegment): IncomingSegment {
-    val bot = dependencies.resolve<AbstractBot>()
+suspend fun MilkyContext.transformSegment(segment: BotIncomingSegment): IncomingSegment {
+    val bot = application.dependencies.resolve<AbstractBot>()
     return when (segment) {
         is BotIncomingSegment.Text -> IncomingSegment.Text(
             data = IncomingSegment.Text.Data(
@@ -172,12 +168,12 @@ suspend fun Application.transformSegment(segment: BotIncomingSegment): IncomingS
     }
 }
 
-suspend fun Application.transformSegment(
+suspend fun MilkyContext.transformSegment(
     scene: MessageScene,
     peerUin: Long,
     segment: OutgoingSegment,
 ): BotOutgoingSegment {
-    val bot = dependencies.resolve<AbstractBot>()
+    val bot = application.dependencies.resolve<AbstractBot>()
     val logger = bot.createLogger("MessageTransform")
     return when (segment) {
         is OutgoingSegment.Text -> BotOutgoingSegment.Text(
@@ -218,10 +214,10 @@ suspend fun Application.transformSegment(
 
         is OutgoingSegment.Image -> {
             val imageData = resolveUri(segment.data.uri)
-            val imageInfo = getImageInfo(imageData)
+            val imageInfo = codec.getImageInfo(imageData)
             BotOutgoingSegment.Image(
                 raw = imageData,
-                format = imageInfo.format.toAcidifyFormat(),
+                format = imageInfo.format,
                 width = imageInfo.width,
                 height = imageInfo.height,
                 subType = segment.data.subType.toImageSubType(),
@@ -233,13 +229,13 @@ suspend fun Application.transformSegment(
             val audioData = resolveUri(segment.data.uri)
             // 尝试转换为 PCM，若失败则假设已是 PCM 格式
             val pcmData = try {
-                FFMpegCodec.audioToPcm(audioData)
+                codec.audioToPcm(audioData)
             } catch (e: Exception) {
                 logger.w(e) { "语音 ${segment.data.uri} 转 PCM 失败，尝试直接编码" }
                 audioData
             }
-            val silkData = FFMpegCodec.silkEncode(pcmData)
-            val duration = calculatePcmDuration(pcmData)
+            val silkData = codec.silkEncode(pcmData)
+            val duration = codec.calculatePcmDuration(pcmData)
             logger.d { "语音 ${segment.data.uri} 编码完成，时长 ${duration.inWholeSeconds} 秒" }
             BotOutgoingSegment.Record(
                 rawSilk = silkData,
@@ -249,21 +245,21 @@ suspend fun Application.transformSegment(
 
         is OutgoingSegment.Video -> {
             val videoData = resolveUri(segment.data.uri)
-            val videoInfo = FFMpegCodec.getVideoInfo(videoData)
+            val videoInfo = codec.getVideoInfo(videoData)
             logger.d { "视频 ${segment.data.uri} 信息：${videoInfo.width}x${videoInfo.height}，时长 ${videoInfo.duration.inWholeSeconds} 秒" }
             val thumbData = if (segment.data.thumbUri != null) {
                 resolveUri(segment.data.thumbUri!!)
             } else {
-                FFMpegCodec.getVideoFirstFrameJpg(videoData)
+                codec.getVideoFirstFrameJpg(videoData)
             }
-            val thumbInfo = getImageInfo(thumbData)
+            val thumbInfo = codec.getImageInfo(thumbData)
             BotOutgoingSegment.Video(
                 raw = videoData,
                 width = videoInfo.width,
                 height = videoInfo.height,
                 duration = videoInfo.duration.inWholeSeconds,
                 thumb = thumbData,
-                thumbFormat = thumbInfo.format.toAcidifyFormat()
+                thumbFormat = thumbInfo.format
             )
         }
 
@@ -294,7 +290,7 @@ suspend fun Application.transformSegment(
     }
 }
 
-suspend fun Application.transformEssenceMessage(msg: BotEssenceMessage): GroupEssenceMessage {
+suspend fun MilkyContext.transformEssenceMessage(msg: BotEssenceMessage): GroupEssenceMessage {
     return GroupEssenceMessage(
         groupId = msg.groupUin,
         messageSeq = msg.messageSeq,
@@ -310,8 +306,8 @@ suspend fun Application.transformEssenceMessage(msg: BotEssenceMessage): GroupEs
     )
 }
 
-suspend fun Application.transformEssenceSegment(segment: BotEssenceSegment): IncomingSegment {
-    val bot = dependencies.resolve<AbstractBot>()
+suspend fun MilkyContext.transformEssenceSegment(segment: BotEssenceSegment): IncomingSegment {
+    val bot = application.dependencies.resolve<AbstractBot>()
     val logger = bot.createLogger("MessageTransform")
     return when (segment) {
         is BotEssenceSegment.Text -> IncomingSegment.Text(
@@ -330,13 +326,13 @@ suspend fun Application.transformEssenceSegment(segment: BotEssenceSegment): Inc
         is BotEssenceSegment.Image -> {
             val imageData = resolveUri(segment.imageUrl)
             val imageInfo = try {
-                getImageInfo(imageData)
+                codec.getImageInfo(imageData)
             } catch (e: Exception) {
                 logger.w(e) { "解析精华消息图像信息失败，使用缺省值" }
                 ImageInfo(
-                    format = org.ntqqrev.acidify.codec.ImageFormat.PNG,
+                    format = ImageFormat.PNG,
                     width = 300,
-                    height = 300
+                    height = 300,
                 )
             }
             IncomingSegment.Image(
@@ -354,7 +350,7 @@ suspend fun Application.transformEssenceSegment(segment: BotEssenceSegment): Inc
         is BotEssenceSegment.Video -> {
             // also transform to image
             val imageData = resolveUri(segment.thumbnailUrl)
-            val imageInfo = getImageInfo(imageData)
+            val imageInfo = codec.getImageInfo(imageData)
             IncomingSegment.Image(
                 data = IncomingSegment.Image.Data(
                     resourceId = segment.thumbnailUrl,
@@ -385,13 +381,4 @@ fun String.toMessageScene() = when (this) {
     "group" -> MessageScene.GROUP
     "temp" -> MessageScene.TEMP
     else -> throw IllegalArgumentException("Unknown message scene: $this")
-}
-
-fun org.ntqqrev.acidify.codec.ImageFormat.toAcidifyFormat() = when (this) {
-    org.ntqqrev.acidify.codec.ImageFormat.PNG -> ImageFormat.PNG
-    org.ntqqrev.acidify.codec.ImageFormat.GIF -> ImageFormat.GIF
-    org.ntqqrev.acidify.codec.ImageFormat.JPEG -> ImageFormat.JPEG
-    org.ntqqrev.acidify.codec.ImageFormat.BMP -> ImageFormat.BMP
-    org.ntqqrev.acidify.codec.ImageFormat.WEBP -> ImageFormat.WEBP
-    org.ntqqrev.acidify.codec.ImageFormat.TIFF -> ImageFormat.TIFF
 }

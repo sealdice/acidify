@@ -1,16 +1,15 @@
-package org.ntqqrev.yogurt.transform
+package org.ntqqrev.acidify.milky.transform
 
-import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
 import org.ntqqrev.acidify.AbstractBot
 import org.ntqqrev.acidify.event.*
 import org.ntqqrev.acidify.message.MessageScene
+import org.ntqqrev.acidify.milky.MilkyContext
 import org.ntqqrev.milky.Event
-import org.ntqqrev.yogurt.YogurtApp.config
 import kotlin.time.Clock
 
-suspend fun Application.transformAcidifyEvent(event: AcidifyEvent): Event? {
-    val bot = dependencies.resolve<AbstractBot>()
+suspend fun MilkyContext.transformAcidifyEvent(event: AcidifyEvent): Event? {
+    val bot = application.dependencies.resolve<AbstractBot>()
     return when (event) {
         is BotOfflineEvent -> Event.BotOffline(
             time = Clock.System.now().epochSeconds,
@@ -21,7 +20,7 @@ suspend fun Application.transformAcidifyEvent(event: AcidifyEvent): Event? {
         )
 
         is MessageReceiveEvent -> {
-            if (config.milky.reportSelfMessage || event.message.senderUin != bot.uin) {
+            if (reportSelfMessage || event.message.senderUin != bot.uin) {
                 Event.MessageReceive(
                     time = Clock.System.now().epochSeconds,
                     selfId = bot.uin,

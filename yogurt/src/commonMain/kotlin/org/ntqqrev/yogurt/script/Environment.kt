@@ -1,15 +1,27 @@
 package org.ntqqrev.yogurt.script
 
 import com.dokar.quickjs.QuickJs
+import com.dokar.quickjs.binding.ObjectBindingScope
 import com.dokar.quickjs.binding.define
 import io.ktor.server.application.*
+import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.Dispatchers
-import org.ntqqrev.yogurt.api.handler.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.ExperimentalSerializationApi
+import org.ntqqrev.acidify.AbstractBot
+import org.ntqqrev.acidify.milky.MilkyContext
+import org.ntqqrev.acidify.milky.api.MilkyApiContext
+import org.ntqqrev.acidify.milky.api.MilkyApiHandler
+import org.ntqqrev.acidify.milky.api.handler.*
+import org.ntqqrev.milky.milkyJsonModule
 import org.ntqqrev.yogurt.script.stdlib.defineConsole
 import org.ntqqrev.yogurt.script.stdlib.defineHttp
-import org.ntqqrev.yogurt.util.defineJsApi
+import kotlin.time.DurationUnit
+import kotlin.time.measureTime
 
-suspend fun Application.createScriptEnvironment() = QuickJs.create(jobDispatcher = Dispatchers.Default).apply {
+context(ctx: MilkyContext)
+suspend fun Application.createScriptEnvironment() =
+    QuickJs.create(jobDispatcher = Dispatchers.Default).apply {
     defineConsole()
     defineHttp()
 
@@ -23,72 +35,76 @@ suspend fun Application.createScriptEnvironment() = QuickJs.create(jobDispatcher
     )
 
     define(internalApiHandle) {
-        defineJsApi(this@apply, this, GetLoginInfo)
-        defineJsApi(this@apply, this, GetImplInfo)
-        defineJsApi(this@apply, this, GetUserProfile)
-        defineJsApi(this@apply, this, GetFriendList)
-        defineJsApi(this@apply, this, GetFriendInfo)
-        defineJsApi(this@apply, this, GetGroupList)
-        defineJsApi(this@apply, this, GetGroupInfo)
-        defineJsApi(this@apply, this, GetGroupMemberList)
-        defineJsApi(this@apply, this, GetGroupMemberInfo)
-        defineJsApi(this@apply, this, SetAvatar)
-        defineJsApi(this@apply, this, SetNickname)
-        defineJsApi(this@apply, this, SetBio)
-        defineJsApi(this@apply, this, GetCustomFaceUrlList)
-        defineJsApi(this@apply, this, GetCookies)
-        defineJsApi(this@apply, this, GetCsrfToken)
+        context(this@apply, this) {
+            defineJsApi(GetLoginInfo)
+            defineJsApi(GetImplInfo)
+            defineJsApi(GetUserProfile)
+            defineJsApi(GetFriendList)
+            defineJsApi(GetFriendInfo)
+            defineJsApi(GetGroupList)
+            defineJsApi(GetGroupInfo)
+            defineJsApi(GetGroupMemberList)
+            defineJsApi(GetGroupMemberInfo)
+            defineJsApi(GetPeerPins)
+            defineJsApi(SetPeerPin)
+            defineJsApi(SetAvatar)
+            defineJsApi(SetNickname)
+            defineJsApi(SetBio)
+            defineJsApi(GetCustomFaceUrlList)
+            defineJsApi(GetCookies)
+            defineJsApi(GetCsrfToken)
 
-        defineJsApi(this@apply, this, SendPrivateMessage)
-        defineJsApi(this@apply, this, SendGroupMessage)
-        defineJsApi(this@apply, this, RecallPrivateMessage)
-        defineJsApi(this@apply, this, RecallGroupMessage)
-        defineJsApi(this@apply, this, GetMessage)
-        defineJsApi(this@apply, this, GetHistoryMessages)
-        defineJsApi(this@apply, this, GetResourceTempUrl)
-        defineJsApi(this@apply, this, GetForwardedMessages)
-        defineJsApi(this@apply, this, MarkMessageAsRead)
+            defineJsApi(SendPrivateMessage)
+            defineJsApi(SendGroupMessage)
+            defineJsApi(RecallPrivateMessage)
+            defineJsApi(RecallGroupMessage)
+            defineJsApi(GetMessage)
+            defineJsApi(GetHistoryMessages)
+            defineJsApi(GetResourceTempUrl)
+            defineJsApi(GetForwardedMessages)
+            defineJsApi(MarkMessageAsRead)
 
-        defineJsApi(this@apply, this, SendFriendNudge)
-        defineJsApi(this@apply, this, SendProfileLike)
-        defineJsApi(this@apply, this, DeleteFriend)
-        defineJsApi(this@apply, this, GetFriendRequests)
-        defineJsApi(this@apply, this, AcceptFriendRequest)
-        defineJsApi(this@apply, this, RejectFriendRequest)
+            defineJsApi(SendFriendNudge)
+            defineJsApi(SendProfileLike)
+            defineJsApi(DeleteFriend)
+            defineJsApi(GetFriendRequests)
+            defineJsApi(AcceptFriendRequest)
+            defineJsApi(RejectFriendRequest)
 
-        defineJsApi(this@apply, this, SetGroupName)
-        defineJsApi(this@apply, this, SetGroupAvatar)
-        defineJsApi(this@apply, this, SetGroupMemberCard)
-        defineJsApi(this@apply, this, SetGroupMemberSpecialTitle)
-        defineJsApi(this@apply, this, SetGroupMemberAdmin)
-        defineJsApi(this@apply, this, SetGroupMemberMute)
-        defineJsApi(this@apply, this, SetGroupWholeMute)
-        defineJsApi(this@apply, this, KickGroupMember)
-        defineJsApi(this@apply, this, GetGroupAnnouncements)
-        defineJsApi(this@apply, this, SendGroupAnnouncement)
-        defineJsApi(this@apply, this, DeleteGroupAnnouncement)
-        defineJsApi(this@apply, this, GetGroupEssenceMessages)
-        defineJsApi(this@apply, this, SetGroupEssenceMessage)
-        defineJsApi(this@apply, this, QuitGroup)
-        defineJsApi(this@apply, this, SendGroupMessageReaction)
-        defineJsApi(this@apply, this, SendGroupNudge)
-        defineJsApi(this@apply, this, GetGroupNotifications)
-        defineJsApi(this@apply, this, AcceptGroupRequest)
-        defineJsApi(this@apply, this, RejectGroupRequest)
-        defineJsApi(this@apply, this, AcceptGroupInvitation)
-        defineJsApi(this@apply, this, RejectGroupInvitation)
+            defineJsApi(SetGroupName)
+            defineJsApi(SetGroupAvatar)
+            defineJsApi(SetGroupMemberCard)
+            defineJsApi(SetGroupMemberSpecialTitle)
+            defineJsApi(SetGroupMemberAdmin)
+            defineJsApi(SetGroupMemberMute)
+            defineJsApi(SetGroupWholeMute)
+            defineJsApi(KickGroupMember)
+            defineJsApi(GetGroupAnnouncements)
+            defineJsApi(SendGroupAnnouncement)
+            defineJsApi(DeleteGroupAnnouncement)
+            defineJsApi(GetGroupEssenceMessages)
+            defineJsApi(SetGroupEssenceMessage)
+            defineJsApi(QuitGroup)
+            defineJsApi(SendGroupMessageReaction)
+            defineJsApi(SendGroupNudge)
+            defineJsApi(GetGroupNotifications)
+            defineJsApi(AcceptGroupRequest)
+            defineJsApi(RejectGroupRequest)
+            defineJsApi(AcceptGroupInvitation)
+            defineJsApi(RejectGroupInvitation)
 
-        defineJsApi(this@apply, this, UploadPrivateFile)
-        defineJsApi(this@apply, this, UploadGroupFile)
-        defineJsApi(this@apply, this, GetPrivateFileDownloadUrl)
-        defineJsApi(this@apply, this, GetGroupFileDownloadUrl)
-        defineJsApi(this@apply, this, GetGroupFiles)
-        defineJsApi(this@apply, this, MoveGroupFile)
-        defineJsApi(this@apply, this, RenameGroupFile)
-        defineJsApi(this@apply, this, DeleteGroupFile)
-        defineJsApi(this@apply, this, CreateGroupFolder)
-        defineJsApi(this@apply, this, RenameGroupFolder)
-        defineJsApi(this@apply, this, DeleteGroupFolder)
+            defineJsApi(UploadPrivateFile)
+            defineJsApi(UploadGroupFile)
+            defineJsApi(GetPrivateFileDownloadUrl)
+            defineJsApi(GetGroupFileDownloadUrl)
+            defineJsApi(GetGroupFiles)
+            defineJsApi(MoveGroupFile)
+            defineJsApi(RenameGroupFile)
+            defineJsApi(DeleteGroupFile)
+            defineJsApi(CreateGroupFolder)
+            defineJsApi(RenameGroupFolder)
+            defineJsApi(DeleteGroupFolder)
+        }
     }
 
     evaluate<Any?>(
@@ -116,4 +132,50 @@ suspend fun Application.createScriptEnvironment() = QuickJs.create(jobDispatcher
             }
         """.trimIndent()
     )
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+context(
+    qjs: QuickJs,
+    scope: ObjectBindingScope,
+    ctx: MilkyContext,
+)
+inline fun <reified T : Any, reified R : Any> Application.defineJsApi(
+    handler: MilkyApiHandler<T, R>
+) {
+    val methodName = handler.path.removePrefix("/")
+
+    runBlocking {
+        qjs.evaluate<Any?>(
+            """
+                $rootHandle.$apiHandle.$methodName = async (payload) => {
+                    const payloadStr = payload ? JSON.stringify(payload) : '{}';
+                    const respStr = await $internalApiHandle.$methodName(payloadStr);
+                    return JSON.parse(respStr);
+                };
+            """.trimIndent()
+        )
+    }
+
+    scope.asyncFunction(methodName) { args ->
+        require(args.size == 1)
+        val payloadString = args[0] as? String
+            ?: throw IllegalArgumentException("Expected argument to be a JSON string")
+        val bot = dependencies.resolve<AbstractBot>()
+        val logger = bot.createLogger("Scripting")
+        val context = MilkyApiContext(bot, ctx)
+        var resp: R
+        try {
+            val duration = measureTime {
+                resp = handler.callHandler(context, milkyJsonModule.decodeFromString(payloadString))
+            }
+            logger.i {
+                "脚本调用 API ${handler.path}（成功 ${duration.toString(DurationUnit.MILLISECONDS)}）"
+            }
+            milkyJsonModule.encodeToString(resp)
+        } catch (e: Exception) {
+            logger.e(e) { "脚本调用 API ${handler.path}（失败 ${e::class.simpleName}）" }
+            throw e
+        }
+    }
 }

@@ -1,11 +1,10 @@
-package org.ntqqrev.yogurt.api.handler
+package org.ntqqrev.acidify.milky.api.handler
 
 import org.ntqqrev.acidify.*
+import org.ntqqrev.acidify.milky.api.MilkyApiException
+import org.ntqqrev.acidify.milky.api.define
+import org.ntqqrev.acidify.milky.transform.toMilkyEntity
 import org.ntqqrev.milky.*
-import org.ntqqrev.yogurt.api.MilkyApiException
-import org.ntqqrev.yogurt.api.define
-import org.ntqqrev.yogurt.transform.toMilkyEntity
-import org.ntqqrev.yogurt.util.resolveUri
 
 val UploadPrivateFile = ApiEndpoint.UploadPrivateFile.define {
     val fileData = resolveUri(it.fileUri)

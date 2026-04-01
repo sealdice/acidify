@@ -19,17 +19,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import org.ntqqrev.acidify.milky.MilkyContext
+import org.ntqqrev.acidify.milky.configureMilky
 import org.ntqqrev.milky.milkyJsonModule
 import org.ntqqrev.milky.milkyVersion
-import org.ntqqrev.yogurt.api.configureMilkyApiAuth
-import org.ntqqrev.yogurt.api.configureMilkyApiHttpRoutes
-import org.ntqqrev.yogurt.api.configureMilkyApiLoginProtect
 import org.ntqqrev.yogurt.config.loadConfigAndUpdate
 import org.ntqqrev.yogurt.debug.configureDebugFaceDetailsApi
-import org.ntqqrev.yogurt.event.configureMilkyEventAuth
-import org.ntqqrev.yogurt.event.configureMilkyEventSse
-import org.ntqqrev.yogurt.event.configureMilkyEventWebSocket
-import org.ntqqrev.yogurt.event.configureMilkyEventWebhook
 import org.ntqqrev.yogurt.script.createScriptEnvironment
 import org.ntqqrev.yogurt.script.loadScripts
 import org.ntqqrev.yogurt.util.*
@@ -122,42 +117,45 @@ object YogurtApp {
             allowHeader(HttpHeaders.Authorization)
         }
 
-        val qjs = createScriptEnvironment()
-        dependencies {
-            provide<QuickJs> { qjs } cleanup { it.close() }
-        }
 
-        routing {
-            val prefix = config.milky.http.prefix.removeSuffix("/")
-            route("$prefix/api") {
-                if (config.milky.http.accessToken.isNotEmpty()) {
-                    configureMilkyApiAuth()
-                }
-                configureMilkyApiLoginProtect()
-                configureMilkyApiHttpRoutes()
-            }
-            route("$prefix/event") {
-                if (config.milky.http.accessToken.isNotEmpty()) {
-                    configureMilkyEventAuth()
-                }
-                configureMilkyEventWebSocket()
-                configureMilkyEventSse()
-            }
-            route("$prefix/debug") {
-                if (config.debug.enableFaceDetailsApi) {
-                    configureDebugFaceDetailsApi()
-                }
-            }
-        }
+        val ctx = MilkyContext(
+            application = this@embeddedServer,
+            implName = BuildKonfig.name,
+            implVersion = BuildKonfig.version,
+            protocolOs = config.protocol.os,
+            httpAccessToken = config.milky.http.accessToken,
+            webhookEndpoints = config.milky.webhook.endpoints.map { (url, token) ->
+                MilkyContext.WebhookEndpoint(url, token)
+            },
+            reportSelfMessage = config.milky.reportSelfMessage,
+            resolveUri = ::resolveUri,
+            codec = FFmpegCodec,
+        )
+        context(ctx) {
+            val rawPrefix = config.milky.http.prefix.ifEmpty { "/" }
+            val prefix = if (rawPrefix == "/") "/" else rawPrefix.removeSuffix("/")
 
-        if (!SystemFileSystem.exists(scriptsPath)) {
-            SystemFileSystem.createDirectories(scriptsPath)
+            routing {
+                route(prefix) {
+                    configureMilky()
+
+                    route("/debug") {
+                        if (config.debug.enableFaceDetailsApi) {
+                            configureDebugFaceDetailsApi()
+                        }
+                    }
+                }
+            }
+
+            val qjs = createScriptEnvironment()
+
+            dependencies {
+                provide<MilkyContext> { ctx }
+                provide<QuickJs> { qjs } cleanup { it.close() }
+            }
         }
 
         monitor.subscribe(ApplicationStarted) {
-            if (config.milky.webhook.endpoints.isNotEmpty()) {
-                configureMilkyEventWebhook()
-            }
             configureQRCodeDisplay()
             configureSessionStoreAutoSave()
             configureEventLogging()

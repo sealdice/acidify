@@ -1,14 +1,15 @@
-package org.ntqqrev.yogurt.api.handler
+package org.ntqqrev.acidify.milky.api.handler
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.*
-import org.ntqqrev.acidify.codec.getImageInfo
+import org.ntqqrev.acidify.milky.api.MilkyApiException
+import org.ntqqrev.acidify.milky.api.define
+import org.ntqqrev.acidify.milky.transform.toEventType
+import org.ntqqrev.acidify.milky.transform.toIntReactionType
+import org.ntqqrev.acidify.milky.transform.toMilkyEntity
+import org.ntqqrev.acidify.milky.transform.transformEssenceMessage
 import org.ntqqrev.milky.*
-import org.ntqqrev.yogurt.api.MilkyApiException
-import org.ntqqrev.yogurt.api.define
-import org.ntqqrev.yogurt.transform.*
-import org.ntqqrev.yogurt.util.resolveUri
 
 val SetGroupName = ApiEndpoint.SetGroupName.define {
     bot.getGroup(it.groupId)
@@ -89,12 +90,12 @@ val SendGroupAnnouncement = ApiEndpoint.SendGroupAnnouncement.define {
     bot.getGroup(it.groupId)
         ?: throw MilkyApiException(-404, "Group not found")
     val imageData = it.imageUri?.let { uri -> resolveUri(uri) }
-    val imageFormat = imageData?.let { data -> getImageInfo(data) }?.format
+    val imageFormat = imageData?.let { data -> codec.getImageInfo(data) }?.format
     bot.sendGroupAnnouncement(
         groupUin = it.groupId,
         content = it.content,
         imageData = imageData,
-        imageFormat = imageFormat?.toAcidifyFormat(),
+        imageFormat = imageFormat,
     )
     SendGroupAnnouncementOutput()
 }
@@ -116,7 +117,7 @@ val GetGroupEssenceMessages = ApiEndpoint.GetGroupEssenceMessages.define {
     )
     GetGroupEssenceMessagesOutput(
         messages = essenceMessageResult.messages.map {
-            application.async { application.transformEssenceMessage(it) }
+            async { transformEssenceMessage(it) }
         }.awaitAll(),
         isEnd = essenceMessageResult.isEnd
     )
