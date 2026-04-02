@@ -1,12 +1,13 @@
 package org.ntqqrev.acidify.milky
 
 import io.ktor.server.application.*
+import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import org.ntqqrev.acidify.AbstractBot
 import org.ntqqrev.acidify.event.AcidifyEvent
 import org.ntqqrev.acidify.milky.transform.transformAcidifyEvent
 import org.ntqqrev.milky.Event
@@ -33,9 +34,15 @@ open class MilkyContext(
     )
 
     internal fun pipeBotEventFlow(flow: Flow<AcidifyEvent>) = launch {
-        flow.mapNotNull { transformAcidifyEvent(it) }
-            .collect {
-                eventFlow.emit(it)
+        val bot = application.dependencies.resolve<AbstractBot>()
+        val logger = bot.createLogger(this@MilkyContext)
+        flow.collect {
+            try {
+                val milkyEvent = transformAcidifyEvent(it) ?: return@collect
+                eventFlow.emit(milkyEvent)
+            } catch (e: Exception) {
+                logger.w(e) { "处理事件 ${it::class.simpleName} 时发生错误" }
             }
+        }
     }
 }
