@@ -34,8 +34,14 @@ actual fun readByteArrayFromFilePath(path: String): ByteArray = memScoped {
         }
 
         val fileSize = sizeStruct.QuadPart
-        if (fileSize <= 0) {
-            throw IOException("File is empty or invalid size ($fileSize)")
+        if (fileSize < 0) {
+            throw IOException("Invalid size ($fileSize)")
+        }
+        if (fileSize == 0L) {
+            return ByteArray(0)
+        }
+        if (fileSize > Int.MAX_VALUE.toLong()) {
+            throw IOException("File is too large to read into memory ($fileSize bytes): $path")
         }
         val buffer = ByteArray(fileSize.toInt())
         buffer.usePinned { pinned ->
