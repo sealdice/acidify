@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import org.ntqqrev.acidify.common.SsoResponse
 import org.ntqqrev.acidify.exception.ServiceException
+import org.ntqqrev.acidify.exception.UrlSignException
 import org.ntqqrev.acidify.internal.context.FlashTransferContext
 import org.ntqqrev.acidify.internal.context.HighwayContext
 import org.ntqqrev.acidify.internal.context.PacketContext
@@ -79,7 +80,15 @@ internal sealed class AbstractClient(
             timeoutMillis = timeout,
             requestType = service.ssoRequestType,
             encryptType = service.ssoEncryptType,
-            ssoSecureInfo = getSsoSecureInfo(service.cmd, sequence, byteArray)
+            ssoSecureInfo = try {
+                getSsoSecureInfo(service.cmd, sequence, byteArray)
+            } catch (e: UrlSignException) {
+                logger.w { "没有成功获取 ${service.cmd} 的签名，该操作可能会失败: ${e.message}" }
+                null
+            } catch (e: Exception) {
+                logger.w(e) { "获取 ${service.cmd} 的签名时发生未知错误，该操作可能会失败" }
+                null
+            }
         )
         if (resp.retCode != 0) {
             throw ServiceException(

@@ -14,9 +14,15 @@ plugins {
 version = "0.1.0"
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(project(":acidify-core"))
+            implementation(project(":acidify-milky"))
+            implementation(project(":yogurt-fs"))
             implementation(libs.kotlinx.datetime)
             implementation(libs.bundles.ktor.client)
             implementation(libs.bundles.ktor.server)
@@ -27,7 +33,7 @@ kotlin {
             implementation(libs.mordant)
         }
         jvmMain.dependencies {
-            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.java)
             implementation(libs.logback.classic)
         }
         mingwMain.dependencies {

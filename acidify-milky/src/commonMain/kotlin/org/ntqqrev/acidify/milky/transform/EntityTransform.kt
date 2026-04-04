@@ -1,0 +1,172 @@
+package org.ntqqrev.acidify.milky.transform
+
+import org.ntqqrev.acidify.entity.BotFriend
+import org.ntqqrev.acidify.entity.BotGroup
+import org.ntqqrev.acidify.entity.BotGroupMember
+import org.ntqqrev.acidify.struct.*
+import org.ntqqrev.milky.*
+
+fun BotFriend.toMilkyEntity() = FriendEntity(
+    userId = uin,
+    nickname = nickname,
+    sex = gender.toMilkyString(),
+    qid = qid,
+    remark = remark,
+    category = FriendCategoryEntity(
+        categoryId = categoryId,
+        categoryName = categoryName
+    )
+)
+
+fun BotGroup.toMilkyEntity() = GroupEntity(
+    groupId = uin,
+    groupName = name,
+    memberCount = memberCount,
+    maxMemberCount = capacity,
+    remark = remark,
+    createdTime = createdAt,
+    description = description,
+    question = question,
+    announcement = announcementPreview,
+)
+
+fun BotGroupMember.toMilkyEntity() = GroupMemberEntity(
+    userId = uin,
+    nickname = nickname,
+    sex = "unknown",
+    groupId = group.uin,
+    card = card,
+    title = specialTitle,
+    level = level,
+    role = role.toMilkyString(),
+    joinTime = joinedAt,
+    lastSentTime = lastSpokeAt,
+    shutUpEndTime = mutedUntil
+)
+
+fun BotUserInfo.toMilkyOutput() = GetUserProfileOutput(
+    nickname = nickname,
+    qid = qid,
+    age = age,
+    sex = gender.toMilkyString(),
+    remark = remark,
+    bio = bio,
+    level = level,
+    country = country,
+    city = city,
+    school = school
+)
+
+fun UserInfoGender.toMilkyString() = when (this) {
+    UserInfoGender.MALE -> "male"
+    UserInfoGender.FEMALE -> "female"
+    else -> "unknown"
+}
+
+fun GroupMemberRole.toMilkyString() = when (this) {
+    GroupMemberRole.OWNER -> "owner"
+    GroupMemberRole.ADMIN -> "admin"
+    GroupMemberRole.MEMBER -> "member"
+}
+
+fun BotGroupFileEntry.toMilkyEntity(groupId: Long) = GroupFileEntity(
+    groupId = groupId,
+    fileId = fileId,
+    fileName = fileName,
+    parentFolderId = parentFolderId,
+    fileSize = fileSize,
+    uploadedTime = uploadedTime,
+    expireTime = expireTime,
+    uploaderId = uploaderUin,
+    downloadedTimes = downloadedTimes
+)
+
+fun BotGroupFolderEntry.toMilkyEntity(groupId: Long) = GroupFolderEntity(
+    groupId = groupId,
+    folderId = folderId,
+    parentFolderId = parentFolderId,
+    folderName = folderName,
+    createdTime = createTime,
+    lastModifiedTime = modifiedTime,
+    creatorId = creatorUin,
+    fileCount = totalFileCount
+)
+
+fun BotFriendRequest.toMilkyEntity() = FriendRequest(
+    time = time,
+    initiatorId = initiatorUin,
+    initiatorUid = initiatorUid,
+    targetUserId = targetUserUin,
+    targetUserUid = targetUserUid,
+    state = state.toMilkyString(),
+    comment = comment,
+    via = via,
+    isFiltered = isFiltered
+)
+
+fun BotGroupNotification.toMilkyEntity() = when (this) {
+    is BotGroupNotification.JoinRequest -> GroupNotification.JoinRequest(
+        groupId = groupUin,
+        notificationSeq = notificationSeq,
+        isFiltered = isFiltered,
+        initiatorId = initiatorUin,
+        state = state.toMilkyString(),
+        operatorId = operatorUin,
+        comment = comment
+    )
+
+    is BotGroupNotification.AdminChange -> GroupNotification.AdminChange(
+        groupId = groupUin,
+        notificationSeq = notificationSeq,
+        targetUserId = targetUserUin,
+        isSet = isSet,
+        operatorId = operatorUin
+    )
+
+    is BotGroupNotification.Kick -> GroupNotification.Kick(
+        groupId = groupUin,
+        notificationSeq = notificationSeq,
+        targetUserId = targetUserUin,
+        operatorId = operatorUin
+    )
+
+    is BotGroupNotification.Quit -> GroupNotification.Quit(
+        groupId = groupUin,
+        notificationSeq = notificationSeq,
+        targetUserId = targetUserUin
+    )
+
+    is BotGroupNotification.InvitedJoinRequest -> GroupNotification.InvitedJoinRequest(
+        groupId = groupUin,
+        notificationSeq = notificationSeq,
+        initiatorId = initiatorUin,
+        targetUserId = targetUserUin,
+        state = state.toMilkyString(),
+        operatorId = operatorUin
+    )
+}
+
+fun RequestState.toMilkyString() = when (this) {
+    RequestState.PENDING -> "pending"
+    RequestState.ACCEPTED -> "accepted"
+    RequestState.REJECTED -> "rejected"
+    else -> "ignored"
+}
+
+fun String.toEventType() = when (this) {
+    "join_request" -> 1
+    "invited_join_request" -> 22
+    else -> throw IllegalArgumentException("Unknown notification type: $this")
+}
+
+fun Int.toMilkyReactionType() = when (this) {
+    1 -> "face"
+    2 -> "emoji"
+    else -> throw IllegalArgumentException("Unknown reaction type: $this")
+}
+
+fun String.toIntReactionType() = when (this) {
+    "face" -> 1
+    "emoji" -> 2
+    else -> throw IllegalArgumentException("Unknown reaction type: $this")
+}

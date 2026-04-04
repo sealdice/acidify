@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "org.ntqqrev"
-version = "1.3.2"
+version = "1.4.0"
 
 kotlin {
     js(IR) {
@@ -45,10 +45,6 @@ kotlin {
             implementation(libs.kompress)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
-        }
-        commonTest.dependencies {
-            implementation(libs.ktor.client.cio)
-            implementation(kotlin("test"))
         }
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")

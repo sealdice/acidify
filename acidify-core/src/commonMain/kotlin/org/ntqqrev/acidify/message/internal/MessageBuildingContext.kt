@@ -372,11 +372,14 @@ internal class MessageBuildingContext(
 
         if (uploadResp.uKey.isNotEmpty()) {
             // TODO: fix highway here
-            bot.client.flashTransferContext.uploadFile(
+            val success = bot.client.flashTransferContext.uploadFile(
                 uKey = uploadResp.uKey,
                 appId = if (scene == MessageScene.FRIEND) 1413 else 1415,
                 bodyStream = raw,
             )
+            if (!success) {
+                throw IllegalStateException("视频文件上传失败")
+            }
         } else {
             logger.d { "uKey 为空，服务器可能已存在该视频，跳过上传" }
         }

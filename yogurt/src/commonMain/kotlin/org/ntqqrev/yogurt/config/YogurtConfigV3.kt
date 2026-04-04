@@ -30,6 +30,7 @@ data class YogurtConfigV3(
         val webhook: WebhookConfig = WebhookConfig(),
         val reportSelfMessage: Boolean = true,
         val preloadContacts: Boolean = false,
+        val ffmpegPath: String = "",
     ) {
         @Serializable
         data class HttpConfig(

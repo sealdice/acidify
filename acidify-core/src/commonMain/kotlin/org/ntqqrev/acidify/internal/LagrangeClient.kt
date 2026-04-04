@@ -64,17 +64,12 @@ internal class LagrangeClient(
 
     override suspend fun getSsoSecureInfo(cmd: String, seq: Int, src: ByteArray): SsoSecureInfo? {
         return if (signRequiredCommand.contains(cmd)) {
-            try {
-                signProvider.sign(cmd, seq, src).let {
-                    SsoSecureInfo(
-                        sign = it.sign,
-                        token = it.token,
-                        extra = it.extra,
-                    )
-                }
-            } catch (e: UrlSignException) {
-                logger.w(e) { "没有成功获取 $cmd (seq=$seq) 的签名，该操作可能会失败" }
-                null
+            signProvider.sign(cmd, seq, src).let {
+                SsoSecureInfo(
+                    sign = it.sign,
+                    token = it.token,
+                    extra = it.extra,
+                )
             }
         } else {
             null
