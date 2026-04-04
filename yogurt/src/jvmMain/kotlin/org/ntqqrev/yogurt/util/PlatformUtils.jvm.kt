@@ -32,3 +32,10 @@ actual fun executeCommand(vararg args: String): CommandExecutionResult {
         deleteCommandTempFile(stderrPath)
     }
 }
+
+
+actual fun currentProgramDirectory(): String? = runCatching {
+    val location = object {}.javaClass.protectionDomain.codeSource?.location?.toURI() ?: return null
+    val file = File(location)
+    (if (file.isDirectory) file else file.parentFile)?.absolutePath
+}.getOrNull() ?: runCatching { File(".").absoluteFile.canonicalPath }.getOrNull()

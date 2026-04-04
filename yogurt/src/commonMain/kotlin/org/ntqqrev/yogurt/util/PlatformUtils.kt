@@ -14,6 +14,8 @@ data class CommandExecutionResult(
 
 expect fun executeCommand(vararg args: String): CommandExecutionResult
 
+expect fun currentProgramDirectory(): String?
+
 fun createCommandTempFilePath(kind: String): String {
     while (true) {
         withFs {
@@ -62,3 +64,43 @@ fun buildPosixRedirectedCommand(
 
 private fun quotePosixArgument(argument: String): String =
     "'" + argument.replace("'", "'\"'\"'") + "'"
+
+
+fun discoverFfmpegCommand(configuredPath: String): String? {
+    if (configuredPath.isNotBlank()) {
+        return configuredPath
+    }
+
+    val candidateNames = listOf("ffmpeg", "ffmpeg.exe")
+    val candidates = LinkedHashSet<String>()
+
+    currentProgramDirectory()?.let { programDir ->
+        withFs {
+            for (name in candidateNames) {
+                val candidate = Path(programDir, name)
+                if (exists(candidate)) {
+                    candidates += candidate.toString()
+                }
+            }
+        }
+    }
+
+    withFs {
+        val cwd = resolve(Path("."))
+        for (name in candidateNames) {
+            val candidate = Path(cwd, name)
+            if (exists(candidate)) {
+                candidates += candidate.toString()
+            }
+        }
+    }
+
+    candidates += candidateNames
+
+    return candidates.firstOrNull(::isFfmpegUsable)
+}
+
+private fun isFfmpegUsable(command: String): Boolean {
+    val result = executeCommand(command, "-version")
+    return result.errorCode == 0 && listOf(result.stdout, result.stderr).any { "ffmpeg version" in it }
+}

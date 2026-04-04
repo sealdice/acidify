@@ -2,7 +2,7 @@
 
 package org.ntqqrev.yogurt.util
 
-import kotlinx.cinterop.toKString
+import kotlinx.cinterop.*
 import platform.posix.errno
 import platform.posix.strerror
 import platform.posix.system
@@ -36,3 +36,13 @@ private fun exitCodeFromStatus(status: Int): Int =
         (status and 0x7f) != 0x7f -> 128 + (status and 0x7f)
         else -> -1
     }
+
+
+actual fun currentProgramDirectory(): String? = memScoped {
+    val bufferSize = 4096
+    val buffer = allocArray<ByteVar>(bufferSize)
+    val length = platform.posix.readlink("/proc/self/exe", buffer, (bufferSize - 1).convert())
+    if (length <= 0) return null
+    buffer[length] = 0
+    buffer.toKString().substringBeforeLast('/', "").ifBlank { null }
+}

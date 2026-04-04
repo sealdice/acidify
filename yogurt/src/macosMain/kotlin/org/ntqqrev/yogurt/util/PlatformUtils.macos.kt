@@ -45,3 +45,6 @@ actual fun executeCommand(vararg args: String): CommandExecutionResult {
         deleteCommandTempFile(stderrPath)
     }
 }
+
+
+actual fun currentProgramDirectory(): String? = null

@@ -145,3 +145,6 @@ private fun quoteWindowsArgument(argument: String): String {
     result.append('"')
     return result.toString()
 }
+
+
+actual fun currentProgramDirectory(): String? = null

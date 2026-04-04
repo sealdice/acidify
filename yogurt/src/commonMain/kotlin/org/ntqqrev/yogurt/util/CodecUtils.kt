@@ -18,10 +18,64 @@ import kotlin.time.Duration.Companion.seconds
 
 object FFmpegCodec : Codec {
     val ffmpegMutex = Mutex()
+    private val ffmpegCommand: String? by lazy { discoverFfmpegCommand(config.milky.ffmpegPath) }
 
-    override suspend fun getImageInfo(input: ByteArray) = codecGetImageInfo(input)
+    override suspend fun getImageInfo(input: ByteArray) = ffmpegCommand?.let { ffmpeg ->
+        withContext(Dispatchers.IO) {
+            withTempFile(input, "image-input") { inputPath ->
+                val result = executeCommand(
+                    ffmpeg,
+                    "-hide_banner",
+                    "-nostdin",
+                    "-i",
+                    inputPath,
+                    "-frames:v",
+                    "1",
+                    "-f",
+                    "null",
+                    "-"
+                )
+                parseImageInfoFromFfmpegOutput(result.stderr)
+                    ?: codecGetImageInfo(input)
+            }
+        }
+    } ?: codecGetImageInfo(input)
 
     override suspend fun audioToPcm(input: ByteArray): ByteArray = ffmpegMutex.withLock {
+        ffmpegCommand?.let { ffmpeg ->
+            return@withLock withContext(Dispatchers.IO) {
+                withTempFile(input, "audio-input") { inputPath ->
+                    val outputPath = createCodecTempFilePath("audio-pcm", ".pcm")
+                    try {
+                        val result = executeCommand(
+                            ffmpeg,
+                            "-hide_banner",
+                            "-nostdin",
+                            "-y",
+                            "-i",
+                            inputPath,
+                            "-vn",
+                            "-sn",
+                            "-f",
+                            "s16le",
+                            "-acodec",
+                            "pcm_s16le",
+                            "-ac",
+                            "1",
+                            "-ar",
+                            "24000",
+                            outputPath,
+                        )
+                        if (result.errorCode == 0) {
+                            return@withTempFile Path(outputPath).readBytes()
+                        }
+                    } finally {
+                        deleteCodecTempFile(outputPath)
+                    }
+                    codecAudioToPcm(input)
+                }
+            }
+        }
         codecAudioToPcm(input)
     }
 
@@ -44,11 +98,11 @@ object FFmpegCodec : Codec {
         return (frameCount / sampleRate).seconds
     }
 
-    override suspend fun getVideoInfo(videoData: ByteArray): VideoInfo = if (config.milky.ffmpegPath.isNotEmpty()) {
+    override suspend fun getVideoInfo(videoData: ByteArray): VideoInfo = if (ffmpegCommand != null) {
         withContext(Dispatchers.IO) {
             withTempFile(videoData, "video-input") { inputPath ->
                 val result = executeCommand(
-                    config.milky.ffmpegPath,
+                    ffmpegCommand!!,
                     "-hide_banner",
                     "-nostdin",
                     "-i",
@@ -72,13 +126,13 @@ object FFmpegCodec : Codec {
         }
     }
 
-    override suspend fun getVideoFirstFrameJpg(videoData: ByteArray): ByteArray = if (config.milky.ffmpegPath.isNotEmpty()) {
+    override suspend fun getVideoFirstFrameJpg(videoData: ByteArray): ByteArray = if (ffmpegCommand != null) {
         withContext(Dispatchers.IO) {
             withTempFile(videoData, "video-input") { inputPath ->
                 val outputPath = createCodecTempFilePath("video-first-frame", ".jpg")
                 try {
                     val result = executeCommand(
-                        config.milky.ffmpegPath,
+                        ffmpegCommand!!,
                         "-hide_banner",
                         "-nostdin",
                         "-y",
@@ -170,3 +224,24 @@ private fun parseFfmpegDuration(raw: String): Duration {
 
 private val durationRegex = Regex("""Duration:\s*([0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?)""")
 private val resolutionRegex = Regex("""\b(\d{2,5})x(\d{2,5})\b""")
+
+
+private fun parseImageInfoFromFfmpegOutput(output: String): org.ntqqrev.acidify.milky.ImageInfo? {
+    val videoLine = output.lineSequence().firstOrNull { "Video:" in it } ?: return null
+    val resolution = resolutionRegex.find(videoLine) ?: return null
+    val format = when {
+        "png" in videoLine.lowercase() -> org.ntqqrev.acidify.message.ImageFormat.PNG
+        "gif" in videoLine.lowercase() -> org.ntqqrev.acidify.message.ImageFormat.GIF
+        "mjpeg" in videoLine.lowercase() || "jpeg" in videoLine.lowercase() || "jpg" in videoLine.lowercase() -> org.ntqqrev.acidify.message.ImageFormat.JPEG
+        "bmp" in videoLine.lowercase() -> org.ntqqrev.acidify.message.ImageFormat.BMP
+        "webp" in videoLine.lowercase() -> org.ntqqrev.acidify.message.ImageFormat.WEBP
+        "tiff" in videoLine.lowercase() -> org.ntqqrev.acidify.message.ImageFormat.TIFF
+        else -> return null
+    }
+
+    return org.ntqqrev.acidify.milky.ImageInfo(
+        format = format,
+        width = resolution.groupValues[1].toInt(),
+        height = resolution.groupValues[2].toInt(),
+    )
+}
