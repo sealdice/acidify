@@ -42,8 +42,14 @@ jobs:
             gradle-target: LinuxArm64
             platform: linux-arm64
 
+          - runs-on: ubuntu-latest
+            target: androidNativeArm64
+            gradle-target: AndroidNativeArm64
+            platform: android-arm64
+
     env:
       GITHUB_ACTIONS_BUILD_TARGET: ${{ matrix.target }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repository
