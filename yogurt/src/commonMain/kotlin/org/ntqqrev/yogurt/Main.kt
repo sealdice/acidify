@@ -8,6 +8,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import org.ntqqrev.acidify.codec.calculatePcmDuration
+import org.ntqqrev.acidify.codec.getImageInfo
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
 import org.ntqqrev.yogurt.util.FFMpegCodec
@@ -56,18 +58,68 @@ private fun runCliCommand(args: Array<String>): Boolean {
     }
 
     when (args[0]) {
-        "codec" -> {
+        "codec", "codec-decode" -> {
             val inputPath = args.getOrNull(1)
                 ?: return failCli("Usage: yogurt codec <input-audio-path> [output-pcm-path]")
             val outputPath = args.getOrNull(2) ?: defaultCodecOutputPath(inputPath)
+
+            println("[codec] reading: $inputPath")
             val input = readByteArrayFromFilePath(inputPath)
+            println("[codec] bytes: ${input.size}")
+            println("[codec] calling audioToPcm")
             val pcm = runBlocking {
                 FFMpegCodec.audioToPcm(input)
             }
+            println("[codec] pcm bytes: ${pcm.size}")
+            println("[codec] writing: $outputPath")
             SystemFileSystem.sink(Path(outputPath)).buffered().use { sink ->
                 sink.write(pcm)
             }
             println(outputPath)
+            return true
+        }
+
+        "codec-stat" -> {
+            val inputPath = args.getOrNull(1)
+                ?: return failCli("Usage: yogurt codec-stat <input-path>")
+            val input = readByteArrayFromFilePath(inputPath)
+            println("path=$inputPath")
+            println("bytes=${input.size}")
+            println("head16=${input.take(16).joinToString(" ") { byte -> (byte.toInt() and 0xff).toString(16).padStart(2, '0') }}")
+            return true
+        }
+
+        "codec-pcm-duration" -> {
+            val inputPath = args.getOrNull(1)
+                ?: return failCli("Usage: yogurt codec-pcm-duration <pcm-path>")
+            val input = readByteArrayFromFilePath(inputPath)
+            println(calculatePcmDuration(input))
+            return true
+        }
+
+        "codec-image-info" -> {
+            val inputPath = args.getOrNull(1)
+                ?: return failCli("Usage: yogurt codec-image-info <image-path>")
+            val input = readByteArrayFromFilePath(inputPath)
+            val info = getImageInfo(input)
+            println("format=${info.format}")
+            println("width=${info.width}")
+            println("height=${info.height}")
+            return true
+        }
+
+        "codec-video-info" -> {
+            val inputPath = args.getOrNull(1)
+                ?: return failCli("Usage: yogurt codec-video-info <video-path>")
+            val input = readByteArrayFromFilePath(inputPath)
+            println("[codec-video-info] bytes: ${input.size}")
+            println("[codec-video-info] calling getVideoInfo")
+            val info = runBlocking {
+                FFMpegCodec.getVideoInfo(input)
+            }
+            println("width=${info.width}")
+            println("height=${info.height}")
+            println("duration=${info.duration}")
             return true
         }
 

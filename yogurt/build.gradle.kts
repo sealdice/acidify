@@ -61,13 +61,14 @@ kotlin {
             )
         }
     }
+
 }
 
 configurations.configureEach {
     if (name.contains("androidNativeArm64", ignoreCase = true)) {
         resolutionStrategy.dependencySubstitution {
             substitute(module("org.ntqqrev:acidify-codec"))
-                .using(module("com.github.sealdice.acidify-codec:acidify-codec-androidnativearm64:1e7b7ee"))
+                .using(project(":acidify-codec-androidlocal"))
         }
     }
 }

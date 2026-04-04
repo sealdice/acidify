@@ -25,6 +25,7 @@ plugins {
 }
 
 include(
+    ":acidify-codec-androidlocal",
     ":acidify-core",
     ":acidify-core-runner",
     ":yogurt",
