@@ -18,6 +18,7 @@ kotlin {
         macosArm64Main.get().dependsOn(wrappedMain)
         linuxX64Main.get().dependsOn(wrappedMain)
         linuxArm64Main.get().dependsOn(wrappedMain)
+        findByName("androidNativeArm64Main")?.dependsOn(wrappedMain)
 
         commonTest.dependencies {
             implementation(kotlin("test"))

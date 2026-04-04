@@ -6,9 +6,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
-import org.ntqqrev.acidify.message.ImageFormat
 import org.ntqqrev.acidify.milky.Codec
-import org.ntqqrev.acidify.milky.ImageInfo
 import org.ntqqrev.acidify.milky.VideoInfo
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.fs.FileSystem
@@ -21,25 +19,29 @@ import kotlin.time.Duration.Companion.seconds
 object FFmpegCodec : Codec {
     val ffmpegMutex = Mutex()
 
-    override suspend fun getImageInfo(input: ByteArray): ImageInfo {
-        return org.ntqqrev.acidify.codec.getImageInfo(input).toAcidifyImageInfo()
-    }
+    override suspend fun getImageInfo(input: ByteArray) = codecGetImageInfo(input)
 
     override suspend fun audioToPcm(input: ByteArray): ByteArray = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.audioToPcm(input)
+        codecAudioToPcm(input)
     }
 
     override suspend fun silkEncode(input: ByteArray): ByteArray = ffmpegMutex.withLock {
-        org.ntqqrev.acidify.codec.silkEncode(input)
+        codecSilkEncode(input)
     }
 
     override suspend fun calculatePcmDuration(
         input: ByteArray,
         bitDepth: Int,
         channelCount: Int,
-        sampleRate: Int
+        sampleRate: Int,
     ): Duration {
-        return org.ntqqrev.acidify.codec.calculatePcmDuration(input, bitDepth, channelCount, sampleRate)
+        val bytesPerSample = bitDepth / 8.0
+        if (bytesPerSample <= 0.0 || channelCount <= 0 || sampleRate <= 0) {
+            return Duration.ZERO
+        }
+
+        val frameCount = input.size / (bytesPerSample * channelCount)
+        return (frameCount / sampleRate).seconds
     }
 
     override suspend fun getVideoInfo(videoData: ByteArray): VideoInfo = if (config.milky.ffmpegPath.isNotEmpty()) {
@@ -66,12 +68,11 @@ object FFmpegCodec : Codec {
         }
     } else {
         ffmpegMutex.withLock {
-            org.ntqqrev.acidify.codec.getVideoInfo(videoData).toAcidifyVideoInfo()
+            codecGetVideoInfo(videoData)
         }
     }
 
-    override suspend fun getVideoFirstFrameJpg(videoData: ByteArray): ByteArray =
-        if (config.milky.ffmpegPath.isNotEmpty()) {
+    override suspend fun getVideoFirstFrameJpg(videoData: ByteArray): ByteArray = if (config.milky.ffmpegPath.isNotEmpty()) {
         withContext(Dispatchers.IO) {
             withTempFile(videoData, "video-input") { inputPath ->
                 val outputPath = createCodecTempFilePath("video-first-frame", ".jpg")
@@ -102,31 +103,12 @@ object FFmpegCodec : Codec {
                 }
             }
         }
-        } else {
-            ffmpegMutex.withLock {
-                org.ntqqrev.acidify.codec.getVideoFirstFrameJpg(videoData)
-            }
+    } else {
+        ffmpegMutex.withLock {
+            codecGetVideoFirstFrameJpg(videoData)
         }
+    }
 }
-
-private fun org.ntqqrev.acidify.codec.ImageInfo.toAcidifyImageInfo() = ImageInfo(
-    format = when (format) {
-        org.ntqqrev.acidify.codec.ImageFormat.PNG -> ImageFormat.PNG
-        org.ntqqrev.acidify.codec.ImageFormat.GIF -> ImageFormat.GIF
-        org.ntqqrev.acidify.codec.ImageFormat.JPEG -> ImageFormat.JPEG
-        org.ntqqrev.acidify.codec.ImageFormat.BMP -> ImageFormat.BMP
-        org.ntqqrev.acidify.codec.ImageFormat.WEBP -> ImageFormat.WEBP
-        org.ntqqrev.acidify.codec.ImageFormat.TIFF -> ImageFormat.TIFF
-    },
-    width = width,
-    height = height,
-)
-
-private fun org.ntqqrev.acidify.codec.VideoInfo.toAcidifyVideoInfo() = VideoInfo(
-    width = width,
-    height = height,
-    duration = duration,
-)
 
 private inline fun <T> withTempFile(
     data: ByteArray,

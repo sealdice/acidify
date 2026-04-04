@@ -1,4 +1,4 @@
-锘縫ackage org.ntqqrev.yogurt
+package org.ntqqrev.yogurt
 
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.terminal.Terminal

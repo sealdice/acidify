@@ -15,6 +15,7 @@ kotlin {
         "macosArm64" -> macosArm64()
         "linuxX64" -> linuxX64()
         "linuxArm64" -> linuxArm64()
+        "androidNativeArm64" -> androidNativeArm64()
 
         // is run locally
         else -> {

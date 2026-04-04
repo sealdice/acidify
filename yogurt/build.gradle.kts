@@ -19,31 +19,57 @@ kotlin {
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(project(":acidify-core"))
-            implementation(project(":acidify-milky"))
-            implementation(project(":yogurt-fs"))
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.bundles.ktor.client)
-            implementation(libs.bundles.ktor.server)
-            implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.milky.types)
-            implementation(libs.acidify.codec)
-            implementation(libs.qr.matrix)
-            implementation(libs.mordant)
+        val commonMain by getting {
+            dependencies {
+                implementation(project(":acidify-core"))
+                implementation(project(":acidify-milky"))
+                implementation(project(":yogurt-fs"))
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.bundles.ktor.client)
+                implementation(libs.bundles.ktor.server)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.milky.types)
+                implementation(libs.qr.matrix)
+            }
         }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.java)
-            implementation(libs.logback.classic)
+
+        val codecMain by creating {
+            dependsOn(commonMain)
+            dependencies {
+                implementation(libs.acidify.codec)
+            }
         }
-        mingwMain.dependencies {
-            implementation(libs.ktor.client.winhttp)
+
+        val jvmMain by getting {
+            dependsOn(codecMain)
+            dependencies {
+                implementation(libs.ktor.client.java)
+                implementation(libs.logback.classic)
+            }
         }
-        appleMain.dependencies {
-            implementation(libs.ktor.client.darwin)
+
+        findByName("mingwMain")?.apply {
+            dependsOn(codecMain)
+            dependencies {
+                implementation(libs.ktor.client.winhttp)
+            }
         }
-        linuxMain.dependencies {
-            implementation(libs.ktor.client.curl)
+        findByName("appleMain")?.apply {
+            dependsOn(codecMain)
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
+        }
+        findByName("linuxMain")?.apply {
+            dependsOn(codecMain)
+            dependencies {
+                implementation(libs.ktor.client.curl)
+            }
+        }
+        val nativeMain = findByName("nativeMain")
+        val androidNativeArm64Main = findByName("androidNativeArm64Main")
+        if (nativeMain != null && androidNativeArm64Main != null) {
+            androidNativeArm64Main.dependsOn(nativeMain)
         }
     }
 
@@ -55,8 +81,8 @@ kotlin {
         }
     }
 
-    mingwX64 {
-        binaries.all {
+    targets.matching { it.name == "mingwX64" }.configureEach {
+        (this as KotlinNativeTarget).binaries.all {
             linkerOpts(
                 "-Wl,-Bstatic",
                 "-lstdc++",
