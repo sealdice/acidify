@@ -13,6 +13,8 @@ import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
 import org.ntqqrev.yogurt.fs.withFs
 import org.ntqqrev.yogurt.util.logHandler
+import org.ntqqrev.yogurt.util.readEnvironmentVariable
+import org.ntqqrev.yogurt.util.setEnvironmentVariable
 
 suspend fun Application.initializePC(): Bot = withFs {
     val sessionStore: SessionStore = if (exists(sessionStorePath)) {
@@ -39,6 +41,8 @@ suspend fun Application.initializePC(): Bot = withFs {
         require(config.protocol.uin != 0L) {
             "使用 Lagrange Sign API 时，请在配置文件中填写 uin 字段"
         }
+        val launcherSignature = readEnvironmentVariable("APP_LAUNCHER_SIG")
+        val jwtToken = readEnvironmentVariable("APP_JWT_TOKEN")
         appInfo = when (config.protocol.version) {
             "fetched" -> throw IllegalStateException("在使用 Lagrange Sign API 时，必须显式指定 AppInfo 版本或自行提供 AppInfo 文件，无法使用 fetched 版本")
             "custom" -> readCustomAppInfo()
@@ -57,6 +61,9 @@ suspend fun Application.initializePC(): Bot = withFs {
                     else -> throw IllegalStateException()
                 }
             }_NQ_${appInfo.currentVersion.replace('-', '_')}_GW_B",
+            jwtToken = jwtToken,
+            launcherSignature = launcherSignature,
+            onJwtTokenUpdated = { setEnvironmentVariable("APP_JWT_TOKEN", it) },
         )
     } else {
         signProvider = UrlSignProvider(config.protocol.signApiUrl)

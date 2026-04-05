@@ -101,6 +101,10 @@ Yogurt 使用的协议类型。可选值有：
 
 默认为空。若填写该字段，则 Yogurt 会在使用 `Windows`、`Mac` 或 `Linux` 协议时，使用新版 Lagrange Sign API 来获取签名。如果你不确定是否使用的是新版 API，请保持该字段为空。
 
+> [!tip]
+>
+> 对接带 `APP_LAUNCHER_SIG` / `APP_JWT_TOKEN` 机制的新版 Lagrange Sign API 时，不需要新增配置字段。Yogurt 仍然使用 `protocol.signApiUrl` 和 `protocol.pcLagrangeSignToken`，并额外从当前进程环境变量中读取 `APP_LAUNCHER_SIG` 与 `APP_JWT_TOKEN`。
+
 > [!important]
 >
 > 使用新版 Lagrange Sign API 时，将不能使用 `fetched` 版本，必须指定具体的协议版本号，或者使用 `custom` 版本并提供 `app-info.json` 文件。此外，还需要填写 `uin` 字段，且 `uin` 需要与实际登录的 QQ 号一致。`password` 字段可以留空。
