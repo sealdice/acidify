@@ -14,62 +14,47 @@ plugins {
 version = "0.1.0"
 
 kotlin {
+    applyDefaultHierarchyTemplate()
+
     compilerOptions {
         freeCompilerArgs.add("-Xcontext-parameters")
     }
 
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(project(":acidify-core"))
-                implementation(project(":acidify-milky"))
-                implementation(project(":yogurt-fs"))
-                implementation(libs.kotlinx.datetime)
-                implementation(libs.bundles.ktor.client)
-                implementation(libs.bundles.ktor.server)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.milky.types)
-                implementation(libs.qr.matrix)
-            }
+        val posixMain by creating {
+            dependsOn(commonMain.get())
+            macosMain.get().dependsOn(this)
+            linuxMain.get().dependsOn(this)
         }
 
-        val codecMain by creating {
-            dependsOn(commonMain)
-            dependencies {
-                implementation(libs.acidify.codec)
-            }
+        commonMain.dependencies {
+            implementation(project(":acidify-core"))
+            implementation(project(":acidify-milky"))
+            implementation(project(":yogurt-fs"))
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.bundles.ktor.client)
+            implementation(libs.bundles.ktor.server)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.milky.types)
+            implementation(libs.qr.matrix)
         }
-
-        val jvmMain by getting {
-            dependsOn(codecMain)
-            dependencies {
-                implementation(libs.ktor.client.java)
-                implementation(libs.logback.classic)
-            }
+        jvmMain.dependencies {
+            implementation(libs.acidify.codec)
+            implementation(libs.ktor.client.java)
+            implementation(libs.logback.classic)
         }
-
-        findByName("mingwMain")?.apply {
-            dependsOn(codecMain)
-            dependencies {
-                implementation(libs.ktor.client.winhttp)
-            }
+        mingwMain.dependencies {
+            implementation(libs.acidify.codec)
+            implementation(libs.ktor.client.winhttp)
         }
-        findByName("appleMain")?.apply {
-            dependsOn(codecMain)
-            dependencies {
-                implementation(libs.ktor.client.darwin)
-            }
+        appleMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
-        findByName("linuxMain")?.apply {
-            dependsOn(codecMain)
-            dependencies {
-                implementation(libs.ktor.client.curl)
-            }
+        linuxMain.dependencies {
+            implementation(libs.ktor.client.curl)
         }
-        val nativeMain = findByName("nativeMain")
-        val androidNativeArm64Main = findByName("androidNativeArm64Main")
-        if (nativeMain != null && androidNativeArm64Main != null) {
-            androidNativeArm64Main.dependsOn(nativeMain)
+        posixMain.dependencies {
+            implementation(libs.acidify.codec)
         }
     }
 

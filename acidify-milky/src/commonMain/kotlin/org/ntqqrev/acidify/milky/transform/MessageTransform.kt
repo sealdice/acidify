@@ -4,15 +4,18 @@ import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import org.ntqqrev.acidify.AbstractBot
+import org.ntqqrev.acidify.common.MediaSource.Companion.toMediaSource
 import org.ntqqrev.acidify.getDownloadUrl
 import org.ntqqrev.acidify.getFriend
 import org.ntqqrev.acidify.getGroup
 import org.ntqqrev.acidify.message.*
 import org.ntqqrev.acidify.milky.ImageInfo
+import org.ntqqrev.acidify.milky.MediaSourceScope
 import org.ntqqrev.acidify.milky.MilkyContext
+import org.ntqqrev.acidify.milky.tracked
 import org.ntqqrev.milky.*
 
-suspend fun MilkyContext.transformMessage(msg: BotIncomingMessage): IncomingMessage? {
+suspend fun MilkyContext.transformIncomingMessage(msg: BotIncomingMessage): IncomingMessage? {
     val bot = application.dependencies.resolve<AbstractBot>()
     return when (msg.scene) {
         MessageScene.FRIEND -> {
@@ -23,7 +26,7 @@ suspend fun MilkyContext.transformMessage(msg: BotIncomingMessage): IncomingMess
                 senderId = msg.senderUin,
                 time = msg.timestamp,
                 segments = msg.segments.map {
-                    async { transformSegment(it) }
+                    async { transformIncomingSegment(it) }
                 }.awaitAll(),
                 friend = friend.toMilkyEntity()
             )
@@ -38,7 +41,7 @@ suspend fun MilkyContext.transformMessage(msg: BotIncomingMessage): IncomingMess
                 senderId = msg.senderUin,
                 time = msg.timestamp,
                 segments = msg.segments.map {
-                    async { transformSegment(it) }
+                    async { transformIncomingSegment(it) }
                 }.awaitAll(),
                 group = group.toMilkyEntity(),
                 groupMember = member.toMilkyEntity(),
@@ -56,12 +59,12 @@ suspend fun MilkyContext.transformForwardedMessage(msg: BotForwardedMessage): In
         avatarUrl = msg.avatarUrl,
         time = msg.timestamp,
         segments = msg.segments.map { segment ->
-            async { transformSegment(segment) }
+            async { transformIncomingSegment(segment) }
         }.awaitAll()
     )
 }
 
-suspend fun MilkyContext.transformSegment(segment: BotIncomingSegment): IncomingSegment {
+suspend fun MilkyContext.transformIncomingSegment(segment: BotIncomingSegment): IncomingSegment {
     val bot = application.dependencies.resolve<AbstractBot>()
     return when (segment) {
         is BotIncomingSegment.Text -> IncomingSegment.Text(
@@ -97,7 +100,7 @@ suspend fun MilkyContext.transformSegment(segment: BotIncomingSegment): Incoming
                 senderName = segment.senderName,
                 time = segment.timestamp,
                 segments = segment.segments.map {
-                    async { transformSegment(it) }
+                    async { transformIncomingSegment(it) }
                 }.awaitAll(),
             )
         )
@@ -168,7 +171,8 @@ suspend fun MilkyContext.transformSegment(segment: BotIncomingSegment): Incoming
     }
 }
 
-suspend fun MilkyContext.transformSegment(
+context(scope: MediaSourceScope)
+suspend fun MilkyContext.transformOutgoingSegment(
     scene: MessageScene,
     peerUin: Long,
     segment: OutgoingSegment,
@@ -213,7 +217,7 @@ suspend fun MilkyContext.transformSegment(
         )
 
         is OutgoingSegment.Image -> {
-            val imageData = resolveUri(segment.data.uri)
+            val imageData = resolveUri(segment.data.uri).readByteArray()
             val imageInfo = codec.getImageInfo(imageData)
             BotOutgoingSegment.Image(
                 raw = imageData,
@@ -226,7 +230,7 @@ suspend fun MilkyContext.transformSegment(
         }
 
         is OutgoingSegment.Record -> {
-            val audioData = resolveUri(segment.data.uri)
+            val audioData = resolveUri(segment.data.uri).readByteArray()
             // 尝试转换为 PCM，若失败则假设已是 PCM 格式
             val pcmData = try {
                 codec.audioToPcm(audioData)
@@ -244,21 +248,24 @@ suspend fun MilkyContext.transformSegment(
         }
 
         is OutgoingSegment.Video -> {
-            val videoData = resolveUri(segment.data.uri)
-            val videoInfo = codec.getVideoInfo(videoData)
+            // TODO: refactor Codec API to Source-based
+            val videoSource = resolveUri(segment.data.uri)
+            val videoInfo = codec.getVideoInfo(videoSource)
             logger.d { "视频 ${segment.data.uri} 信息：${videoInfo.width}x${videoInfo.height}，时长 ${videoInfo.duration.inWholeSeconds} 秒" }
-            val thumbData = if (segment.data.thumbUri != null) {
+            val thumbSource = if (segment.data.thumbUri != null) {
                 resolveUri(segment.data.thumbUri!!)
             } else {
-                codec.getVideoFirstFrameJpg(videoData)
+                tracked {
+                    codec.getVideoFirstFrameJpg(videoSource).toMediaSource()
+                }
             }
-            val thumbInfo = codec.getImageInfo(thumbData)
+            val thumbInfo = codec.getImageInfo(thumbSource.readByteArray())
             BotOutgoingSegment.Video(
-                raw = videoData,
+                raw = videoSource,
                 width = videoInfo.width,
                 height = videoInfo.height,
                 duration = videoInfo.duration.inWholeSeconds,
-                thumb = thumbData,
+                thumb = thumbSource,
                 thumbFormat = thumbInfo.format
             )
         }
@@ -269,7 +276,7 @@ suspend fun MilkyContext.transformSegment(
                     senderUin = msg.userId,
                     senderName = msg.senderName,
                     segments = msg.segments.map { seg ->
-                        async { transformSegment(scene, peerUin, seg) }
+                        async { transformOutgoingSegment(scene, peerUin, seg) }
                     }.awaitAll()
                 )
             }
@@ -290,6 +297,7 @@ suspend fun MilkyContext.transformSegment(
     }
 }
 
+context(scope: MediaSourceScope)
 suspend fun MilkyContext.transformEssenceMessage(msg: BotEssenceMessage): GroupEssenceMessage {
     return GroupEssenceMessage(
         groupId = msg.groupUin,
@@ -306,6 +314,7 @@ suspend fun MilkyContext.transformEssenceMessage(msg: BotEssenceMessage): GroupE
     )
 }
 
+context(scope: MediaSourceScope)
 suspend fun MilkyContext.transformEssenceSegment(segment: BotEssenceSegment): IncomingSegment {
     val bot = application.dependencies.resolve<AbstractBot>()
     val logger = bot.createLogger("MessageTransform")
@@ -324,7 +333,7 @@ suspend fun MilkyContext.transformEssenceSegment(segment: BotEssenceSegment): In
         )
 
         is BotEssenceSegment.Image -> {
-            val imageData = resolveUri(segment.imageUrl)
+            val imageData = resolveUri(segment.imageUrl).readByteArray()
             val imageInfo = try {
                 codec.getImageInfo(imageData)
             } catch (e: Exception) {
@@ -349,7 +358,7 @@ suspend fun MilkyContext.transformEssenceSegment(segment: BotEssenceSegment): In
 
         is BotEssenceSegment.Video -> {
             // also transform to image
-            val imageData = resolveUri(segment.thumbnailUrl)
+            val imageData = resolveUri(segment.thumbnailUrl).readByteArray()
             val imageInfo = codec.getImageInfo(imageData)
             IncomingSegment.Image(
                 data = IncomingSegment.Image.Data(
