@@ -2,11 +2,19 @@ package org.ntqqrev.acidify.common
 
 import kotlinx.io.Buffer
 import kotlinx.io.RawSource
+import kotlin.js.JsExport
 
+/**
+ * 通过 [ByteArray] 构造的 [MediaSource] 实现。
+ * 该实现会直接使用提供的 [ByteArray] 作为数据源，因此在构造时需要保证该 [ByteArray] 不会被修改，以免导致数据不一致。
+ * 在调用 [readByteArray] 时会直接返回该 [ByteArray]。
+ */
+@JsExport
 class ByteArrayMediaSource(private val data: ByteArray) : MediaSource() {
     override val size: Long
         get() = data.size.toLong()
 
+    @JsExport.Ignore
     override fun openRawSource(): RawSource {
         return ByteArrayRawSource(data)
     }
