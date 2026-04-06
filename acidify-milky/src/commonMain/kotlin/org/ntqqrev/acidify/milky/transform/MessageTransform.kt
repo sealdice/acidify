@@ -230,7 +230,25 @@ suspend fun MilkyContext.transformOutgoingSegment(
         }
 
         is OutgoingSegment.Record -> {
-            val audioData = resolveUri(segment.data.uri).readByteArray()
+            val recordUri = parseOutgoingRecordUri(segment.data.uri)
+            val audioData = resolveUri(recordUri.uri).readByteArray()
+            val detectedSilkDuration = detectSilkDurationSeconds(audioData)
+            if (recordUri.rawSilk || detectedSilkDuration != null) {
+                val duration = recordUri.durationSeconds ?: detectedSilkDuration ?: error(
+                    "Raw silk record requires duration in URI fragment when automatic duration detection fails, e.g. file:///path/to/audio.silk#duration=3"
+                )
+                logger.d {
+                    if (detectedSilkDuration != null) {
+                        "语音 ${segment.data.uri} 已识别为 silk，跳过转码直接发送，时长 ${duration} 秒"
+                    } else {
+                        "语音 ${segment.data.uri} 已标记为 raw silk，跳过转码直接发送，时长 ${duration} 秒"
+                    }
+                }
+                return BotOutgoingSegment.Record(
+                    rawSilk = audioData,
+                    duration = duration,
+                )
+            }
             // 尝试转换为 PCM，若失败则假设已是 PCM 格式
             val pcmData = try {
                 codec.audioToPcm(audioData)
@@ -390,4 +408,92 @@ fun String.toMessageScene() = when (this) {
     "group" -> MessageScene.GROUP
     "temp" -> MessageScene.TEMP
     else -> throw IllegalArgumentException("Unknown message scene: $this")
+}
+
+private data class OutgoingRecordUri(
+    val uri: String,
+    val rawSilk: Boolean,
+    val durationSeconds: Long?,
+)
+
+private fun parseOutgoingRecordUri(uri: String): OutgoingRecordUri {
+    val baseUri = uri.substringBefore('#', uri)
+    val fragment = uri.substringAfter('#', "")
+    if (fragment.isEmpty()) {
+        return OutgoingRecordUri(
+            uri = baseUri,
+            rawSilk = false,
+            durationSeconds = null,
+        )
+    }
+    val metadata = fragment
+        .split('&', ',', ';')
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    val explicitlyMarkedRawSilk = metadata.any {
+        it.equals("raw-silk", ignoreCase = true) ||
+            it.equals("silk", ignoreCase = true) ||
+            it.equals("format=silk", ignoreCase = true)
+    }
+
+    val durationSeconds = metadata.firstNotNullOfOrNull { item ->
+        val separatorIndex = item.indexOf('=')
+        if (separatorIndex < 0) {
+            return@firstNotNullOfOrNull null
+        }
+        val key = item.substring(0, separatorIndex)
+        val value = item.substring(separatorIndex + 1)
+        if (key.equals("duration", ignoreCase = true) || key.equals("duration-seconds", ignoreCase = true)) {
+            value.toLongOrNull()
+        } else {
+            null
+        }
+    }
+
+    return OutgoingRecordUri(
+        uri = baseUri,
+        rawSilk = explicitlyMarkedRawSilk,
+        durationSeconds = durationSeconds,
+    )
+}
+
+private fun detectSilkDurationSeconds(data: ByteArray, frameDurationMs: Int = 20): Long? {
+    val offset = when {
+        data.startsWithAscii("#!SILK_V3") -> 9
+        data.size >= 10 && data[0] == 0x02.toByte() && data.copyOfRange(1, 10).startsWithAscii("#!SILK_V3") -> 10
+        else -> return null
+    }
+
+    var cursor = offset
+    var frameCount = 0L
+    while (cursor + 2 <= data.size) {
+        val frameSize = data.readLittleEndianUInt16(cursor)
+        cursor += 2
+        if (frameSize == 0xFFFF) {
+            break
+        }
+        if (frameSize <= 0 || cursor + frameSize > data.size) {
+            return null
+        }
+        cursor += frameSize
+        frameCount++
+    }
+    if (frameCount == 0L) {
+        return null
+    }
+    return frameCount * frameDurationMs / 1000L
+}
+
+private fun ByteArray.startsWithAscii(prefix: String): Boolean {
+    if (size < prefix.length) {
+        return false
+    }
+    return prefix.indices.all { index ->
+        this[index].toInt() == prefix[index].code
+    }
+}
+
+private fun ByteArray.readLittleEndianUInt16(offset: Int): Int {
+    return (this[offset].toInt() and 0xFF) or ((this[offset + 1].toInt() and 0xFF) shl 8)
 }
