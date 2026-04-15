@@ -12,6 +12,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 /**
  * 通过 HTTP 接口进行签名的 [SignProvider] 实现，用于对接 Lagrange V2 Sign API。
@@ -67,6 +68,47 @@ class LagrangeUrlSignProvider(
     ): SignResult {
         val currentJwtToken = jwtToken
         val currentLauncherSignature = launcherSignature
+        val requestBody = jsonModule.encodeToString(
+            LagrangeUrlSignRequest(
+                command = cmd,
+                seq = seq,
+                body = src.toHexString(),
+                uin = uin,
+                guid = guid,
+                qua = qua,
+            )
+        )
+        val requestHeaders = buildMap<String, String> {
+            when {
+                !currentJwtToken.isNullOrEmpty() -> put(HttpHeaders.Authorization, "Bearer $currentJwtToken")
+                !currentLauncherSignature.isNullOrEmpty() -> put("X-Launcher-Signature", currentLauncherSignature)
+                else -> put(HttpHeaders.Authorization, "Bearer $token")
+            }
+        }
+
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = URLBuilder(signUrl).apply { appendPathSegments("api", "sign", "sec-sign") }.buildString(),
+            headers = requestHeaders,
+            body = requestBody,
+            contentType = ContentType.Application.Json.toString(),
+            proxy = httpProxy,
+        )?.let { response ->
+            response.header("x-set-token")
+                ?.takeUnless { it.isBlank() }
+                ?.let(::updateJwtToken)
+            val respBody = jsonModule.decodeFromString<LagrangeUrlSignResponse>(response.body)
+            if (respBody.code != 0 || respBody.value == null) {
+                throw UrlSignException(respBody.message ?: "", respBody.code)
+            }
+            val value = respBody.value
+            return SignResult(
+                sign = value.sign.hexToByteArray(),
+                token = value.token.hexToByteArray(),
+                extra = value.extra.hexToByteArray(),
+            )
+        }
+
         val resp = client.post {
             url {
                 takeFrom(signUrl)
@@ -78,16 +120,7 @@ class LagrangeUrlSignProvider(
                 else -> header(HttpHeaders.Authorization, "Bearer $token")
             }
             contentType(ContentType.Application.Json)
-            setBody(
-                LagrangeUrlSignRequest(
-                    command = cmd,
-                    seq = seq,
-                    body = src.toHexString(),
-                    uin = uin,
-                    guid = guid,
-                    qua = qua,
-                )
-            )
+            setBody(requestBody)
         }
         resp.headers["X-SET-TOKEN"]
             ?.takeUnless { it.isBlank() }
@@ -128,6 +161,18 @@ class LagrangeUrlSignProvider(
 
     private suspend fun refreshToken() {
         val currentJwtToken = jwtToken ?: return
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = URLBuilder(signUrl).apply { appendPathSegments("token", "refresh") }.buildString(),
+            headers = mapOf(HttpHeaders.Authorization to "Bearer $currentJwtToken"),
+            proxy = httpProxy,
+        )?.let { response ->
+            response.header("x-set-token")
+                ?.takeUnless { it.isBlank() }
+                ?.let(::updateJwtToken)
+            return
+        }
+
         val resp = client.post {
             url {
                 takeFrom(signUrl)

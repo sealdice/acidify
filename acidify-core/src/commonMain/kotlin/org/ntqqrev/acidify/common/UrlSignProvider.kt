@@ -10,6 +10,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 /**
  * 通过 HTTP 接口进行签名的 [SignProvider] 实现
@@ -34,10 +35,29 @@ class UrlSignProvider(val url: String, val httpProxy: String? = null) : SignProv
     }
 
     override suspend fun sign(cmd: String, seq: Int, src: ByteArray): SignResult {
+        val requestBody = jsonModule.encodeToString(UrlSignRequest(cmd, seq, src.toHexString()))
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = signUrl.toString(),
+            body = requestBody,
+            contentType = ContentType.Application.Json.toString(),
+            proxy = httpProxy,
+        )?.let { response ->
+            if (response.statusCode != HttpStatusCode.OK.value) {
+                throw UrlSignException(HttpStatusCode.fromValue(response.statusCode).description, response.statusCode)
+            }
+            val value = jsonModule.decodeFromString<UrlSignResponse>(response.body).value
+            return SignResult(
+                sign = value.sign.hexToByteArray(),
+                token = value.token.hexToByteArray(),
+                extra = value.extra.hexToByteArray(),
+            )
+        }
+
         val resp = client.post {
             url(signUrl)
             contentType(ContentType.Application.Json)
-            setBody(UrlSignRequest(cmd, seq, src.toHexString()))
+            setBody(requestBody)
         }
         if (resp.status != HttpStatusCode.OK) {
             throw UrlSignException(resp.status.description, resp.status.value)
