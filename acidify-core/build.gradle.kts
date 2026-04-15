@@ -68,7 +68,6 @@ kotlin {
         }
         findByName("androidNativeArm64Main")?.dependencies {
             implementation(project(":android-https-native"))
-            implementation(libs.ktor.client.cio)
         }
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")

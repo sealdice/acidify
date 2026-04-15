@@ -11,6 +11,7 @@ import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
 import org.ntqqrev.yogurt.util.createPlatformHttpClient
 import org.ntqqrev.yogurt.util.isCausedByAddrInUse
+import org.ntqqrev.yogurt.util.platformHttpRouteName
 import org.ntqqrev.yogurt.util.platformHttpsSmokeTestOrNull
 import kotlin.jvm.JvmName
 import kotlin.time.Duration.Companion.milliseconds
@@ -50,6 +51,7 @@ private fun runHttpsTest(url: String) = runBlocking {
         platformHttpsSmokeTestOrNull(url)?.let { response ->
             println("HTTPS test ok")
             println("URL: $url")
+            println("Route: ${platformHttpRouteName()} (direct)")
             println("Status: ${response.statusCode}")
             println("Body: ${response.body.replace("\n", " ").replace("\r", " ").take(200)}")
             return@runBlocking
@@ -57,6 +59,7 @@ private fun runHttpsTest(url: String) = runBlocking {
     } catch (e: Throwable) {
         println("HTTPS test failed")
         println("URL: $url")
+        println("Route: ${platformHttpRouteName()} (direct)")
         println("Error: ${e::class.simpleName}: ${e.message}")
         halt(1)
     }
@@ -67,11 +70,13 @@ private fun runHttpsTest(url: String) = runBlocking {
         val bodyPreview = response.bodyAsText().replace("\n", " ").replace("\r", " ").take(200)
         println("HTTPS test ok")
         println("URL: $url")
+        println("Route: ${platformHttpRouteName()} (ktor)")
         println("Status: ${response.status}")
         println("Body: $bodyPreview")
     } catch (e: Throwable) {
         println("HTTPS test failed")
         println("URL: $url")
+        println("Route: ${platformHttpRouteName()} (ktor)")
         println("Error: ${e::class.simpleName}: ${e.message}")
         halt(1)
     } finally {

@@ -62,6 +62,7 @@ object YogurtApp {
                 Commit Hash:    ${BuildKonfig.commitHash}
                 Core Version:   ${BuildKonfig.coreVersion}
                 Milky Version:  ${BuildKonfig.milkyVersion} ($milkyVersion)
+                HTTP Route:     ${platformHttpRouteName()}
                 Build Time:     ${BuildKonfig.buildTime}
                 Listen Address: ${config.milky.http.host}:${config.milky.http.port}${config.milky.http.prefix}
                 Data Directory: ${withFs { resolve(Path(".")) }}
