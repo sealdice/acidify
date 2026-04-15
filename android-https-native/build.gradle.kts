@@ -9,11 +9,10 @@ plugins {
 version = "0.1.0"
 
 val mbedTlsVersion = "3.6.5"
-val caBundleDate = "2026-03-19"
 val mbedTlsUrl = "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-$mbedTlsVersion/mbedtls-$mbedTlsVersion.tar.bz2"
 val mbedTlsSha256 = "4a11f1777bb95bf4ad96721cac945a26e04bf19f57d905f241fe77ebeddf46d8"
-val caBundleUrl = "https://curl.se/ca/cacert-$caBundleDate.pem"
-val caBundleSha256 = "b6e66569cc3d438dd5abe514d0df50005d570bfc96c14dca8f768d020cb96171"
+val caBundleUrl = "https://curl.se/ca/cacert.pem"
+val caBundleSha256Url = "https://curl.se/ca/cacert.pem.sha256"
 
 val userHome = System.getProperty("user.home")
 val hostTag = when {
@@ -64,6 +63,40 @@ fun downloadVerified(url: String, destination: File, expectedSha256: String) {
         }
     }
     verifySha256(destination, expectedSha256)
+}
+
+fun downloadLatestCaBundle(destination: File) {
+    destination.parentFile.mkdirs()
+    if (destination.exists()) {
+        destination.delete()
+    }
+    val expectedSha256 = URL(caBundleSha256Url)
+        .readText()
+        .lineSequence()
+        .firstOrNull()
+        ?.trim()
+        ?.substringBefore(' ')
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: error("Unable to resolve SHA-256 for latest CA bundle from $caBundleSha256Url")
+    downloadVerified(caBundleUrl, destination, expectedSha256)
+}
+
+fun generateEmbeddedCaSource(caBundle: File, destination: File) {
+    destination.parentFile.mkdirs()
+    val bytes = caBundle.readBytes() + byteArrayOf(0)
+    destination.bufferedWriter().use { writer ->
+        writer.appendLine("#include <stddef.h>")
+        writer.appendLine()
+        writer.appendLine("const unsigned char acidify_embedded_ca_bundle[] = {")
+        bytes.asList().chunked(16).forEach { chunk ->
+            writer.append("    ")
+            writer.append(chunk.joinToString(", ") { (it.toInt() and 0xff).toString() })
+            writer.appendLine(",")
+        }
+        writer.appendLine("};")
+        writer.appendLine("const size_t acidify_embedded_ca_bundle_len = sizeof(acidify_embedded_ca_bundle);")
+    }
 }
 
 fun runCommand(command: List<String>, workingDirectory: File? = null) {
@@ -117,16 +150,19 @@ val extractMbedTls by tasks.registering {
 
 val prepareAndroidNativeCaBundle by tasks.registering {
     outputs.file(caBundleFile)
+    outputs.upToDateWhen { false }
     doLast {
-        downloadVerified(caBundleUrl, caBundleFile.get().asFile, caBundleSha256)
+        downloadLatestCaBundle(caBundleFile.get().asFile)
     }
 }
 
 val buildAndroidHttpsNative by tasks.registering {
     dependsOn(extractMbedTls)
+    dependsOn(prepareAndroidNativeCaBundle)
     inputs.dir(mbedTlsSourceDir)
     inputs.file(layout.projectDirectory.file("src/androidNativeArm64Main/c/android_https_native.c"))
     inputs.file(layout.projectDirectory.file("src/androidNativeArm64Main/c/include/android_https_native.h"))
+    inputs.file(caBundleFile)
     outputs.file(generatedDefFile)
     outputs.file(nativeOutputRoot.map { it.file("lib/libandroid_https_native.a") })
     doLast {
@@ -144,10 +180,16 @@ val buildAndroidHttpsNative by tasks.registering {
             deleteRecursively()
             mkdirs()
         }
+        val generatedSourceDir = File(outputRoot, "src").apply {
+            deleteRecursively()
+            mkdirs()
+        }
         copy {
             from(layout.projectDirectory.file("src/androidNativeArm64Main/c/include/android_https_native.h"))
             into(includeDir)
         }
+        val embeddedCaSourceFile = File(generatedSourceDir, "acidify_embedded_ca_bundle.c")
+        generateEmbeddedCaSource(caBundleFile.get().asFile, embeddedCaSourceFile)
         val generatedDef = generatedDefFile.get().asFile.apply {
             parentFile.mkdirs()
         }
@@ -165,7 +207,10 @@ val buildAndroidHttpsNative by tasks.registering {
 
         val allSources = fileTree(File(mbedTlsDir, "library")) {
             include("*.c")
-        }.files.sortedBy { it.name } + layout.projectDirectory.file("src/androidNativeArm64Main/c/android_https_native.c").asFile
+        }.files.sortedBy { it.name } + listOf(
+            layout.projectDirectory.file("src/androidNativeArm64Main/c/android_https_native.c").asFile,
+            embeddedCaSourceFile,
+        )
 
         val objectFiles = mutableListOf<File>()
         allSources.forEachIndexed { index, sourceFile ->

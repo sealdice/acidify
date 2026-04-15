@@ -19,6 +19,9 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/x509_crt.h>
 
+extern const unsigned char acidify_embedded_ca_bundle[];
+extern const size_t acidify_embedded_ca_bundle_len;
+
 typedef struct parsed_url {
     bool is_https;
     char *host;
@@ -170,11 +173,6 @@ static int connect_io(const parsed_url *url, const acidify_http_request *request
         context->use_tls = false;
         return 0;
     }
-    if (request->ca_bundle_path == NULL || request->ca_bundle_path[0] == '\0') {
-        set_error(response, "HTTPS request requires a CA bundle path");
-        return -1;
-    }
-
     context->use_tls = true;
     const char *personalization = "acidify-android-https";
     if ((ret = mbedtls_ctr_drbg_seed(
@@ -187,9 +185,16 @@ static int connect_io(const parsed_url *url, const acidify_http_request *request
         set_error(response, "mbedtls_ctr_drbg_seed failed: %d", ret);
         return -1;
     }
-    if ((ret = mbedtls_x509_crt_parse_file(&context->ca_cert, request->ca_bundle_path)) != 0) {
-        set_error(response, "mbedtls_x509_crt_parse_file failed: %d", ret);
-        return -1;
+    if (request->ca_bundle_path != NULL && request->ca_bundle_path[0] != '\0') {
+        if ((ret = mbedtls_x509_crt_parse_file(&context->ca_cert, request->ca_bundle_path)) != 0) {
+            set_error(response, "mbedtls_x509_crt_parse_file failed: %d", ret);
+            return -1;
+        }
+    } else {
+        if ((ret = mbedtls_x509_crt_parse(&context->ca_cert, acidify_embedded_ca_bundle, acidify_embedded_ca_bundle_len)) != 0) {
+            set_error(response, "mbedtls_x509_crt_parse (embedded CA) failed: %d", ret);
+            return -1;
+        }
     }
     if ((ret = mbedtls_ssl_config_defaults(
             &context->config,

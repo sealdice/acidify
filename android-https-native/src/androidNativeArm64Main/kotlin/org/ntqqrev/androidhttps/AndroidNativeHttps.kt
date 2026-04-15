@@ -7,7 +7,6 @@ import kotlinx.cinterop.*
 import org.ntqqrev.androidhttps.native.*
 import platform.posix.F_OK
 import platform.posix.access
-import platform.posix.getenv
 import platform.posix.readlink
 
 data class AndroidNativeTextResponse(
@@ -19,13 +18,9 @@ data class AndroidNativeTextResponse(
 }
 
 fun defaultCaBundlePathOrNull(): String? {
-    getenv("SSL_CERT_FILE")?.toKString()?.takeIf(::fileExists)?.let { return it }
-    getenv("CURL_CA_BUNDLE")?.toKString()?.takeIf(::fileExists)?.let { return it }
-    getenv("ACIDIFY_CA_BUNDLE")?.toKString()?.takeIf(::fileExists)?.let { return it }
-    getenv("YOGURT_CA_BUNDLE")?.toKString()?.takeIf(::fileExists)?.let { return it }
-    currentProgramDirectory()?.let { "$it/cacert.pem" }?.takeIf(::fileExists)?.let { return it }
-    currentProgramDirectory()?.let { "$it/etc/tls/cert.pem" }?.takeIf(::fileExists)?.let { return it }
-    return listOf("./cacert.pem", "./etc/tls/cert.pem").firstOrNull(::fileExists)
+    return currentProgramDirectory()
+        ?.let { "$it/cacert.pem" }
+        ?.takeIf(::fileExists)
 }
 
 fun executeTextRequest(
@@ -99,8 +94,7 @@ private fun executeTextRequestOnce(
         this.content_type = contentType?.cstr?.getPointer(this@memScoped)
         this.timeout_ms = timeoutMillis
         this.ca_bundle_path = if (url.startsWith("https://", ignoreCase = true)) {
-            (caBundlePath ?: throw IllegalStateException("No CA bundle found for Android Native HTTPS request to $url"))
-                .cstr.getPointer(this@memScoped)
+            caBundlePath?.cstr?.getPointer(this@memScoped)
         } else {
             null
         }
