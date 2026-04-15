@@ -8,24 +8,25 @@ import io.ktor.http.HeadersBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.OutgoingContent
-import io.ktor.http.content.UnsupportedContentTypeException
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.core.readByteArray
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readAvailable
 import io.ktor.utils.io.writer
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.io.Buffer
+import kotlinx.io.readByteArray
 import kotlin.coroutines.coroutineContext
 
 fun createAndroidNativePlatformHttpClient(block: HttpClientConfig<*>.() -> Unit = {}): HttpClient = HttpClient(MockEngine) {
     block(this)
     engine {
         addHandler { request ->
+            val requestBody = request.body.toByteArray()
             val response = executeBinaryRequest(
                 method = request.method.value,
                 url = request.url.toString(),
                 headers = request.headers.entries().associate { (name, values) -> name to values.joinToString(",") },
-                body = request.body.toByteChannel().readRemaining().readByteArray().takeIf { it.isNotEmpty() },
+                body = requestBody.takeIf { it.isNotEmpty() },
                 contentType = request.headers[HttpHeaders.ContentType],
                 followRedirects = false,
             )
@@ -57,5 +58,21 @@ private suspend fun OutgoingContent.toByteChannel(): ByteReadChannel = when (thi
     is OutgoingContent.ReadChannelContent -> readFrom()
     is OutgoingContent.NoContent -> ByteReadChannel.Empty
     is OutgoingContent.ContentWrapper -> delegate().toByteChannel()
-    is OutgoingContent.ProtocolUpgrade -> throw UnsupportedContentTypeException(this)
+    is OutgoingContent.ProtocolUpgrade -> error("Protocol upgrade is not supported on Android Native platform HTTP bridge")
+}
+
+private suspend fun OutgoingContent.toByteArray(): ByteArray {
+    val channel = toByteChannel()
+    val sink = Buffer()
+    while (true) {
+        val read = channel.readAvailable(1) { source: Buffer ->
+            val bytes = source.readByteArray()
+            sink.write(bytes)
+            bytes.size
+        }
+        if (read <= 0) {
+            break
+        }
+    }
+    return sink.readByteArray()
 }
