@@ -21,6 +21,7 @@ import org.ntqqrev.acidify.event.AcidifyEvent
 import org.ntqqrev.acidify.event.internal.KickSignal
 import org.ntqqrev.acidify.event.internal.MsgPushSignal
 import org.ntqqrev.acidify.internal.AbstractClient
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.logging.LogHandler
 import org.ntqqrev.acidify.logging.LogLevel
 import org.ntqqrev.acidify.logging.Logger
@@ -78,7 +79,7 @@ sealed class AbstractBot(
     }
 
 
-    internal val httpClient = HttpClient {
+    internal val httpClient = createPlatformHttpClient {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }

@@ -10,6 +10,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 /**
@@ -23,7 +24,7 @@ class UrlSignProvider(val url: String, val httpProxy: String? = null) : SignProv
         ignoreUnknownKeys = true
     }
 
-    private val client = HttpClient {
+    private val client = createPlatformHttpClient {
         install(ContentNegotiation) {
             json(jsonModule)
         }

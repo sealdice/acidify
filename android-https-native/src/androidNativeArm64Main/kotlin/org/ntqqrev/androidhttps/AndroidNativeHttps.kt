@@ -9,6 +9,14 @@ import platform.posix.F_OK
 import platform.posix.access
 import platform.posix.readlink
 
+data class AndroidNativeBinaryResponse(
+    val statusCode: Int,
+    val headers: Map<String, List<String>>,
+    val body: ByteArray,
+) {
+    fun header(name: String): String? = headers[name.lowercase()]?.lastOrNull()
+}
+
 data class AndroidNativeTextResponse(
     val statusCode: Int,
     val headers: Map<String, List<String>>,
@@ -33,14 +41,42 @@ fun executeTextRequest(
     maxRedirects: Int = 5,
     timeoutMillis: Int = 30_000,
     caBundlePath: String? = defaultCaBundlePathOrNull(),
-): AndroidNativeTextResponse {
+): AndroidNativeTextResponse = executeBinaryRequest(
+    method = method,
+    url = url,
+    headers = headers,
+    body = body?.encodeToByteArray(),
+    contentType = contentType,
+    followRedirects = followRedirects,
+    maxRedirects = maxRedirects,
+    timeoutMillis = timeoutMillis,
+    caBundlePath = caBundlePath,
+).let {
+    AndroidNativeTextResponse(
+        statusCode = it.statusCode,
+        headers = it.headers,
+        body = it.body.decodeToString(),
+    )
+}
+
+fun executeBinaryRequest(
+    method: String,
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    body: ByteArray? = null,
+    contentType: String? = null,
+    followRedirects: Boolean = true,
+    maxRedirects: Int = 5,
+    timeoutMillis: Int = 30_000,
+    caBundlePath: String? = defaultCaBundlePathOrNull(),
+): AndroidNativeBinaryResponse {
     var currentMethod = method.uppercase()
     var currentUrl = url
     var currentBody = body
     var currentContentType = contentType
 
     repeat(maxRedirects + 1) { redirectCount ->
-        val response = executeTextRequestOnce(
+        val response = executeBinaryRequestOnce(
             method = currentMethod,
             url = currentUrl,
             headers = headers,
@@ -67,15 +103,15 @@ fun executeTextRequest(
     throw IllegalStateException("Unreachable redirect state for $url")
 }
 
-private fun executeTextRequestOnce(
+private fun executeBinaryRequestOnce(
     method: String,
     url: String,
     headers: Map<String, String>,
-    body: String?,
+    body: ByteArray?,
     contentType: String?,
     timeoutMillis: Int,
     caBundlePath: String?,
-): AndroidNativeTextResponse = memScoped {
+): AndroidNativeBinaryResponse = memScoped {
     val headerEntries = headers.entries.toList()
     val nativeHeaders = if (headerEntries.isEmpty()) null else allocArray<acidify_http_header>(headerEntries.size)
     headerEntries.forEachIndexed { index, entry ->
@@ -83,7 +119,6 @@ private fun executeTextRequestOnce(
         nativeHeaders[index].value = entry.value.cstr.getPointer(this)
     }
 
-    val bodyBytes = body?.encodeToByteArray()
     val request = alloc<acidify_http_request>().apply {
         this.method = method.cstr.getPointer(this@memScoped)
         this.url = url.cstr.getPointer(this@memScoped)
@@ -106,7 +141,7 @@ private fun executeTextRequestOnce(
     }
 
     try {
-        val payload = bodyBytes?.takeIf { it.isNotEmpty() }
+        val payload = body?.takeIf { it.isNotEmpty() }
         payload?.usePinned {
             request.body = it.addressOf(0).reinterpret()
             request.body_len = payload.size.convert()
@@ -137,7 +172,7 @@ private fun executeOrThrow(
     }
 }
 
-private fun parseRawHttpResponse(rawBytes: ByteArray): AndroidNativeTextResponse {
+private fun parseRawHttpResponse(rawBytes: ByteArray): AndroidNativeBinaryResponse {
     val headerEnd = rawBytes.indexOfSequence(byteArrayOf('\r'.code.toByte(), '\n'.code.toByte(), '\r'.code.toByte(), '\n'.code.toByte()))
     require(headerEnd >= 0) { "Malformed HTTP response: missing header separator" }
     val headerText = rawBytes.copyOfRange(0, headerEnd).decodeToString()
@@ -166,10 +201,10 @@ private fun parseRawHttpResponse(rawBytes: ByteArray): AndroidNativeTextResponse
         else -> rawBody
     }
 
-    return AndroidNativeTextResponse(
+    return AndroidNativeBinaryResponse(
         statusCode = statusCode,
         headers = headers,
-        body = body.decodeToString(),
+        body = body,
     )
 }
 

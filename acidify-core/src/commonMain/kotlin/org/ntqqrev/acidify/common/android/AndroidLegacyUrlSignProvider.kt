@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.ntqqrev.acidify.common.SignResult
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 class AndroidLegacyUrlSignProvider(
@@ -30,7 +31,7 @@ class AndroidLegacyUrlSignProvider(
     private val base = Url(url)
     private val jsonModule = Json { ignoreUnknownKeys = true }
 
-    private val client = HttpClient {
+    private val client = createPlatformHttpClient {
         if (!(base.user.isNullOrEmpty() || base.password.isNullOrEmpty())) {
             install(Auth) {
                 basic {

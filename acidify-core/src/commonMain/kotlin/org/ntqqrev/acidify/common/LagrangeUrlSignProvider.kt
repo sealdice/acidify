@@ -12,6 +12,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 /**
@@ -46,7 +47,7 @@ class LagrangeUrlSignProvider(
     private var jwtToken: String? = jwtToken?.takeUnless { it.isBlank() }
     private var refreshJob: Job? = null
 
-    private val client = HttpClient {
+    private val client = createPlatformHttpClient {
         install(ContentNegotiation) {
             json(jsonModule)
         }

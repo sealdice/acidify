@@ -15,6 +15,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.ntqqrev.acidify.common.SignResult
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 /**
@@ -26,7 +27,7 @@ class AndroidUrlSignProvider(val url: String, val httpProxy: String? = null) : A
     val base = Url(url)
     private val jsonModule = Json { ignoreUnknownKeys = true }
 
-    private val client = HttpClient {
+    private val client = createPlatformHttpClient {
         install(ContentNegotiation) {
             json(jsonModule)
         }

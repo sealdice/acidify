@@ -245,6 +245,7 @@ kotlin {
     sourceSets {
         findByName("androidNativeArm64Main")?.dependencies {
             implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.mock)
         }
     }
 
