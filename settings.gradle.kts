@@ -17,6 +17,7 @@ plugins {
 }
 
 include(
+    ":android-https-native",
     ":acidify-core",
     ":acidify-core-runner",
     ":acidify-milky",

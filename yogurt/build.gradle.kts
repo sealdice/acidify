@@ -56,7 +56,8 @@ kotlin {
         posixMain.dependencies {
             implementation(libs.acidify.codec)
         }
-        androidNativeArm64Main.dependencies {
+        findByName("androidNativeArm64Main")?.dependencies {
+            implementation(project(":android-https-native"))
             implementation(libs.ktor.client.cio)
         }
     }

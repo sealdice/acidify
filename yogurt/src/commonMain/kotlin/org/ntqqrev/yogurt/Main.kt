@@ -10,9 +10,8 @@ import kotlinx.coroutines.runBlocking
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
 import org.ntqqrev.yogurt.util.createPlatformHttpClient
-import org.ntqqrev.yogurt.util.discoverCurlCommand
-import org.ntqqrev.yogurt.util.executeCommand
 import org.ntqqrev.yogurt.util.isCausedByAddrInUse
+import org.ntqqrev.yogurt.util.platformHttpsSmokeTestOrNull
 import kotlin.jvm.JvmName
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -47,32 +46,19 @@ fun main(args: Array<String>) {
 }
 
 private fun runHttpsTest(url: String) = runBlocking {
-    discoverCurlCommand()?.let { curlCommand ->
-        val result = executeCommand(
-            curlCommand,
-            "--silent",
-            "--show-error",
-            "--http1.1",
-            "--location",
-            "--write-out",
-            "\\n%{http_code}",
-            url,
-        )
-        if (result.errorCode != 0) {
-            println("HTTPS test failed")
+    try {
+        platformHttpsSmokeTestOrNull(url)?.let { response ->
+            println("HTTPS test ok")
             println("URL: $url")
-            println("Error: ${result.stderr.ifBlank { result.stdout }.ifBlank { "curl exited with code ${result.errorCode}" }}")
-            halt(1)
+            println("Status: ${response.statusCode}")
+            println("Body: ${response.body.replace("\n", " ").replace("\r", " ").take(200)}")
+            return@runBlocking
         }
-        val stdout = result.stdout.trimEnd()
-        val separatorIndex = stdout.lastIndexOf('\n')
-        val body = if (separatorIndex >= 0) stdout.substring(0, separatorIndex) else stdout
-        val status = if (separatorIndex >= 0) stdout.substring(separatorIndex + 1).trim() else "unknown"
-        println("HTTPS test ok")
+    } catch (e: Throwable) {
+        println("HTTPS test failed")
         println("URL: $url")
-        println("Status: $status")
-        println("Body: ${body.replace("\n", " ").replace("\r", " ").take(200)}")
-        return@runBlocking
+        println("Error: ${e::class.simpleName}: ${e.message}")
+        halt(1)
     }
 
     val httpClient = createPlatformHttpClient()

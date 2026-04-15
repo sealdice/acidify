@@ -66,7 +66,8 @@ kotlin {
         linuxMain.dependencies {
             implementation(libs.ktor.client.curl)
         }
-        androidNativeArm64Main.dependencies {
+        findByName("androidNativeArm64Main")?.dependencies {
+            implementation(project(":android-https-native"))
             implementation(libs.ktor.client.cio)
         }
         all {
