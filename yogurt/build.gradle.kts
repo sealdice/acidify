@@ -57,7 +57,7 @@ kotlin {
             implementation(libs.acidify.codec)
         }
         androidNativeArm64Main.dependencies {
-            implementation(libs.ktor.client.cio)
+            implementation(project(":ktor-client-curl-android-native"))
         }
     }
 

@@ -54,6 +54,21 @@ kotlin {
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
         }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.java)
+        }
+        mingwMain.dependencies {
+            implementation(libs.ktor.client.winhttp)
+        }
+        appleMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+        linuxMain.dependencies {
+            implementation(libs.ktor.client.curl)
+        }
+        androidNativeArm64Main.dependencies {
+            implementation(project(":ktor-client-curl-android-native"))
+        }
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
             languageSettings.optIn("kotlin.js.ExperimentalJsExport")

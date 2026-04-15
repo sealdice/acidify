@@ -3,7 +3,6 @@ package org.ntqqrev.yogurt.script.stdlib
 import com.dokar.quickjs.QuickJs
 import com.dokar.quickjs.binding.JsObject
 import com.dokar.quickjs.binding.define
-import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -11,6 +10,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
+import org.ntqqrev.yogurt.util.createPlatformHttpClient
 
 class HttpRequestOptions(
     val method: String,
@@ -47,7 +47,7 @@ class HttpRequestOptions(
 
 @OptIn(ExperimentalUnsignedTypes::class)
 fun QuickJs.defineHttp() = define("http") {
-    val httpClient = HttpClient()
+    val httpClient = createPlatformHttpClient()
 
     fun Array<Any?>.extractParams(): Pair<String, HttpRequestOptions> {
         require(this.size in 1..2) {

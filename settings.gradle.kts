@@ -20,6 +20,7 @@ include(
     ":acidify-core",
     ":acidify-core-runner",
     ":acidify-milky",
+    ":ktor-client-curl-android-native",
     ":yogurt",
     ":yogurt-jvm",
     ":yogurt-fs",

@@ -14,12 +14,13 @@ import org.ntqqrev.acidify.internal.proto.message.media.FlashTransferSha1StateV
 import org.ntqqrev.acidify.internal.proto.message.media.FlashTransferUploadBody
 import org.ntqqrev.acidify.internal.proto.message.media.FlashTransferUploadReq
 import org.ntqqrev.acidify.internal.proto.message.media.FlashTransferUploadResp
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.util.pbDecode
 import org.ntqqrev.acidify.internal.util.pbEncode
 import org.ntqqrev.acidify.internal.util.sha1
 
 internal class FlashTransferContext(client: AbstractClient) : AbstractContext(client) {
-    private val httpClient = HttpClient()
+    private val httpClient = createPlatformHttpClient()
     private val url = "https://multimedia.qfile.qq.com/sliceupload"
 
     companion object {

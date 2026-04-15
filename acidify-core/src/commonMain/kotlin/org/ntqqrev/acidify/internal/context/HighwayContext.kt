@@ -11,6 +11,7 @@ import kotlinx.io.readTo
 import org.ntqqrev.acidify.common.MediaSource
 import org.ntqqrev.acidify.internal.AbstractClient
 import org.ntqqrev.acidify.internal.proto.message.media.*
+import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.service.system.FetchHighwayInfo
 import org.ntqqrev.acidify.internal.util.md5
 import org.ntqqrev.acidify.internal.util.pbDecode
@@ -23,7 +24,7 @@ internal class HighwayContext(client: AbstractClient) : AbstractContext(client) 
     private var highwayHost: String = ""
     private var highwayPort: Int = 0
     private var sigSession: ByteArray = ByteArray(0)
-    private val httpClient = HttpClient()
+    private val httpClient = createPlatformHttpClient()
 
     companion object {
         const val MAX_BLOCK_SIZE = 1024 * 1024 // 1MB

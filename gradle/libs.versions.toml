@@ -11,6 +11,13 @@ kx-datetime = "0.7.1-0.6.x-compat"
 kx-atomicfu = "0.32.1"
 ktor = "3.4.2"
 
+curl = "8.19.0"
+openssl = "3.6.2"
+nghttp2 = "1.68.1"
+nghttp3 = "1.15.0"
+ngtcp2 = "1.21.0"
+zlib = "1.3.1.8"
+
 milky = "1.2.0-RC4"
 acidify-codec = "0.1.0"
 kompress = "1.3.1"
@@ -24,6 +31,7 @@ build-konfig = "0.17.1"
 maven-publish = "0.36.0"
 dokka = "2.2.0"
 shadow = "9.4.1"
+nativebuilds = "0.9.0"
 
 [libraries]
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -56,6 +64,16 @@ ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.re
 
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
+nativebuilds-curl-headers = { module = "com.ensody.nativebuilds:curl-headers", version.ref = "curl" }
+nativebuilds-curl-libcurl = { module = "com.ensody.nativebuilds:curl-libcurl", version.ref = "curl" }
+nativebuilds-openssl-libcrypto = { module = "com.ensody.nativebuilds:openssl-libcrypto", version.ref = "openssl" }
+nativebuilds-openssl-libssl = { module = "com.ensody.nativebuilds:openssl-libssl", version.ref = "openssl" }
+nativebuilds-nghttp2-libnghttp2 = { module = "com.ensody.nativebuilds:nghttp2-libnghttp2", version.ref = "nghttp2" }
+nativebuilds-nghttp3-libnghttp3 = { module = "com.ensody.nativebuilds:nghttp3-libnghttp3", version.ref = "nghttp3" }
+nativebuilds-ngtcp2-libngtcp2 = { module = "com.ensody.nativebuilds:ngtcp2-libngtcp2", version.ref = "ngtcp2" }
+nativebuilds-ngtcp2-libngtcp2_crypto_ossl = { module = "com.ensody.nativebuilds:ngtcp2-libngtcp2_crypto_ossl", version.ref = "ngtcp2" }
+nativebuilds-zlib-libz = { module = "com.ensody.nativebuilds:zlib-libz", version.ref = "zlib" }
+
 milky-types = { module = "org.ntqqrev:milky-kt-types", version.ref = "milky" }
 
 acidify-codec = { module = "org.ntqqrev:acidify-codec", version.ref = "acidify-codec" }
@@ -82,6 +100,17 @@ ktor-server = [
     "ktor-server-sse",
     "ktor-server-websockets"
 ]
+nativebuilds-curl = [
+    "nativebuilds-curl-headers",
+    "nativebuilds-curl-libcurl",
+    "nativebuilds-openssl-libcrypto",
+    "nativebuilds-openssl-libssl",
+    "nativebuilds-nghttp2-libnghttp2",
+    "nativebuilds-nghttp3-libnghttp3",
+    "nativebuilds-ngtcp2-libngtcp2",
+    "nativebuilds-ngtcp2-libngtcp2_crypto_ossl",
+    "nativebuilds-zlib-libz",
+]
 
 [plugins]
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -90,3 +119,4 @@ build-konfig = { id = "com.codingfeline.buildkonfig", version.ref = "build-konfi
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+nativebuilds = { id = "com.ensody.nativebuilds", version.ref = "nativebuilds" }

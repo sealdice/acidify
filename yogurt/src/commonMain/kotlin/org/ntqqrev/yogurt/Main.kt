@@ -3,15 +3,23 @@
 package org.ntqqrev.yogurt
 
 import com.github.ajalt.mordant.rendering.TextColors
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
+import org.ntqqrev.yogurt.util.createPlatformHttpClient
 import org.ntqqrev.yogurt.util.isCausedByAddrInUse
 import kotlin.jvm.JvmName
 import kotlin.time.Duration.Companion.milliseconds
 
-fun main() {
+fun main(args: Array<String>) {
+    if (args.firstOrNull() == "test-https") {
+        runHttpsTest(args.getOrNull(1) ?: "https://sealsignv3.sealdice.com/")
+        return
+    }
+
     val server = YogurtApp.createServer()
     try {
         server.start(wait = false)
@@ -33,5 +41,24 @@ fun main() {
             )
         }
         throw e
+    }
+}
+
+private fun runHttpsTest(url: String) = runBlocking {
+    val httpClient = createPlatformHttpClient()
+    try {
+        val response = httpClient.get(url)
+        val bodyPreview = response.bodyAsText().replace("\n", " ").replace("\r", " ").take(200)
+        println("HTTPS test ok")
+        println("URL: $url")
+        println("Status: ${response.status}")
+        println("Body: $bodyPreview")
+    } catch (e: Throwable) {
+        println("HTTPS test failed")
+        println("URL: $url")
+        println("Error: ${e::class.simpleName}: ${e.message}")
+        halt(1)
+    } finally {
+        httpClient.close()
     }
 }

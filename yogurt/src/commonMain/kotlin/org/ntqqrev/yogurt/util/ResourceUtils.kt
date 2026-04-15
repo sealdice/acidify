@@ -19,7 +19,7 @@ import org.ntqqrev.yogurt.fs.withFs
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
-private val httpClient = HttpClient()
+private val httpClient = createPlatformHttpClient()
 
 suspend fun resolveUri(uri: String): MediaSource = withContext(Dispatchers.IO) {
     when {
