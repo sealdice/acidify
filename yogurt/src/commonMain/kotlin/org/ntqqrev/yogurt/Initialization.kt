@@ -42,7 +42,6 @@ suspend fun Application.initializePC(): Bot = withFs {
             "使用 Lagrange Sign API 时，请在配置文件中填写 uin 字段"
         }
         val launcherSignature = readEnvironmentVariable("APP_LAUNCHER_SIG")
-        t.println("读取到的launcherSignature: $launcherSignature")
         val jwtToken = readEnvironmentVariable("APP_JWT_TOKEN")
         appInfo = when (config.protocol.version) {
             "fetched" -> throw IllegalStateException("在使用 Lagrange Sign API 时，必须显式指定 AppInfo 版本或自行提供 AppInfo 文件，无法使用 fetched 版本")

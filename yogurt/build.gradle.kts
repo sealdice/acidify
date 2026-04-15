@@ -56,6 +56,9 @@ kotlin {
         posixMain.dependencies {
             implementation(libs.acidify.codec)
         }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.okhttp)
+        }
     }
 
     targets.withType<KotlinNativeTarget> {
