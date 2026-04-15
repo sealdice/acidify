@@ -4,14 +4,13 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.application
 import io.ktor.server.websocket.sendSerialized
-import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.*
 import kotlinx.coroutines.launch
 import org.ntqqrev.acidify.AbstractBot
 import org.ntqqrev.acidify.milky.MilkyContext
 
 context(ctx: MilkyContext)
-fun Route.eventWebSocket() = webSocket {
+fun Route.eventWebSocket() = fixedWebSocket {
     val bot = application.dependencies.resolve<AbstractBot>()
     val logger = bot.createLogger("WebSocketModule")
     logger.i { "${call.request.local.remoteAddress} 通过 WebSocket 连接" }
