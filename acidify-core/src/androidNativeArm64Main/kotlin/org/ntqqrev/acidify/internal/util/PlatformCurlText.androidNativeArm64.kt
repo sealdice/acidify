@@ -8,7 +8,6 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.request.header
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import kotlinx.coroutines.runBlocking
@@ -26,8 +25,10 @@ internal actual fun platformCurlTextRequestOrNull(
         return null
     }
 
+    val shouldFollowRedirects = followRedirects
+
     val client = HttpClient(Curl) {
-        followRedirects = followRedirects
+        this.followRedirects = shouldFollowRedirects
         engine {
             caInfo = defaultAndroidNativeCurlCaInfoPathOrNull()
         }
