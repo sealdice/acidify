@@ -57,8 +57,7 @@ kotlin {
             implementation(libs.acidify.codec)
         }
         findByName("androidNativeArm64Main")?.dependencies {
-            implementation(project(":android-https-native"))
-            implementation(libs.ktor.client.cio)
+            implementation(project(":ktor-client-curl-android-native"))
         }
     }
 
@@ -67,6 +66,26 @@ kotlin {
             executable {
                 entryPoint = "org.ntqqrev.yogurt.main"
             }
+        }
+    }
+
+    targets.matching { it.name == "androidNativeArm64" }.configureEach {
+        (this as KotlinNativeTarget).binaries.all {
+            val libDir = project(":ktor-client-curl-android-native").file("src/cinterop/lib").absolutePath
+            linkerOpts("-L$libDir")
+            linkerOpts("-Wl,--start-group")
+            linkerOpts(
+                "$libDir/libcurl.a",
+                "$libDir/libnghttp2.a",
+                "$libDir/libnghttp3.a",
+                "$libDir/libngtcp2.a",
+                "$libDir/libngtcp2_crypto_ossl.a",
+                "$libDir/libssl.a",
+                "$libDir/libcrypto.a",
+                "$libDir/libz.a",
+            )
+            linkerOpts("-Wl,--end-group")
+            linkerOpts("-ldl", "-lz")
         }
     }
 

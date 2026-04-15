@@ -1,4 +1,4 @@
-name: Build Yogurt Dev Release
+name: Build Yogurt Curl Route Test
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: yogurt-dev-release
+  group: yogurt-curl-route-release
   cancel-in-progress: true
 
 jobs:
@@ -85,7 +85,7 @@ jobs:
           path: yogurt/build/bin/${{ matrix.target }}/releaseExecutable/**
 
   release-dev:
-    name: Refresh dev release
+    name: Refresh curl-route release
     needs:
       - build-native
     runs-on: ubuntu-latest
@@ -111,7 +111,7 @@ jobs:
 
           ls -lah release-assets
 
-      - name: Recreate dev release
+      - name: Recreate curl-route release
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
@@ -119,10 +119,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          gh release delete dev --yes --cleanup-tag || true
-          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/dev" || true
+          gh release delete dev-curl-route --yes --cleanup-tag || true
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/dev-curl-route" || true
 
-          gh release create dev release-assets/* \
+          gh release create dev-curl-route release-assets/* \
             --target "${GITHUB_SHA}" \
-            --title "dev" \
-            --notes "Auto-updated Yogurt dev binaries for ${GITHUB_SHA}"
+            --title "dev-curl-route" \
+            --notes "Auto-updated Yogurt curl-route test binaries for ${GITHUB_SHA}"
