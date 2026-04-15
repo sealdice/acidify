@@ -78,6 +78,14 @@ jobs:
       - name: Build Yogurt for ${{ matrix.target }}
         run: ./gradlew :yogurt:linkReleaseExecutable${{ matrix.gradle-target }} --no-daemon
 
+      - name: Bundle Android curl runtime
+        if: matrix.target == 'androidNativeArm64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/prepare-android-curl.sh
+          scripts/prepare-android-curl.sh yogurt/build/bin/${{ matrix.target }}/releaseExecutable
+
       - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4
         with:

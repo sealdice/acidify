@@ -12,10 +12,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.ntqqrev.acidify.common.SignResult
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 class AndroidLegacyUrlSignProvider(
     val url: String,
@@ -26,6 +28,7 @@ class AndroidLegacyUrlSignProvider(
     val httpProxy: String? = null,
 ) : AndroidSignProvider {
     private val base = Url(url)
+    private val jsonModule = Json { ignoreUnknownKeys = true }
 
     private val client = HttpClient {
         if (!(base.user.isNullOrEmpty() || base.password.isNullOrEmpty())) {
@@ -41,7 +44,7 @@ class AndroidLegacyUrlSignProvider(
             }
         }
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(jsonModule)
         }
         engine {
             if (!httpProxy.isNullOrEmpty()) {
@@ -108,6 +111,51 @@ class AndroidLegacyUrlSignProvider(
         qua: String,
         allowRegisterRetry: Boolean,
     ): SignResult {
+        val formBody = Parameters.build {
+            append("ver", fullVersion)
+            append("fekit_ver", fekitVersion)
+            append("qua", qua)
+            append("uin", uin.toString())
+            append("cmd", cmd)
+            append("seq", seq.toString())
+            append("android_id", androidId)
+            append("qimei36", qimei36)
+            append("buffer", buffer.toHexString())
+            append("guid", guid)
+        }.formUrlEncode()
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = URLBuilder(base).apply { appendPathSegments("sign") }.buildString(),
+            body = formBody,
+            contentType = ContentType.Application.FormUrlEncoded.toString(),
+            proxy = httpProxy,
+        )?.let { response ->
+            ensureSuccess(response.statusCode)
+            val body = jsonModule.decodeFromString<AndroidLegacyUrlSignResponse<AndroidLegacyUrlSignValue>>(response.body)
+            if (body.code == 1 && allowRegisterRetry && body.msg.contains("Uin is not registered.")) {
+                if (register(uin, guid)) {
+                    return signInternal(
+                        uin = uin,
+                        cmd = cmd,
+                        buffer = buffer,
+                        guid = guid,
+                        seq = seq,
+                        qua = qua,
+                        allowRegisterRetry = false,
+                    )
+                }
+            }
+            val value = body.data ?: throw UrlSignException(body.msg, body.code)
+            if (body.code != 0) {
+                throw UrlSignException(body.msg, body.code)
+            }
+            return SignResult(
+                sign = value.sign.hexToByteArray(),
+                token = value.token.hexToByteArray(),
+                extra = value.extra.hexToByteArray(),
+            )
+        }
+
         val response = client.post {
             url {
                 takeFrom(base)
@@ -165,6 +213,43 @@ class AndroidLegacyUrlSignProvider(
         version: String,
         allowRegisterRetry: Boolean,
     ): ByteArray {
+        val queryUrl = URLBuilder(base).apply {
+            appendPathSegments("energy")
+            parameters.append("ver", version)
+            parameters.append("fekit_ver", fekitVersion)
+            parameters.append("uin", uin.toString())
+            parameters.append("data", data)
+            parameters.append("android_id", androidId)
+            parameters.append("qimei36", qimei36)
+            parameters.append("guid", guid)
+            parameters.append("version", ver)
+        }.buildString()
+        platformCurlTextRequestOrNull(
+            method = "GET",
+            url = queryUrl,
+            proxy = httpProxy,
+        )?.let { response ->
+            ensureSuccess(response.statusCode)
+            val body = jsonModule.decodeFromString<AndroidLegacyUrlSignResponse<String>>(response.body)
+            if (body.code == 1 && allowRegisterRetry && body.msg.contains("Uin is not registered.")) {
+                if (register(uin, guid)) {
+                    return energyInternal(
+                        uin = uin,
+                        data = data,
+                        guid = guid,
+                        ver = ver,
+                        version = version,
+                        allowRegisterRetry = false,
+                    )
+                }
+            }
+            val value = body.data ?: throw UrlSignException(body.msg, body.code)
+            if (body.code != 0) {
+                throw UrlSignException(body.msg, body.code)
+            }
+            return value.hexToByteArray()
+        }
+
         val response = client.get {
             url {
                 takeFrom(base)
@@ -204,6 +289,25 @@ class AndroidLegacyUrlSignProvider(
         uin: Long,
         guid: String,
     ): Boolean {
+        val queryUrl = URLBuilder(base).apply {
+            appendPathSegments("register")
+            parameters.append("ver", fullVersion)
+            parameters.append("fekit_ver", fekitVersion)
+            parameters.append("uin", uin.toString())
+            parameters.append("android_id", androidId)
+            parameters.append("qimei36", qimei36)
+            parameters.append("guid", guid)
+        }.buildString()
+        platformCurlTextRequestOrNull(
+            method = "GET",
+            url = queryUrl,
+            proxy = httpProxy,
+        )?.let { response ->
+            ensureSuccess(response.statusCode)
+            val body = jsonModule.decodeFromString<AndroidLegacyUrlSignResponse<JsonElement>>(response.body)
+            return body.code == 0
+        }
+
         val response = client.get {
             url {
                 takeFrom(base)
@@ -225,6 +329,12 @@ class AndroidLegacyUrlSignProvider(
 private fun HttpResponse.ensureSuccess() {
     if (status != HttpStatusCode.OK) {
         throw UrlSignException(status.description, status.value)
+    }
+}
+
+private fun ensureSuccess(statusCode: Int) {
+    if (statusCode != HttpStatusCode.OK.value) {
+        throw UrlSignException(HttpStatusCode.fromValue(statusCode).description, statusCode)
     }
 }
 

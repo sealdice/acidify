@@ -12,6 +12,7 @@ import org.ntqqrev.acidify.internal.LagrangeClient
 import org.ntqqrev.acidify.internal.service.system.AndroidFetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchPSKey
+import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 import kotlin.time.Clock
 
 internal class TicketContext(client: AbstractClient) : AbstractContext(client) {
@@ -61,6 +62,24 @@ internal class TicketContext(client: AbstractClient) : AbstractContext(client) {
                 "&clientuin=${client.uin}" +
                 "&clientkey=$clientKey" +
                 "&u1=$jump"
+        platformCurlTextRequestOrNull(
+            method = "GET",
+            url = urlString,
+            followRedirects = false,
+        )?.let { response ->
+            response.headers["set-cookie"]
+                ?.firstNotNullOfOrNull(::extractSKeyFromCookie)
+                ?.let { currentSKey.refreshWith(it, 86400L) }
+                ?: when (client) {
+                    is LagrangeClient -> throw WebApiException("鑾峰彇 SKey 澶辫触", response.statusCode)
+                    is KuromeClient -> {
+                        logger.w { "閫氳繃 URL 鍒锋柊 SKey 澶辫触锛屼娇鐢?SessionStore 涓殑 SKey锛堝彲鑳藉凡缁忚繃鏈燂級" }
+                        currentSKey.refreshWith(client.sessionStore.wloginSigs.sKey.toHexString(), 86400L)
+                    }
+                }
+            return currentSKey.value
+        }
+
         val resp = httpClient.get(urlString)
         val cookies = httpClient.cookies(urlString)
         cookies.firstOrNull { it.name == "skey" }
@@ -101,3 +120,9 @@ internal class TicketContext(client: AbstractClient) : AbstractContext(client) {
         return newKey
     }
 }
+
+private fun extractSKeyFromCookie(cookieHeader: String): String? =
+    cookieHeader
+        .substringBefore(';')
+        .takeIf { it.startsWith("skey=") }
+        ?.removePrefix("skey=")

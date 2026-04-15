@@ -67,7 +67,7 @@ kotlin {
             implementation(libs.ktor.client.curl)
         }
         androidNativeArm64Main.dependencies {
-            implementation(project(":ktor-client-curl-android-native"))
+            implementation(libs.ktor.client.cio)
         }
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")

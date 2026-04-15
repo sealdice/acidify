@@ -10,9 +10,12 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.ntqqrev.acidify.common.SignResult
 import org.ntqqrev.acidify.exception.UrlSignException
+import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
 
 /**
  * 通过 HTTP 接口进行签名的 [AndroidSignProvider] 实现
@@ -21,10 +24,11 @@ import org.ntqqrev.acidify.exception.UrlSignException
  */
 class AndroidUrlSignProvider(val url: String, val httpProxy: String? = null) : AndroidSignProvider {
     val base = Url(url)
+    private val jsonModule = Json { ignoreUnknownKeys = true }
 
     private val client = HttpClient {
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(jsonModule)
         }
         engine {
             if (!httpProxy.isNullOrEmpty()) {
@@ -42,6 +46,35 @@ class AndroidUrlSignProvider(val url: String, val httpProxy: String? = null) : A
         version: String,
         qua: String
     ): SignResult {
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = URLBuilder(base).apply { appendPathSegments("sign") }.buildString(),
+            body = jsonModule.encodeToString(
+                AndroidUrlSignRequest(
+                    uin = uin,
+                    cmd = cmd,
+                    buffer = buffer.toHexString(),
+                    guid = guid,
+                    seq = seq,
+                    version = version,
+                    qua = qua,
+                )
+            ),
+            contentType = ContentType.Application.Json.toString(),
+            proxy = httpProxy,
+        )?.let { resp ->
+            ensureSuccess(resp.statusCode)
+            val respBody = jsonModule.decodeFromString<AndroidUrlSignResponse<AndroidUrlSignValue>>(resp.body)
+            if (respBody.code != 0 || respBody.data == null) {
+                throw UrlSignException(respBody.msg, respBody.code)
+            }
+            return SignResult(
+                sign = respBody.data.sign.hexToByteArray(),
+                token = respBody.data.token.hexToByteArray(),
+                extra = respBody.data.extra.hexToByteArray(),
+            )
+        }
+
         val resp = client.post {
             url {
                 takeFrom(base)
@@ -82,6 +115,30 @@ class AndroidUrlSignProvider(val url: String, val httpProxy: String? = null) : A
         version: String,
         qua: String
     ): ByteArray {
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = URLBuilder(base).apply { appendPathSegments("energy") }.buildString(),
+            body = jsonModule.encodeToString(
+                AndroidUrlEnergyRequest(
+                    uin = uin,
+                    data = data,
+                    guid = guid,
+                    ver = ver,
+                    version = version,
+                    qua = qua,
+                )
+            ),
+            contentType = ContentType.Application.Json.toString(),
+            proxy = httpProxy,
+        )?.let { resp ->
+            ensureSuccess(resp.statusCode)
+            val respBody = jsonModule.decodeFromString<AndroidUrlSignResponse<String>>(resp.body)
+            if (respBody.code != 0 || respBody.data == null) {
+                throw UrlSignException(respBody.msg, respBody.code)
+            }
+            return respBody.data.hexToByteArray()
+        }
+
         val resp = client.post {
             url {
                 takeFrom(base)
@@ -116,6 +173,29 @@ class AndroidUrlSignProvider(val url: String, val httpProxy: String? = null) : A
         version: String,
         qua: String
     ): ByteArray {
+        platformCurlTextRequestOrNull(
+            method = "POST",
+            url = URLBuilder(base).apply { appendPathSegments("get_tlv553") }.buildString(),
+            body = jsonModule.encodeToString(
+                AndroidUrlDebugXwidRequest(
+                    uin = uin,
+                    data = data,
+                    guid = guid,
+                    version = version,
+                    qua = qua,
+                )
+            ),
+            contentType = ContentType.Application.Json.toString(),
+            proxy = httpProxy,
+        )?.let { resp ->
+            ensureSuccess(resp.statusCode)
+            val respBody = jsonModule.decodeFromString<AndroidUrlSignResponse<String>>(resp.body)
+            if (respBody.code != 0 || respBody.data == null) {
+                throw UrlSignException(respBody.msg, respBody.code)
+            }
+            return respBody.data.hexToByteArray()
+        }
+
         val resp = client.post {
             url {
                 takeFrom(base)
@@ -179,6 +259,12 @@ private data class AndroidUrlSignResponse<T>(
     val msg: String = "",
     val data: T? = null,
 )
+
+private fun ensureSuccess(statusCode: Int) {
+    if (statusCode != HttpStatusCode.OK.value) {
+        throw UrlSignException(HttpStatusCode.fromValue(statusCode).description, statusCode)
+    }
+}
 
 @Serializable
 private data class AndroidUrlSignValue(
