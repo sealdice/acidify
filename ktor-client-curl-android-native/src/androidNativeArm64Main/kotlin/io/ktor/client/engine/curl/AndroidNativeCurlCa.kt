@@ -8,6 +8,7 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.usePinned
 import platform.posix.F_OK
@@ -65,6 +66,5 @@ private fun currentProgramDirectory(): String? = memScoped {
     val buffer = allocArray<ByteVar>(bufferSize)
     val length = readlink("/proc/self/exe", buffer, (bufferSize - 1).convert())
     if (length <= 0) return@memScoped null
-    buffer[length] = 0
-    buffer.toKString().substringBeforeLast('/', "").ifBlank { null }
+    buffer.readBytes(length.toInt()).decodeToString().substringBeforeLast('/', "").ifBlank { null }
 }
