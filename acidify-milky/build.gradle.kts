@@ -25,5 +25,20 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.milky.types)
         }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.java)
+        }
+        mingwMain.dependencies {
+            implementation(libs.ktor.client.winhttp)
+        }
+        appleMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+        linuxMain.dependencies {
+            implementation(libs.ktor.client.curl)
+        }
+        findByName("androidNativeArm64Main")?.dependencies {
+            implementation(project(":android-https-native"))
+        }
     }
 }
