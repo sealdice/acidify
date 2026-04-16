@@ -56,7 +56,7 @@ internal fun Route.fixedWebSocket(
 // ---- Fixed implementation for platforms without ISO_8859_1 ----
 
 /** RFC 6455 Section 4.2.2 magic GUID */
-private const val WEBSOCKET_MAGIC = "258EAFA5-E914-47DA-95CA-5AB4C085B170"
+private const val WEBSOCKET_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 private fun Route.fixedWebSocketImpl(
     handler: suspend DefaultWebSocketServerSession.() -> Unit
