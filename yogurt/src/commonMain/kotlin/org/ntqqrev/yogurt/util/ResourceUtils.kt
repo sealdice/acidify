@@ -24,7 +24,13 @@ private val httpClient = createPlatformHttpClient()
 suspend fun resolveUri(uri: String): MediaSource = withContext(Dispatchers.IO) {
     when {
         uri.startsWith("file://") -> withFs {
-            val filePath = Path(uri.removePrefix("file://").decodeURLPart())
+            val pathStr = uri.removePrefix("file://").decodeURLPart()
+            val normalizedPath = if (pathStr.startsWith("/") && pathStr.length > 2 && pathStr[1].isLetter() && pathStr[2] == ':') {
+                pathStr.substring(1)
+            } else {
+                pathStr
+            }
+            val filePath = Path(normalizedPath)
             if (!exists(filePath)) {
                 throw IOException("File not found: $filePath")
             }
