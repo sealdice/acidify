@@ -35,6 +35,12 @@ kotlin {
                 withJvm()
                 withNative()
             }
+            group("nonAndroid") {
+                withJvm()
+                withMingw()
+                withLinux()
+                withMacos()
+            }
         }
     }
 
@@ -56,6 +62,9 @@ kotlin {
             implementation(libs.kompress)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
+        }
+        androidNativeArm64Main.dependencies {
+            implementation(project(":android-https-native"))
         }
         all {
             languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")

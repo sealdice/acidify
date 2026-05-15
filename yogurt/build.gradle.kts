@@ -22,6 +22,13 @@ kotlin {
             group("posix") {
                 withLinux()
                 withMacos()
+                withAndroidNativeArm64()
+            }
+            group("nonAndroid") {
+                withJvm()
+                withMingw()
+                withLinux()
+                withMacos()
             }
         }
     }
@@ -34,21 +41,21 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":acidify-core"))
             implementation(project(":acidify-milky"))
+            implementation(project(":mordant-polyfill"))
             implementation(libs.kotlinx.datetime)
             implementation(libs.bundles.ktor.client)
             implementation(libs.bundles.ktor.server)
             implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.acidify.codec)
             implementation(libs.ktfs)
             implementation(libs.qr.matrix)
-            implementation(libs.quickjs.kt)
-            implementation(libs.mordant)
         }
         jvmMain.dependencies {
+            implementation(libs.acidify.codec)
             implementation(libs.ktor.client.java)
             implementation(libs.logback.classic)
         }
         mingwMain.dependencies {
+            implementation(libs.acidify.codec)
             implementation(libs.ktor.client.winhttp)
         }
         appleMain.dependencies {
@@ -56,6 +63,13 @@ kotlin {
         }
         linuxMain.dependencies {
             implementation(libs.ktor.client.curl)
+        }
+        findByName("nonAndroidMain")?.dependencies {
+            implementation(libs.acidify.codec)
+        }
+        androidNativeArm64Main.dependencies {
+            implementation(project(":android-codec-native"))
+            implementation(project(":android-https-native"))
         }
     }
 
@@ -67,8 +81,8 @@ kotlin {
         }
     }
 
-    mingwX64 {
-        binaries.all {
+    targets.matching { it.name == "mingwX64" }.configureEach {
+        (this as KotlinNativeTarget).binaries.all {
             linkerOpts(
                 "-Wl,-Bstatic",
                 "-lstdc++",

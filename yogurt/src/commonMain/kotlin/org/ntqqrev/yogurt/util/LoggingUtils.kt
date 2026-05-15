@@ -1,6 +1,13 @@
 package org.ntqqrev.yogurt.util
 
-import com.github.ajalt.mordant.rendering.TextColors.*
+import com.github.ajalt.mordant.rendering.TextColors.brightBlue
+import com.github.ajalt.mordant.rendering.TextColors.brightCyan
+import com.github.ajalt.mordant.rendering.TextColors.brightGreen
+import com.github.ajalt.mordant.rendering.TextColors.brightRed
+import com.github.ajalt.mordant.rendering.TextColors.brightYellow
+import com.github.ajalt.mordant.rendering.TextColors.gray
+import com.github.ajalt.mordant.rendering.TextColors.green
+import com.github.ajalt.mordant.rendering.TextColors.yellow
 import com.github.ajalt.mordant.rendering.TextStyles.bold
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
@@ -54,11 +61,7 @@ fun formatColoredLog(
     )
     b.append(" ")
     b.append(
-        when (level) {
-            LogLevel.VERBOSE -> gray
-            LogLevel.ERROR -> brightRed
-            else -> cyan
-        }(shortenPackageName(tag))
+        (shortenPackageName(tag))
     )
     b.append(" ")
     b.append(
@@ -71,11 +74,7 @@ fun formatColoredLog(
     if (stackTrace != null) {
         b.append("\n")
         b.append(
-            when (level) {
-                LogLevel.ERROR -> brightRed
-                LogLevel.WARN -> brightYellow
-                else -> gray
-            }(stackTrace)
+            (stackTrace)
         )
     }
     return b.toString()

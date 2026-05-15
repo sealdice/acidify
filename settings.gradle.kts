@@ -24,4 +24,10 @@ include(
     ":yogurt-jvm",
 )
 
+include(
+    ":android-codec-native",
+    ":android-https-native",
+    ":mordant-polyfill"
+)
+
 rootProject.name = "acidify"

@@ -1,6 +1,5 @@
 package org.ntqqrev.yogurt.util
 
-import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -19,12 +18,19 @@ import org.ntqqrev.ktfs.withFs
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
-private val httpClient = HttpClient()
+private val httpClient = createPlatformHttpClient()
 
 suspend fun resolveUri(uri: String): MediaSource = withContext(Dispatchers.IO) {
     when {
         uri.startsWith("file://") -> withFs {
-            val filePath = Path(uri.removePrefix("file://").decodeURLPart())
+            val pathStr = uri.removePrefix("file://").decodeURLPart()
+            val normalizedPath =
+                if (pathStr.startsWith("/") && pathStr.length > 2 && pathStr[1].isLetter() && pathStr[2] == ':') {
+                    pathStr.substring(1)
+                } else {
+                    pathStr
+                }
+            val filePath = Path(normalizedPath)
             if (!filePath.exists) {
                 throw IOException("File not found: $filePath")
             }

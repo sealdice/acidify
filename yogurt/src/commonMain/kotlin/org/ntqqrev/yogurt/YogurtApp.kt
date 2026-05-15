@@ -24,7 +24,6 @@ import org.ntqqrev.milky.milkyPackageVersion
 import org.ntqqrev.milky.milkyVersion
 import org.ntqqrev.yogurt.config.loadConfigAndUpdate
 import org.ntqqrev.yogurt.debug.configureDebugFaceDetailsApi
-import org.ntqqrev.yogurt.scripting.configureScripting
 import org.ntqqrev.yogurt.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -144,8 +143,6 @@ object YogurtApp {
                     }
                 }
             }
-
-            configureScripting()
         }
 
         monitor.subscribe(ApplicationStarted) {
