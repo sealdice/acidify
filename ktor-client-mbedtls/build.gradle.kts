@@ -197,7 +197,7 @@ val buildAndroidHttpsNative by tasks.registering {
             (
                 """
                 headers = ${File(includeDir, "android_https_native.h").invariantSeparatorsPath}
-                package = org.ntqqrev.androidhttps.native
+                package = mbedtls
                 compilerOpts = -I${includeDir.invariantSeparatorsPath}
                 staticLibraries = libandroid_https_native.a
                 libraryPaths = ${libDir.invariantSeparatorsPath}
@@ -243,9 +243,8 @@ kotlin {
     androidNativeArm64()
 
     sourceSets {
-        findByName("androidNativeArm64Main")?.dependencies {
+        androidNativeArm64Main.dependencies {
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.mock)
         }
     }
 

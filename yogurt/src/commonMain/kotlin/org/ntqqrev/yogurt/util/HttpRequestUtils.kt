@@ -1,4 +1,4 @@
-package org.ntqqrev.acidify.internal.util
+package org.ntqqrev.yogurt.util
 
 internal data class PlatformCurlTextResponse(
     val statusCode: Int,

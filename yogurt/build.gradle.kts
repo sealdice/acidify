@@ -68,8 +68,7 @@ kotlin {
             implementation(libs.acidify.codec)
         }
         androidNativeArm64Main.dependencies {
-            implementation(project(":android-codec-native"))
-            implementation(project(":android-https-native"))
+            implementation(project(":ktor-client-mbedtls"))
         }
     }
 

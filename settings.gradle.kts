@@ -25,8 +25,7 @@ include(
 )
 
 include(
-    ":android-codec-native",
-    ":android-https-native",
+    ":ktor-client-mbedtls",
     ":mordant-polyfill"
 )
 

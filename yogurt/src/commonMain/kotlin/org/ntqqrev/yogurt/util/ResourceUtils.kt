@@ -1,5 +1,6 @@
 package org.ntqqrev.yogurt.util
 
+import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -18,7 +19,7 @@ import org.ntqqrev.ktfs.withFs
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
-private val httpClient = createPlatformHttpClient()
+private val httpClient = HttpClient()
 
 suspend fun resolveUri(uri: String): MediaSource = withContext(Dispatchers.IO) {
     when {

@@ -1,5 +1,6 @@
-package org.ntqqrev.acidify.common
+package org.ntqqrev.yogurt.util
 
+import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -10,9 +11,10 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.ntqqrev.acidify.common.SignProvider
+import org.ntqqrev.acidify.common.SignResult
 import org.ntqqrev.acidify.exception.UrlSignException
-import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
-import org.ntqqrev.acidify.internal.util.platformCurlTextRequestOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Seal-specific Lagrange V2 sign provider with JWT refresh and native Android HTTPS fallback.
@@ -36,7 +38,7 @@ class SealUrlSignProvider(
     private var jwtToken: String? = jwtToken?.takeUnless { it.isBlank() }
     private var refreshJob: Job? = null
 
-    private val client = createPlatformHttpClient {
+    private val client = HttpClient {
         install(ContentNegotiation) {
             json(jsonModule)
         }
@@ -129,7 +131,7 @@ class SealUrlSignProvider(
         }
         refreshJob = refreshScope.launch {
             while (isActive) {
-                delay(5 * 60 * 1000L)
+                delay(300.seconds)
                 runCatching {
                     refreshToken()
                 }

@@ -1,7 +1,3 @@
-@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-
 plugins {
     id("buildsrc.convention.kotlin-multiplatform")
     alias(libs.plugins.kotlin.serialization)
@@ -15,21 +11,6 @@ kotlin {
         freeCompilerArgs.add("-Xcontext-parameters")
     }
 
-    applyDefaultHierarchyTemplate {
-        common {
-            group("nonJs") {
-                withJvm()
-                withNative()
-            }
-            group("nonAndroid") {
-                withJvm()
-                withMingw()
-                withLinux()
-                withMacos()
-            }
-        }
-    }
-
     sourceSets {
         commonMain.dependencies {
             implementation(project(":acidify-core"))
@@ -41,9 +22,6 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-        }
-        androidNativeArm64Main.dependencies {
-            implementation(project(":android-https-native"))
         }
     }
 }

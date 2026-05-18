@@ -12,6 +12,7 @@ import org.ntqqrev.acidify.exception.WtLoginException
 import org.ntqqrev.ktfs.withFs
 import org.ntqqrev.yogurt.YogurtApp.config
 import org.ntqqrev.yogurt.YogurtApp.t
+import org.ntqqrev.yogurt.util.SealUrlSignProvider
 import org.ntqqrev.yogurt.util.logHandler
 import org.ntqqrev.yogurt.util.readEnvironmentVariable
 import org.ntqqrev.yogurt.util.setEnvironmentVariable

@@ -1,10 +1,10 @@
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:OptIn(ExperimentalForeignApi::class)
 
-package org.ntqqrev.androidhttps
+package org.ntqqrev.mbedtls
 
-import io.ktor.http.Url
+import io.ktor.http.*
 import kotlinx.cinterop.*
-import org.ntqqrev.androidhttps.native.*
+import mbedtls.*
 import platform.posix.F_OK
 import platform.posix.access
 import platform.posix.readlink

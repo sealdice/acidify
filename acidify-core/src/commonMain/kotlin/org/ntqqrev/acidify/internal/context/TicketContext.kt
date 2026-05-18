@@ -13,7 +13,6 @@ import org.ntqqrev.acidify.internal.service.system.AndroidFetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchClientKey
 import org.ntqqrev.acidify.internal.service.system.FetchPSKey
 import org.ntqqrev.acidify.internal.util.RetryPolicy
-import org.ntqqrev.acidify.internal.util.createPlatformHttpClient
 import org.ntqqrev.acidify.internal.util.withRetry
 import kotlin.time.Clock
 
@@ -40,7 +39,7 @@ internal class TicketContext(client: AbstractClient) : AbstractContext(client) {
     private val currentSKey = KeyWithLifetime.dummy()
     private val psKeyCache = mutableMapOf<String, KeyWithLifetime>()
     private val psKeyQueryMutex = Mutex()
-    private val httpClient = createPlatformHttpClient {
+    private val httpClient = HttpClient {
         install(HttpCookies)
         followRedirects = false
     }

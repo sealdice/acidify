@@ -1,6 +1,6 @@
-package org.ntqqrev.acidify.internal.util
+package org.ntqqrev.yogurt.util
 
-import org.ntqqrev.androidhttps.executeTextRequest
+import org.ntqqrev.mbedtls.executeTextRequest
 
 internal actual fun platformCurlTextRequestOrNull(
     method: String,

@@ -1,4 +1,4 @@
-package org.ntqqrev.acidify.internal.util
+package org.ntqqrev.yogurt.util
 
 internal actual fun platformCurlTextRequestOrNull(
     method: String,
@@ -7,5 +7,7 @@ internal actual fun platformCurlTextRequestOrNull(
     body: String?,
     contentType: String?,
     followRedirects: Boolean,
-    proxy: String?,
-): PlatformCurlTextResponse? = null
+    proxy: String?
+): PlatformCurlTextResponse? {
+    return null
+}

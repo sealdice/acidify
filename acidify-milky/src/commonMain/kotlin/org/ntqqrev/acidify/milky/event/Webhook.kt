@@ -10,10 +10,9 @@ import io.ktor.server.plugins.di.*
 import kotlinx.coroutines.launch
 import org.ntqqrev.acidify.AbstractBot
 import org.ntqqrev.acidify.milky.MilkyContext
-import org.ntqqrev.acidify.milky.internal.createPlatformHttpClient
 import org.ntqqrev.milky.milkyJsonModule
 
-val webhookClient = createPlatformHttpClient {
+val webhookClient = HttpClient {
     install(ContentNegotiation) {
         json(milkyJsonModule)
     }
