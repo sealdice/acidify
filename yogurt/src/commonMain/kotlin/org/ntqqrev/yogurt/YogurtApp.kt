@@ -90,7 +90,7 @@ object YogurtApp {
         }
 
         when {
-            isPC -> initializePC()
+            isPC -> initializeSeal()
             isAndroid -> initializeAndroid()
             else -> throw IllegalStateException(
                 "不支持的协议 ${config.protocol.os}，当前仅支持 Windows、Mac、Linux、AndroidPhone、AndroidPad"
