@@ -18,6 +18,7 @@ data object MbedTls : HttpClientEngineFactory<HttpClientEngineConfig> {
     }
 
     override fun create(block: HttpClientEngineConfig.() -> Unit): HttpClientEngine {
-        TODO("Not yet implemented")
+        val config = HttpClientEngineConfig().apply(block)
+        return MbedTlsEngine(config)
     }
 }
