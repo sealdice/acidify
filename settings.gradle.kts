@@ -18,7 +18,7 @@ plugins {
 
 include(
     ":acidify-core",
-    ":acidify-core-runner",
+    //":acidify-core-runner",
     ":acidify-milky",
     ":yogurt",
     ":yogurt-jvm",
