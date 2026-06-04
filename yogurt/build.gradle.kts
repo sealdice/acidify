@@ -33,10 +33,6 @@ kotlin {
         }
     }
 
-    compilerOptions {
-        freeCompilerArgs.add("-Xcontext-parameters")
-    }
-
     sourceSets {
         commonMain.dependencies {
             implementation(project(":acidify-core"))
