@@ -69,7 +69,9 @@ internal object MsgPushTransformer : AbstractTransformer("trpc.msg.olpush.OlPush
                 memberData.copy(
                     nickname = msg.extraInfo.nick.ifEmpty { memberData.nickname },
                     card = msg.extraInfo.groupCard,
-                    specialTitle = msg.extraInfo.specialTitle
+                    specialTitle = msg.extraInfo.specialTitle,
+                    level = msg.extraInfo.level,
+                    lastSpokeAt = msg.timestamp,
                 )
             }
         }
@@ -243,7 +245,10 @@ internal object MsgPushTransformer : AbstractTransformer("trpc.msg.olpush.OlPush
         val operatorUid = operatorInfoBytes.decodeToString()
         val operatorUin = bot.getUinByUid(operatorUid)
 
-        bot.getGroup(groupUin)?.updateMemberCache()
+        bot.getGroup(groupUin)?.let {
+            it.updateBinding(it.data.copy(memberCount = it.data.memberCount + 1))
+            it.updateMemberCache()
+        }
 
         return when (content.type) {
             130 -> listOf(
@@ -285,16 +290,22 @@ internal object MsgPushTransformer : AbstractTransformer("trpc.msg.olpush.OlPush
             ?.uid
         val operatorUin = operatorUid?.let { bot.getUinByUid(it) }
 
-        bot.getGroup(groupUin)?.updateMemberCache()
+        bot.getGroup(groupUin)?.let {
+            it.updateBinding(it.data.copy(memberCount = it.data.memberCount - 1))
+            it.updateMemberCache()
+        }
 
         return when (content.type) {
-            129 if operatorUin != null -> listOf(
-                GroupDisbandEvent(
-                    groupUin = groupUin,
-                    operatorUin = operatorUin,
-                    operatorUid = operatorUid
+            129 if operatorUin != null -> {
+                bot.groupCache.update()
+                listOf(
+                    GroupDisbandEvent(
+                        groupUin = groupUin,
+                        operatorUin = operatorUin,
+                        operatorUid = operatorUid
+                    )
                 )
-            )
+            }
 
             else -> listOf(
                 GroupMemberDecreaseEvent(
@@ -447,7 +458,9 @@ internal object MsgPushTransformer : AbstractTransformer("trpc.msg.olpush.OlPush
 
         return if (targetUid != null) {
             val targetUin = bot.getUinByUid(targetUid)
-            bot.updateGroupMemberBinding(groupUin, targetUin) { it.copy(mutedUntil = Clock.System.now().epochSeconds) }
+            bot.updateGroupMemberBinding(groupUin, targetUin) {
+                it.copy(mutedUntil = Clock.System.now().epochSeconds + duration)
+            }
             listOf(
                 GroupMuteEvent(
                     groupUin = groupUin,
